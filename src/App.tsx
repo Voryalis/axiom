@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { all, create } from "mathjs";
 import GraphCanvas, { type GraphExpression } from "./components/GraphCanvas";
 import "./App.css";
+
+const math = create(all, {});
 
 const GRAPH_LIBRARY_KEY = "axiom.graphLibrary";
 
@@ -135,6 +138,54 @@ function loadGraphLibrary(): SavedGraph[] {
 
 function saveGraphLibrary(graphs: SavedGraph[]) {
   localStorage.setItem(GRAPH_LIBRARY_KEY, JSON.stringify(graphs, null, 2));
+}
+
+function isGraphLikeExpression(raw: string) {
+  const trimmed = raw.trim().toLowerCase();
+
+  if (!trimmed) return false;
+  if (trimmed.startsWith("y=") || trimmed.startsWith("y =")) return true;
+
+  return /\bx\b/.test(trimmed);
+}
+
+function normalizeMathExpression(raw: string) {
+  const trimmed = raw.trim();
+
+  if (trimmed.toLowerCase().startsWith("y=")) {
+    return trimmed.slice(2).trim();
+  }
+
+  if (trimmed.toLowerCase().startsWith("y =")) {
+    return trimmed.slice(3).trim();
+  }
+
+  return trimmed;
+}
+
+function evaluateMathExpression(raw: string) {
+  const expression = normalizeMathExpression(raw);
+
+  if (!expression || isGraphLikeExpression(raw)) {
+    return "";
+  }
+
+  try {
+    const value = math.evaluate(expression);
+
+    if (typeof value === "number") {
+      if (!Number.isFinite(value)) return "undefined";
+      return `= ${Number(value.toPrecision(12)).toString()}`;
+    }
+
+    if (typeof value?.toString === "function") {
+      return `= ${value.toString()}`;
+    }
+
+    return "";
+  } catch {
+    return "invalid";
+  }
 }
 
 function App() {
@@ -381,66 +432,74 @@ function App() {
             <p className="empty-library">No expressions. Click + to add one.</p>
           ) : (
             <div className="expression-list">
-              {expressions.map((expression) => (
-                <div
-                  className={`expression-card ${
-                    expression.visible ? "" : "expression-card-hidden"
-                  }`}
-                  key={expression.id}
-                >
-                  <button
-                    className="visibility-button"
-                    onClick={() => toggleExpression(expression.id)}
-                    title={expression.visible ? "Hide expression" : "Show expression"}
-                    style={{ borderColor: expression.color }}
+              {expressions.map((expression) => {
+                const result = evaluateMathExpression(expression.raw);
+
+                return (
+                  <div
+                    className={`expression-card ${
+                      expression.visible ? "" : "expression-card-hidden"
+                    }`}
+                    key={expression.id}
                   >
-                    <span
-                      className="visibility-dot"
-                      style={{
-                        background: expression.visible
-                          ? expression.color
-                          : "transparent",
-                      }}
-                    />
-                  </button>
+                    <button
+                      className="visibility-button"
+                      onClick={() => toggleExpression(expression.id)}
+                      title={expression.visible ? "Hide expression" : "Show expression"}
+                      style={{ borderColor: expression.color }}
+                    >
+                      <span
+                        className="visibility-dot"
+                        style={{
+                          background: expression.visible
+                            ? expression.color
+                            : "transparent",
+                        }}
+                      />
+                    </button>
 
-                  <input
-                    ref={(element) => {
-                      expressionInputRefs.current[expression.id] = element;
-                    }}
-                    value={expression.raw}
-                    onChange={(event) =>
-                      updateExpression(expression.id, event.target.value)
-                    }
-                    placeholder="Type an expression..."
-                    spellCheck={false}
-                  />
+                    <div className="expression-input-stack">
+                      <input
+                        ref={(element) => {
+                          expressionInputRefs.current[expression.id] = element;
+                        }}
+                        value={expression.raw}
+                        onChange={(event) =>
+                          updateExpression(expression.id, event.target.value)
+                        }
+                        placeholder="Type an expression..."
+                        spellCheck={false}
+                      />
 
-                  <label className="color-picker-label" title="Change line color">
-                    <input
-                      className="color-picker"
-                      type="color"
-                      value={expression.color}
-                      onChange={(event) =>
-                        updateExpressionColor(expression.id, event.target.value)
-                      }
-                    />
-                  </label>
+                      {result ? <span className="expression-result">{result}</span> : null}
+                    </div>
 
-                  <button
-                    className="remove-button"
-                    onClick={() => removeExpression(expression.id)}
-                    title="Remove expression"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
+                    <label className="color-picker-label" title="Change line color">
+                      <input
+                        className="color-picker"
+                        type="color"
+                        value={expression.color}
+                        onChange={(event) =>
+                          updateExpressionColor(expression.id, event.target.value)
+                        }
+                      />
+                    </label>
+
+                    <button
+                      className="remove-button"
+                      onClick={() => removeExpression(expression.id)}
+                      title="Remove expression"
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
 
           <p className="hint">
-            Try: y = x^2, y = sin(x), y = cos(x), y = sqrt(x)
+            Try: y = x^2, 2 + 2, sin(pi / 2), sqrt(16)
           </p>
         </section>
 

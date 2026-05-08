@@ -40,6 +40,7 @@ Main goals:
 - saved graphs remain available in the local library
 - deletable final expression
 - scrollable sidebar for many expressions and library items
+- normal math evaluation for non-graph expressions
 
 ## Future ideas
 

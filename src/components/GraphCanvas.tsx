@@ -47,7 +47,10 @@ function GraphCanvas({ expressions }: GraphCanvasProps) {
       event.preventDefault();
     };
 
-    window.addEventListener("wheel", preventNativeZoom, { passive: false, capture: true });
+    window.addEventListener("wheel", preventNativeZoom, {
+      passive: false,
+      capture: true,
+    });
     window.addEventListener("gesturestart", preventGesture, { passive: false });
     window.addEventListener("gesturechange", preventGesture, { passive: false });
     window.addEventListener("gestureend", preventGesture, { passive: false });
@@ -70,7 +73,11 @@ function GraphCanvas({ expressions }: GraphCanvasProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const enforceSquareUnits = (viewport: Viewport, width: number, height: number): Viewport => {
+    const enforceSquareUnits = (
+      viewport: Viewport,
+      width: number,
+      height: number,
+    ): Viewport => {
       const xRange = viewport.xMax - viewport.xMin;
       const yRange = xRange * (height / width);
       const yCenter = (viewport.yMin + viewport.yMax) / 2;
@@ -87,7 +94,11 @@ function GraphCanvas({ expressions }: GraphCanvasProps) {
       const rect = parent.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
 
-      viewportRef.current = enforceSquareUnits(viewportRef.current, rect.width, rect.height);
+      viewportRef.current = enforceSquareUnits(
+        viewportRef.current,
+        rect.width,
+        rect.height,
+      );
 
       canvas.width = Math.floor(rect.width * dpr);
       canvas.height = Math.floor(rect.height * dpr);
@@ -239,6 +250,10 @@ function normalizeExpression(raw: string) {
   return trimmed;
 }
 
+function isGraphLikeExpression(rawExpression: string) {
+  return rawExpression.trim().length > 0;
+}
+
 function graphToScreenX(x: number, width: number, viewport: Viewport) {
   return ((x - viewport.xMin) / (viewport.xMax - viewport.xMin)) * width;
 }
@@ -270,7 +285,12 @@ function drawBackground(ctx: CanvasRenderingContext2D, width: number, height: nu
   ctx.fillRect(0, 0, width, height);
 }
 
-function drawGrid(ctx: CanvasRenderingContext2D, width: number, height: number, viewport: Viewport) {
+function drawGrid(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  viewport: Viewport,
+) {
   const step = getGridStep(viewport.xMax - viewport.xMin);
 
   ctx.lineWidth = 1;
@@ -298,7 +318,12 @@ function drawGrid(ctx: CanvasRenderingContext2D, width: number, height: number, 
   }
 }
 
-function drawLabels(ctx: CanvasRenderingContext2D, width: number, height: number, viewport: Viewport) {
+function drawLabels(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  viewport: Viewport,
+) {
   const step = getGridStep(viewport.xMax - viewport.xMin);
 
   ctx.fillStyle = "#8b909b";
@@ -335,6 +360,8 @@ function drawExpression(
   graphExpression: GraphExpression,
   viewport: Viewport,
 ) {
+  if (!isGraphLikeExpression(graphExpression.raw)) return;
+
   const expression = normalizeExpression(graphExpression.raw);
 
   if (!expression) return;

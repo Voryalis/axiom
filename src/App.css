@@ -362,3 +362,15 @@ input {
 .sidebar::-webkit-scrollbar-thumb:hover {
   background: #5a5e68;
 }
+
+.expression-input-stack {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 4px;
+}
+
+.expression-result {
+  color: #9da1aa;
+  font-size: 12px;
+}
