@@ -229,7 +229,14 @@ function isTableExpression(rawExpression: string) {
     ?.trim()
     .toLowerCase();
 
-  return firstLine === "table:" || firstLine === "table";
+  return (
+    firstLine === "table:" ||
+    firstLine === "table" ||
+    firstLine === "table lines:" ||
+    firstLine === "table lines" ||
+    firstLine === "table line:" ||
+    firstLine === "table line"
+  );
 }
 
 function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {

@@ -26,6 +26,11 @@ type GraphPoint = {
   y: number;
 };
 
+type ParsedTable = {
+  points: GraphPoint[];
+  connect: boolean;
+};
+
 type RenderedPoint = {
   expressionId: string;
   point: GraphPoint;
@@ -332,10 +337,21 @@ function draw(
   for (const expression of expressions) {
     if (!expression.visible) continue;
 
-    const tablePoints = parseTableExpression(expression.raw, scope);
+    const table = parseTableExpression(expression.raw, scope);
 
-    if (tablePoints.length > 0) {
-      tablePoints.forEach((point, index) => {
+    if (table && table.points.length > 0) {
+      if (table.connect) {
+        drawConnectedTableLines(
+          ctx,
+          width,
+          height,
+          table.points,
+          expression.color,
+          viewport,
+        );
+      }
+
+      table.points.forEach((point, index) => {
         const renderedPoint = drawPoint(
           ctx,
           width,
@@ -474,18 +490,25 @@ function parsePointExpression(
 function parseTableExpression(
   rawExpression: string,
   scope: Record<string, number>,
-): GraphPoint[] {
+): ParsedTable | null {
   const lines = rawExpression
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
 
-  if (lines.length < 2) return [];
+  if (lines.length < 2) return null;
 
   const firstLine = lines[0]?.toLowerCase();
 
-  if (firstLine !== "table:" && firstLine !== "table") {
-    return [];
+  const isPlainTable = firstLine === "table:" || firstLine === "table";
+  const isConnectedTable =
+    firstLine === "table lines:" ||
+    firstLine === "table lines" ||
+    firstLine === "table line:" ||
+    firstLine === "table line";
+
+  if (!isPlainTable && !isConnectedTable) {
+    return null;
   }
 
   const dataLines = lines.slice(1);
@@ -522,7 +545,10 @@ function parseTableExpression(
     }
   }
 
-  return points;
+  return {
+    points,
+    connect: isConnectedTable,
+  };
 }
 
 function isTableExpression(rawExpression: string) {
@@ -532,7 +558,14 @@ function isTableExpression(rawExpression: string) {
     ?.trim()
     .toLowerCase();
 
-  return firstLine === "table:" || firstLine === "table";
+  return (
+    firstLine === "table:" ||
+    firstLine === "table" ||
+    firstLine === "table lines:" ||
+    firstLine === "table lines" ||
+    firstLine === "table line:" ||
+    firstLine === "table line"
+  );
 }
 
 function isGraphLikeExpression(rawExpression: string) {
@@ -704,6 +737,46 @@ function drawExpression(
   }
 
   ctx.stroke();
+}
+
+function drawConnectedTableLines(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  points: GraphPoint[],
+  color: string,
+  viewport: Viewport,
+) {
+  if (points.length < 2) return;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+
+  let started = false;
+
+  for (const point of points) {
+    const sx = graphToScreenX(point.x, width, viewport);
+    const sy = graphToScreenY(point.y, height, viewport);
+
+    if (sx < -40 || sx > width + 40 || sy < -40 || sy > height + 40) {
+      started = false;
+      continue;
+    }
+
+    if (!started) {
+      ctx.moveTo(sx, sy);
+      started = true;
+    } else {
+      ctx.lineTo(sx, sy);
+    }
+  }
+
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawPoint(

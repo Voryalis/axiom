@@ -100,6 +100,12 @@ Main goals:
 - add/remove table rows
 - copy/paste table data from spreadsheets
 - optional connected table points
+- table UI should have a toggle/button for connected lines vs points only
+- text-based table syntax is temporary and should be replaced with a user-friendly table interface
+
+Table expression
+[x] show points
+[ ] connect lines
 
 ### Points and intersections
 
