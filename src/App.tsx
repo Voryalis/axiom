@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import GraphCanvas, { type GraphExpression } from "./components/GraphCanvas";
 import "./App.css";
 
@@ -334,6 +334,29 @@ function App() {
       }
     }
   }
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const isModifierPressed = event.ctrlKey || event.metaKey;
+      const key = event.key.toLowerCase();
+
+      if (isModifierPressed && key === "s") {
+        event.preventDefault();
+        saveGraph();
+      }
+
+      if (isModifierPressed && key === "r") {
+        event.preventDefault();
+        resetGraph();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeGraphId, title, expressions, nextColorIndex]);
 
   return (
     <main className="app">
