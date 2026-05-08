@@ -21,63 +21,113 @@ Main goals:
 
 ## Current features
 
+### App foundation
+
 - Tauri desktop app
 - React + TypeScript frontend
 - dark interface
 - graph canvas renderer
-- editable function plotting
+
+### Graph viewport
+
 - mouse/touchpad zoom
 - drag to pan
 - square graph units
 - double-click to reset viewport
+
+### Expressions
+
+- editable function plotting
 - multiple expressions
+- pressing Enter in an expression creates a new expression
+- deletable final expression
 - turn graph lines on and off
 - change each line color
+
+### Math engine
+
+- normal math evaluation for non-graph expressions
+- basic sliders for numeric variable expressions
+
+### Points
+
+- point plotting with expressions like `(1, 2)`
+- variable-based point plotting, like `(a, b)`
+- point coordinate labels on hover and click
+
+### Saving and library
+
+- clean startup graph
+- local graph library
+- saved graphs remain available in the local library
 - local current graph saving
 - import and export JSON graph files
-- local graph library
-- clean startup graph
-- saved graphs remain available in the local library
-- deletable final expression
-- scrollable sidebar for many expressions and library items
-- normal math evaluation for non-graph expressions
+
+### Keyboard shortcuts
+
 - Ctrl+S to save
 - Ctrl+R to reset
-- basic sliders for numeric variable expressions
-- pressing Enter in an expression creates a new expression
-- point plotting with expressions like (1, 2)
-- variable-based point plotting, like (a, b)
-- point coordinate labels on hover and click
+
+### Interface
+
+- scrollable sidebar for many expressions and library items
 
 ## Future ideas
 
+### Graph controls
+
 - zoom in and zoom out buttons
 - reset view button
+- collapsible sidebar / graph-only mode
+
+### Math and expression input
+
 - normal calculator/math evaluation like Desmos
 - on-screen math keyboard
+- keyboard shortcuts
+- Ctrl+W deletes the currently focused expression
+
+### Sliders
+
 - sliders for variable expressions
 - slider accent colors should match their graph line colors
 - custom slider min, max, and step values
 - animated sliders
-- tables
-- inequalities
-- implicit equations
-- PNG export
-- themes
-- keyboard shortcuts
-- collapsible sidebar / graph-only mode
+
+### Tables
+
+- real editable table UI for point data
+- add/remove table rows
+- copy/paste table data from spreadsheets
+- optional connected table points
+
+### Points and intersections
+
+- Desmos-style point coordinate labels on hover/click
 - intersection points between graphs
 - show a dot where curves intersect
 - display the intersection coordinates
 - Desmos-like point hover / selection behavior
-- Ctrl+W deletes the currently focused expression
-- Desmos-style point coordinate labels on hover/click
-- restyled color picker that matches Axiom’s theme
+
+### Advanced graphing
+
+- inequalities
+- implicit equations
+
+### Export and sharing
+
+- PNG export
+
+### Design and settings
+
+- themes
 - settings panel
 - toggleable light/dark theme in settings
+- restyled color picker that matches Axiom’s theme
 
-- long-term goal: functionality on par with or beyond Desmos
+### Long-term goal
 
+- functionality on par with or beyond Desmos
 ## Development
 
 Run:
