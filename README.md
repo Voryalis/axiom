@@ -59,6 +59,10 @@ Main goals:
 - Ctrl+S to save
 - Ctrl+R to reset
 - collapsible sidebar / graph-only mode
+- intersection points between graphs
+- show a dot where curves intersect
+- display the intersection coordinates
+- Desmos-like point hover / selection behavior
 
 - long-term goal: functionality on par with or beyond Desmos
 

@@ -374,3 +374,46 @@ input {
   color: #9da1aa;
   font-size: 12px;
 }
+
+.expression-card {
+  align-items: flex-start;
+}
+
+.expression-input-stack {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 4px;
+}
+
+.expression-textarea {
+  width: 100%;
+  min-height: 24px;
+  border: 0;
+  outline: 0;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: #f1f1f1;
+  font: inherit;
+  line-height: 1.35;
+  padding: 0;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.expression-textarea::placeholder {
+  color: #7f858f;
+}
+
+.expression-result {
+  color: #9da1aa;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.color-picker-label,
+.remove-button {
+  margin-top: 2px;
+}

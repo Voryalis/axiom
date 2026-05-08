@@ -230,9 +230,11 @@ function draw(
   drawGrid(ctx, width, height, viewport);
   drawLabels(ctx, width, height, viewport);
 
+  const scope = buildEvaluationScope(expressions);
+
   for (const expression of expressions) {
     if (!expression.visible) continue;
-    drawExpression(ctx, width, height, expression, viewport);
+    drawExpression(ctx, width, height, expression, viewport, scope);
   }
 }
 
@@ -250,8 +252,52 @@ function normalizeExpression(raw: string) {
   return trimmed;
 }
 
+function isVariableAssignment(rawExpression: string) {
+  const trimmed = rawExpression.trim();
+
+  if (trimmed.toLowerCase().startsWith("y=")) return false;
+  if (trimmed.toLowerCase().startsWith("y =")) return false;
+
+  return /^[a-zA-Z]\w*\s*=/.test(trimmed);
+}
+
+function parseVariableAssignment(rawExpression: string) {
+  const match = rawExpression.trim().match(/^([a-zA-Z]\w*)\s*=\s*(.+)$/);
+
+  if (!match) return null;
+
+  const [, name, expression] = match;
+
+  if (!name || !expression) return null;
+
+  return { name, expression };
+}
+
+function buildEvaluationScope(expressions: GraphExpression[]) {
+  const scope: Record<string, number> = {};
+
+  for (const item of expressions) {
+    const assignment = parseVariableAssignment(item.raw);
+
+    if (!assignment) continue;
+    if (assignment.name === "x" || assignment.name === "y") continue;
+
+    try {
+      const value = math.evaluate(assignment.expression, scope);
+
+      if (typeof value === "number" && Number.isFinite(value)) {
+        scope[assignment.name] = value;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return scope;
+}
+
 function isGraphLikeExpression(rawExpression: string) {
-  return rawExpression.trim().length > 0;
+  return rawExpression.trim().length > 0 && !isVariableAssignment(rawExpression);
 }
 
 function graphToScreenX(x: number, width: number, viewport: Viewport) {
@@ -359,6 +405,7 @@ function drawExpression(
   height: number,
   graphExpression: GraphExpression,
   viewport: Viewport,
+  scope: Record<string, number>,
 ) {
   if (!isGraphLikeExpression(graphExpression.raw)) return;
 
@@ -387,7 +434,7 @@ function drawExpression(
     let y: unknown;
 
     try {
-      y = compiled.evaluate({ x });
+      y = compiled.evaluate({ ...scope, x });
     } catch {
       started = false;
       continue;

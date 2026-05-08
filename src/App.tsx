@@ -140,15 +140,6 @@ function saveGraphLibrary(graphs: SavedGraph[]) {
   localStorage.setItem(GRAPH_LIBRARY_KEY, JSON.stringify(graphs, null, 2));
 }
 
-function isGraphLikeExpression(raw: string) {
-  const trimmed = raw.trim().toLowerCase();
-
-  if (!trimmed) return false;
-  if (trimmed.startsWith("y=") || trimmed.startsWith("y =")) return true;
-
-  return /\bx\b/.test(trimmed);
-}
-
 function normalizeMathExpression(raw: string) {
   const trimmed = raw.trim();
 
@@ -163,26 +154,76 @@ function normalizeMathExpression(raw: string) {
   return trimmed;
 }
 
-function evaluateMathExpression(raw: string) {
-  const expression = normalizeMathExpression(raw);
+function parseVariableAssignment(rawExpression: string) {
+  const match = rawExpression.trim().match(/^([a-zA-Z]\w*)\s*=\s*(.+)$/);
 
-  if (!expression || isGraphLikeExpression(raw)) {
-    return "";
+  if (!match) return null;
+
+  const [, name, expression] = match;
+
+  if (!name || !expression) return null;
+  if (name === "x" || name === "y") return null;
+
+  return { name, expression };
+}
+
+function buildEvaluationScope(expressions: GraphExpression[]) {
+  const scope: Record<string, number> = {};
+
+  for (const item of expressions) {
+    const assignment = parseVariableAssignment(item.raw);
+
+    if (!assignment) continue;
+
+    try {
+      const value = math.evaluate(assignment.expression, scope);
+
+      if (typeof value === "number" && Number.isFinite(value)) {
+        scope[assignment.name] = value;
+      }
+    } catch {
+      continue;
+    }
   }
 
+  return scope;
+}
+
+function formatEvaluatedValue(value: unknown) {
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) return "undefined";
+    return `= ${Number(value.toPrecision(12)).toString()}`;
+  }
+
+  if (typeof value?.toString === "function") {
+    return `= ${value.toString()}`;
+  }
+
+  return "";
+}
+
+function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
+  const expression = normalizeMathExpression(raw);
+  const assignment = parseVariableAssignment(raw);
+  const scope = buildEvaluationScope(expressions);
+
+  if (!expression) return "";
+
   try {
-    const value = math.evaluate(expression);
-
-    if (typeof value === "number") {
-      if (!Number.isFinite(value)) return "undefined";
-      return `= ${Number(value.toPrecision(12)).toString()}`;
+    if (assignment) {
+      const value = math.evaluate(assignment.expression, scope);
+      return formatEvaluatedValue(value);
     }
 
-    if (typeof value?.toString === "function") {
-      return `= ${value.toString()}`;
+    const compiled = math.compile(expression);
+    const usesX = /\bx\b/.test(expression);
+
+    if (usesX) {
+      return "";
     }
 
-    return "";
+    const value = compiled.evaluate(scope);
+    return formatEvaluatedValue(value);
   } catch {
     return "invalid";
   }
@@ -190,20 +231,38 @@ function evaluateMathExpression(raw: string) {
 
 function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const expressionInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const expressionInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>(
+    {},
+  );
 
   const startingExpressions = useMemo(() => createDefaultExpressions(), []);
 
   const [activeGraphId, setActiveGraphId] = useState<string>(crypto.randomUUID());
   const [title, setTitle] = useState("Untitled Graph");
-  const [expressions, setExpressions] = useState<GraphExpression[]>(startingExpressions);
+  const [expressions, setExpressions] = useState<GraphExpression[]>(
+    startingExpressions,
+  );
   const [nextColorIndex, setNextColorIndex] = useState(startingExpressions.length);
   const [library, setLibrary] = useState<SavedGraph[]>(() => loadGraphLibrary());
   const [saveStatus, setSaveStatus] = useState("Clean graph");
 
+  function resizeExpressionInput(element: HTMLTextAreaElement | null) {
+    if (!element) return;
+
+    element.style.height = "0px";
+    element.style.height = `${element.scrollHeight}px`;
+  }
+
   function focusExpression(id: string) {
     requestAnimationFrame(() => {
-      expressionInputRefs.current[id]?.focus();
+      const element = expressionInputRefs.current[id];
+      if (!element) return;
+
+      resizeExpressionInput(element);
+      element.focus();
+
+      const length = element.value.length;
+      element.setSelectionRange(length, length);
     });
   }
 
@@ -250,7 +309,9 @@ function App() {
   }
 
   function removeExpression(id: string) {
-    setExpressions((current) => current.filter((expression) => expression.id !== id));
+    setExpressions((current) =>
+      current.filter((expression) => expression.id !== id),
+    );
     markUnsaved();
   }
 
@@ -274,7 +335,9 @@ function App() {
       return next;
     });
 
-    setSaveStatus(`Saved to library ${new Date(graph.updatedAt).toLocaleTimeString()}`);
+    setSaveStatus(
+      `Saved to library ${new Date(graph.updatedAt).toLocaleTimeString()}`,
+    );
   }
 
   function loadGraph(graph: SavedGraph) {
@@ -409,6 +472,12 @@ function App() {
     };
   }, [activeGraphId, title, expressions, nextColorIndex]);
 
+  useEffect(() => {
+    for (const expression of expressions) {
+      resizeExpressionInput(expressionInputRefs.current[expression.id] ?? null);
+    }
+  }, [expressions]);
+
   return (
     <main className="app">
       <aside className="sidebar">
@@ -433,7 +502,7 @@ function App() {
           ) : (
             <div className="expression-list">
               {expressions.map((expression) => {
-                const result = evaluateMathExpression(expression.raw);
+                const result = evaluateMathExpression(expression.raw, expressions);
 
                 return (
                   <div
@@ -445,7 +514,9 @@ function App() {
                     <button
                       className="visibility-button"
                       onClick={() => toggleExpression(expression.id)}
-                      title={expression.visible ? "Hide expression" : "Show expression"}
+                      title={
+                        expression.visible ? "Hide expression" : "Show expression"
+                      }
                       style={{ borderColor: expression.color }}
                     >
                       <span
@@ -459,19 +530,29 @@ function App() {
                     </button>
 
                     <div className="expression-input-stack">
-                      <input
+                      <textarea
                         ref={(element) => {
                           expressionInputRefs.current[expression.id] = element;
+                          resizeExpressionInput(element);
                         }}
+                        className="expression-textarea"
+                        rows={1}
                         value={expression.raw}
                         onChange={(event) =>
                           updateExpression(expression.id, event.target.value)
+                        }
+                        onInput={(event) =>
+                          resizeExpressionInput(
+                            event.currentTarget as HTMLTextAreaElement,
+                          )
                         }
                         placeholder="Type an expression..."
                         spellCheck={false}
                       />
 
-                      {result ? <span className="expression-result">{result}</span> : null}
+                      {result ? (
+                        <span className="expression-result">{result}</span>
+                      ) : null}
                     </div>
 
                     <label className="color-picker-label" title="Change line color">
@@ -499,7 +580,7 @@ function App() {
           )}
 
           <p className="hint">
-            Try: y = x^2, 2 + 2, sin(pi / 2), sqrt(16)
+            Try: a = 2, b = 3, y = a*x + b, a + b
           </p>
         </section>
 
