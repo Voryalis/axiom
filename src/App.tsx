@@ -1,32 +1,87 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import GraphCanvas, { type GraphExpression } from "./components/GraphCanvas";
 import "./App.css";
 
-const STORAGE_KEY = "axiom.currentGraph";
+const CURRENT_GRAPH_KEY = "axiom.currentGraph";
+const GRAPH_LIBRARY_KEY = "axiom.graphLibrary";
 
 type SavedGraph = {
+  id: string;
   version: number;
   title: string;
   expressions: GraphExpression[];
   updatedAt: string;
 };
 
+const COLORS = ["#8ab4f8", "#a8d08d", "#f6c177", "#c4a7e7", "#f28b82"];
+
 const DEFAULT_EXPRESSIONS: GraphExpression[] = [
   {
     id: "expr-1",
     raw: "y = x^2",
-    color: "#8ab4f8",
+    color: COLORS[0],
     visible: true,
   },
   {
     id: "expr-2",
     raw: "y = sin(x)",
-    color: "#a8d08d",
+    color: COLORS[1],
     visible: true,
   },
 ];
 
-const COLORS = ["#8ab4f8", "#a8d08d", "#f6c177", "#c4a7e7", "#f28b82"];
+function hslToHex(hue: number, saturation: number, lightness: number) {
+  const s = saturation / 100;
+  const l = lightness / 100;
+
+  const chroma = (1 - Math.abs(2 * l - 1)) * s;
+  const huePrime = hue / 60;
+  const x = chroma * (1 - Math.abs((huePrime % 2) - 1));
+
+  let red = 0;
+  let green = 0;
+  let blue = 0;
+
+  if (huePrime >= 0 && huePrime < 1) {
+    red = chroma;
+    green = x;
+  } else if (huePrime >= 1 && huePrime < 2) {
+    red = x;
+    green = chroma;
+  } else if (huePrime >= 2 && huePrime < 3) {
+    green = chroma;
+    blue = x;
+  } else if (huePrime >= 3 && huePrime < 4) {
+    green = x;
+    blue = chroma;
+  } else if (huePrime >= 4 && huePrime < 5) {
+    red = x;
+    blue = chroma;
+  } else if (huePrime >= 5 && huePrime < 6) {
+    red = chroma;
+    blue = x;
+  }
+
+  const match = l - chroma / 2;
+
+  const toHex = (value: number) => {
+    const channel = Math.round((value + match) * 255);
+    return channel.toString(16).padStart(2, "0");
+  };
+
+  return `#${toHex(red)}${toHex(green)}${toHex(blue)}`;
+}
+
+function generateExpressionColor(index: number) {
+  if (index < COLORS.length) {
+    return COLORS[index];
+  }
+
+  const generatedIndex = index - COLORS.length;
+  const hue = (generatedIndex * 137.508 + 28) % 360;
+
+  return hslToHex(hue, 78, 72);
+}
 
 function isValidExpression(value: unknown): value is GraphExpression {
   if (typeof value !== "object" || value === null) return false;
@@ -53,41 +108,75 @@ function isValidSavedGraph(value: unknown): value is SavedGraph {
   );
 }
 
-function loadSavedGraph(): SavedGraph | null {
+function normalizeGraph(value: SavedGraph): SavedGraph {
+  return {
+    id: typeof value.id === "string" ? value.id : crypto.randomUUID(),
+    version: typeof value.version === "number" ? value.version : 1,
+    title: value.title,
+    expressions: value.expressions,
+    updatedAt:
+      typeof value.updatedAt === "string"
+        ? value.updatedAt
+        : new Date().toISOString(),
+  };
+}
+
+function loadCurrentGraph(): SavedGraph | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(CURRENT_GRAPH_KEY);
     if (!raw) return null;
 
     const parsed = JSON.parse(raw);
 
     if (!isValidSavedGraph(parsed)) return null;
 
-    return {
-      version: parsed.version ?? 1,
-      title: parsed.title,
-      expressions: parsed.expressions,
-      updatedAt: parsed.updatedAt ?? new Date().toISOString(),
-    };
+    return normalizeGraph(parsed);
   } catch {
     return null;
   }
 }
 
+function loadGraphLibrary(): SavedGraph[] {
+  try {
+    const raw = localStorage.getItem(GRAPH_LIBRARY_KEY);
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.filter(isValidSavedGraph).map(normalizeGraph);
+  } catch {
+    return [];
+  }
+}
+
+function saveGraphLibrary(graphs: SavedGraph[]) {
+  localStorage.setItem(GRAPH_LIBRARY_KEY, JSON.stringify(graphs, null, 2));
+}
+
 function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const savedGraph = loadSavedGraph();
+  const savedGraph = useMemo(() => loadCurrentGraph(), []);
 
+  const [activeGraphId, setActiveGraphId] = useState(
+    savedGraph?.id ?? crypto.randomUUID(),
+  );
   const [title, setTitle] = useState(savedGraph?.title ?? "Untitled Graph");
   const [expressions, setExpressions] = useState<GraphExpression[]>(
     savedGraph?.expressions ?? DEFAULT_EXPRESSIONS,
   );
+  const [nextColorIndex, setNextColorIndex] = useState(
+    savedGraph?.expressions?.length ?? DEFAULT_EXPRESSIONS.length,
+  );
+  const [library, setLibrary] = useState<SavedGraph[]>(() => loadGraphLibrary());
   const [saveStatus, setSaveStatus] = useState("Not saved");
 
   useEffect(() => {
     if (savedGraph?.updatedAt) {
       setSaveStatus(`Loaded ${new Date(savedGraph.updatedAt).toLocaleString()}`);
     }
-  }, []);
+  }, [savedGraph]);
 
   function markUnsaved() {
     setSaveStatus("Unsaved changes");
@@ -123,15 +212,19 @@ function App() {
   }
 
   function addExpression() {
+    const color = generateExpressionColor(nextColorIndex);
+
     setExpressions((current) => [
       ...current,
       {
         id: crypto.randomUUID(),
         raw: "y = x",
-        color: COLORS[current.length % COLORS.length],
+        color,
         visible: true,
       },
     ]);
+
+    setNextColorIndex((current) => current + 1);
     markUnsaved();
   }
 
@@ -145,6 +238,7 @@ function App() {
 
   function createGraphSnapshot(): SavedGraph {
     return {
+      id: activeGraphId,
       version: 1,
       title,
       expressions,
@@ -155,13 +249,54 @@ function App() {
   function saveGraph() {
     const graph = createGraphSnapshot();
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(graph, null, 2));
+    localStorage.setItem(CURRENT_GRAPH_KEY, JSON.stringify(graph, null, 2));
+
+    setLibrary((current) => {
+      const withoutCurrent = current.filter((item) => item.id !== graph.id);
+      const next = [graph, ...withoutCurrent];
+      saveGraphLibrary(next);
+      return next;
+    });
+
     setSaveStatus(`Saved ${new Date(graph.updatedAt).toLocaleTimeString()}`);
+  }
+
+  function loadGraph(graph: SavedGraph) {
+    const normalized = normalizeGraph(graph);
+
+    setActiveGraphId(normalized.id);
+    setTitle(normalized.title);
+    setExpressions(normalized.expressions);
+    setNextColorIndex(normalized.expressions.length);
+
+    localStorage.setItem(CURRENT_GRAPH_KEY, JSON.stringify(normalized, null, 2));
+    setSaveStatus(`Loaded ${new Date(normalized.updatedAt).toLocaleString()}`);
+  }
+
+  function newGraph() {
+    setActiveGraphId(crypto.randomUUID());
+    setTitle("Untitled Graph");
+    setExpressions(DEFAULT_EXPRESSIONS);
+    setNextColorIndex(DEFAULT_EXPRESSIONS.length);
+    markUnsaved();
+  }
+
+  function deleteGraph(id: string) {
+    setLibrary((current) => {
+      const next = current.filter((graph) => graph.id !== id);
+      saveGraphLibrary(next);
+      return next;
+    });
+
+    if (id === activeGraphId) {
+      newGraph();
+    }
   }
 
   function resetGraph() {
     setTitle("Untitled Graph");
     setExpressions(DEFAULT_EXPRESSIONS);
+    setNextColorIndex(DEFAULT_EXPRESSIONS.length);
     markUnsaved();
   }
 
@@ -202,8 +337,16 @@ function App() {
         return;
       }
 
-      setTitle(parsed.title);
-      setExpressions(parsed.expressions);
+      const imported = normalizeGraph({
+        ...parsed,
+        id: crypto.randomUUID(),
+        updatedAt: new Date().toISOString(),
+      });
+
+      setActiveGraphId(imported.id);
+      setTitle(imported.title);
+      setExpressions(imported.expressions);
+      setNextColorIndex(imported.expressions.length);
       setSaveStatus("Imported JSON");
     } catch {
       setSaveStatus("Invalid JSON graph file");
@@ -228,7 +371,7 @@ function App() {
         <section className="panel">
           <div className="panel-header">
             <h2>Expressions</h2>
-            <button className="small-button" onClick={addExpression}>
+            <button className="add-expression-button" onClick={addExpression}>
               +
             </button>
           </div>
@@ -236,7 +379,9 @@ function App() {
           <div className="expression-list">
             {expressions.map((expression) => (
               <div
-                className={`expression-card ${expression.visible ? "" : "expression-card-hidden"}`}
+                className={`expression-card ${
+                  expression.visible ? "" : "expression-card-hidden"
+                }`}
                 key={expression.id}
               >
                 <button
@@ -248,14 +393,18 @@ function App() {
                   <span
                     className="visibility-dot"
                     style={{
-                      background: expression.visible ? expression.color : "transparent",
+                      background: expression.visible
+                        ? expression.color
+                        : "transparent",
                     }}
                   />
                 </button>
 
                 <input
                   value={expression.raw}
-                  onChange={(event) => updateExpression(expression.id, event.target.value)}
+                  onChange={(event) =>
+                    updateExpression(expression.id, event.target.value)
+                  }
                   spellCheck={false}
                 />
 
@@ -281,7 +430,49 @@ function App() {
             ))}
           </div>
 
-          <p className="hint">Try: y = x^2, y = sin(x), y = cos(x), y = sqrt(x)</p>
+          <p className="hint">
+            Try: y = x^2, y = sin(x), y = cos(x), y = sqrt(x)
+          </p>
+        </section>
+
+        <section className="panel library-panel">
+          <div className="panel-header">
+            <h2>Library</h2>
+            <button className="new-graph-button" onClick={newGraph}>
+              New
+            </button>
+          </div>
+
+          {library.length === 0 ? (
+            <p className="empty-library">No saved graphs yet.</p>
+          ) : (
+            <div className="library-list">
+              {library.map((graph) => (
+                <div
+                  className={`library-item ${
+                    graph.id === activeGraphId ? "library-item-active" : ""
+                  }`}
+                  key={graph.id}
+                >
+                  <button
+                    className="library-load-button"
+                    onClick={() => loadGraph(graph)}
+                  >
+                    <span>{graph.title || "Untitled Graph"}</span>
+                    <small>{new Date(graph.updatedAt).toLocaleString()}</small>
+                  </button>
+
+                  <button
+                    className="remove-button"
+                    onClick={() => deleteGraph(graph.id)}
+                    title="Delete saved graph"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </aside>
 

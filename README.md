@@ -35,12 +35,12 @@ Main goals:
 - change each line color
 - local current graph saving
 - import and export JSON graph files
+- local graph library
 
 ## Future ideas
 
 - zoom in and zoom out buttons
 - reset view button
-- local graph library
 - normal calculator/math evaluation like Desmos
 - on-screen math keyboard
 - sliders
