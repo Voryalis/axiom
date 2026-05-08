@@ -473,3 +473,37 @@ input {
   outline: 2px solid #8ab4f8;
   outline-offset: 2px;
 }
+
+.graph-floating-controls {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  display: grid;
+  gap: 8px;
+  z-index: 5;
+}
+
+.graph-floating-controls button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #3a3f4b;
+  border-radius: 12px;
+  background: rgba(38, 40, 46, 0.95);
+  color: #e7eaf0;
+  font-size: 22px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+.graph-floating-controls button:hover {
+  background: rgba(48, 51, 58, 0.98);
+  border-color: #4b5260;
+}
+
+.graph-floating-controls button:focus-visible {
+  outline: 2px solid #8ab4f8;
+  outline-offset: 2px;
+}

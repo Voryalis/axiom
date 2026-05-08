@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { all, create } from "mathjs";
-import GraphCanvas, { type GraphCanvasHandle, type GraphExpression } from "./components/GraphCanvas";
+import GraphCanvas, {
+  type GraphCanvasHandle,
+  type GraphExpression,
+} from "./components/GraphCanvas";
 import "./App.css";
 
 const math = create(all, {});
@@ -524,9 +527,17 @@ function App() {
     setSaveStatus("Exported PNG");
   }
 
-function resetView() {
-  graphCanvasRef.current?.resetView();
-}
+  function resetView() {
+    graphCanvasRef.current?.resetView();
+  }
+
+  function zoomIn() {
+    graphCanvasRef.current?.zoomIn();
+  }
+
+  function zoomOut() {
+    graphCanvasRef.current?.zoomOut();
+  }
 
   async function importJson(file: File | undefined) {
     if (!file) return;
@@ -803,14 +814,18 @@ function resetView() {
 
         <div className="graph-stage">
           <GraphCanvas ref={graphCanvasRef} expressions={expressions} />
-           <button
-    className="reset-view-floating-button"
-    onClick={resetView}
-    title="Reset view"
-    aria-label="Reset view"
-  >
-    ↺
-  </button>
+
+          <div className="graph-floating-controls">
+            <button onClick={zoomIn} title="Zoom in" aria-label="Zoom in">
+              +
+            </button>
+            <button onClick={zoomOut} title="Zoom out" aria-label="Zoom out">
+              −
+            </button>
+            <button onClick={resetView} title="Reset view" aria-label="Reset view">
+              ↺
+            </button>
+          </div>
         </div>
       </section>
     </main>

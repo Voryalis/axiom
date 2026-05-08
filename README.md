@@ -34,6 +34,7 @@ Main goals:
 - drag to pan
 - square graph units
 - double-click to reset viewport
+- floating zoom in, zoom out, and reset view controls
 
 ### Expressions
 
@@ -79,8 +80,6 @@ Main goals:
 
 ### Graph controls
 
-- zoom in and zoom out buttons
-- reset view button
 - collapsible sidebar / graph-only mode
 
 ### Math and expression input
@@ -132,6 +131,7 @@ Table expression
 - settings panel
 - toggleable light/dark theme in settings
 - restyled color picker that matches Axiom’s theme
+- replace topbar text buttons like Save, Reset, Import, and Export with clean icon/symbol buttons
 
 ### Long-term goal
 
