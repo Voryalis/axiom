@@ -173,28 +173,56 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(function Gra
 
   useEffect(() => {
     const preventNativeZoom = (event: WheelEvent) => {
-      if (event.ctrlKey) {
+      if (event.ctrlKey || event.metaKey) {
         event.preventDefault();
+        event.stopPropagation();
       }
     };
 
     const preventGesture = (event: Event) => {
       event.preventDefault();
+      event.stopPropagation();
     };
+
+    document.addEventListener("wheel", preventNativeZoom, {
+      passive: false,
+      capture: true,
+    });
 
     window.addEventListener("wheel", preventNativeZoom, {
       passive: false,
       capture: true,
     });
-    window.addEventListener("gesturestart", preventGesture, { passive: false });
-    window.addEventListener("gesturechange", preventGesture, { passive: false });
-    window.addEventListener("gestureend", preventGesture, { passive: false });
+
+    document.addEventListener("gesturestart", preventGesture, {
+      passive: false,
+      capture: true,
+    });
+    document.addEventListener("gesturechange", preventGesture, {
+      passive: false,
+      capture: true,
+    });
+    document.addEventListener("gestureend", preventGesture, {
+      passive: false,
+      capture: true,
+    });
 
     return () => {
-      window.removeEventListener("wheel", preventNativeZoom, { capture: true });
-      window.removeEventListener("gesturestart", preventGesture);
-      window.removeEventListener("gesturechange", preventGesture);
-      window.removeEventListener("gestureend", preventGesture);
+      document.removeEventListener("wheel", preventNativeZoom, {
+        capture: true,
+      });
+      window.removeEventListener("wheel", preventNativeZoom, {
+        capture: true,
+      });
+      document.removeEventListener("gesturestart", preventGesture, {
+        capture: true,
+      });
+      document.removeEventListener("gesturechange", preventGesture, {
+        capture: true,
+      });
+      document.removeEventListener("gestureend", preventGesture, {
+        capture: true,
+      });
     };
   }, []);
 
@@ -726,27 +754,34 @@ function drawGrid(
   height: number,
   viewport: Viewport,
 ) {
-  const step = getGridStep(viewport.xMax - viewport.xMin);
+  const majorStep = getGridStep(viewport.xMax - viewport.xMin);
+  const minorStep = majorStep / 5;
 
   ctx.lineWidth = 1;
 
-  const firstX = Math.ceil(viewport.xMin / step) * step;
-  for (let x = firstX; x <= viewport.xMax; x += step) {
+  const firstMinorX = Math.ceil(viewport.xMin / minorStep) * minorStep;
+  for (let x = firstMinorX; x <= viewport.xMax; x += minorStep) {
     const sx = graphToScreenX(x, width, viewport);
+    const isAxis = Math.abs(x) < minorStep / 1000;
+    const isMajor = Math.abs(x / majorStep - Math.round(x / majorStep)) < 0.001;
 
     ctx.beginPath();
-    ctx.strokeStyle = Math.abs(x) < step / 1000 ? "#555963" : "#2a2c31";
+    ctx.strokeStyle = isAxis ? "#6b707c" : isMajor ? "#3b3f48" : "#272a30";
+    ctx.lineWidth = isAxis ? 1.4 : 1;
     ctx.moveTo(sx, 0);
     ctx.lineTo(sx, height);
     ctx.stroke();
   }
 
-  const firstY = Math.ceil(viewport.yMin / step) * step;
-  for (let y = firstY; y <= viewport.yMax; y += step) {
+  const firstMinorY = Math.ceil(viewport.yMin / minorStep) * minorStep;
+  for (let y = firstMinorY; y <= viewport.yMax; y += minorStep) {
     const sy = graphToScreenY(y, height, viewport);
+    const isAxis = Math.abs(y) < minorStep / 1000;
+    const isMajor = Math.abs(y / majorStep - Math.round(y / majorStep)) < 0.001;
 
     ctx.beginPath();
-    ctx.strokeStyle = Math.abs(y) < step / 1000 ? "#555963" : "#2a2c31";
+    ctx.strokeStyle = isAxis ? "#6b707c" : isMajor ? "#3b3f48" : "#272a30";
+    ctx.lineWidth = isAxis ? 1.4 : 1;
     ctx.moveTo(0, sy);
     ctx.lineTo(width, sy);
     ctx.stroke();
