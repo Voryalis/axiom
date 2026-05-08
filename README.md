@@ -102,6 +102,7 @@ Main goals:
 - optional connected table points
 - table UI should have a toggle/button for connected lines vs points only
 - text-based table syntax is temporary and should be replaced with a user-friendly table interface
+- table connected-lines mode should later support both straight segments and optional smooth curve interpolation
 
 Table expression
 [x] show points
