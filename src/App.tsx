@@ -1,6 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import GraphCanvas, { type GraphExpression } from "./components/GraphCanvas";
 import "./App.css";
+
+const STORAGE_KEY = "axiom.currentGraph";
+
+type SavedGraph = {
+  title: string;
+  expressions: GraphExpression[];
+  updatedAt: string;
+};
 
 const DEFAULT_EXPRESSIONS: GraphExpression[] = [
   {
@@ -19,8 +27,35 @@ const DEFAULT_EXPRESSIONS: GraphExpression[] = [
 
 const COLORS = ["#8ab4f8", "#a8d08d", "#f6c177", "#c4a7e7", "#f28b82"];
 
+function loadSavedGraph(): SavedGraph | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as SavedGraph;
+
+    if (!Array.isArray(parsed.expressions)) return null;
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 function App() {
-  const [expressions, setExpressions] = useState<GraphExpression[]>(DEFAULT_EXPRESSIONS);
+  const savedGraph = loadSavedGraph();
+
+  const [title, setTitle] = useState(savedGraph?.title ?? "Untitled Graph");
+  const [expressions, setExpressions] = useState<GraphExpression[]>(
+    savedGraph?.expressions ?? DEFAULT_EXPRESSIONS,
+  );
+  const [saveStatus, setSaveStatus] = useState("Not saved");
+
+  useEffect(() => {
+    if (savedGraph?.updatedAt) {
+      setSaveStatus(`Loaded ${new Date(savedGraph.updatedAt).toLocaleString()}`);
+    }
+  }, []);
 
   function updateExpression(id: string, raw: string) {
     setExpressions((current) =>
@@ -28,6 +63,7 @@ function App() {
         expression.id === id ? { ...expression, raw } : expression,
       ),
     );
+    setSaveStatus("Unsaved changes");
   }
 
   function addExpression() {
@@ -40,6 +76,7 @@ function App() {
         visible: true,
       },
     ]);
+    setSaveStatus("Unsaved changes");
   }
 
   function removeExpression(id: string) {
@@ -47,6 +84,24 @@ function App() {
       if (current.length === 1) return current;
       return current.filter((expression) => expression.id !== id);
     });
+    setSaveStatus("Unsaved changes");
+  }
+
+  function saveGraph() {
+    const graph: SavedGraph = {
+      title,
+      expressions,
+      updatedAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(graph, null, 2));
+    setSaveStatus(`Saved ${new Date(graph.updatedAt).toLocaleTimeString()}`);
+  }
+
+  function resetGraph() {
+    setTitle("Untitled Graph");
+    setExpressions(DEFAULT_EXPRESSIONS);
+    setSaveStatus("Unsaved changes");
   }
 
   return (
@@ -97,8 +152,21 @@ function App() {
 
       <section className="graph-area">
         <div className="topbar">
-          <span>Untitled Graph</span>
-          <button>Save</button>
+          <input
+            className="title-input"
+            value={title}
+            onChange={(event) => {
+              setTitle(event.target.value);
+              setSaveStatus("Unsaved changes");
+            }}
+            spellCheck={false}
+          />
+
+          <div className="topbar-actions">
+            <span className="save-status">{saveStatus}</span>
+            <button onClick={resetGraph}>Reset</button>
+            <button onClick={saveGraph}>Save</button>
+          </div>
         </div>
 
         <div className="graph-stage">

@@ -200,3 +200,25 @@ input {
   background: #2b2d32;
   color: #f1f1f1;
 }
+
+.title-input {
+  width: min(420px, 45vw);
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #d8d9dd;
+  font: inherit;
+  font-weight: 600;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.save-status {
+  color: #7f858f;
+  font-size: 12px;
+  white-space: nowrap;
+}
