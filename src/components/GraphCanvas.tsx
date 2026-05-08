@@ -146,7 +146,10 @@ function GraphCanvas({ expressions }: GraphCanvasProps) {
       pinnedPointRef.current = freshPinnedPoint;
       hoveredPointRef.current = freshHoveredPoint;
 
-      if (freshHoveredPoint && freshHoveredPoint.expressionId !== freshPinnedPoint?.expressionId) {
+      if (
+        freshHoveredPoint &&
+        freshHoveredPoint.expressionId !== freshPinnedPoint?.expressionId
+      ) {
         drawPointLabel(ctx, rect.width, rect.height, freshHoveredPoint);
       }
 
@@ -329,6 +332,28 @@ function draw(
   for (const expression of expressions) {
     if (!expression.visible) continue;
 
+    const tablePoints = parseTableExpression(expression.raw, scope);
+
+    if (tablePoints.length > 0) {
+      tablePoints.forEach((point, index) => {
+        const renderedPoint = drawPoint(
+          ctx,
+          width,
+          height,
+          point,
+          expression.color,
+          `${expression.id}-table-${index}`,
+          viewport,
+        );
+
+        if (renderedPoint) {
+          renderedPoints.push(renderedPoint);
+        }
+      });
+
+      continue;
+    }
+
     const point = parsePointExpression(expression.raw, scope);
 
     if (point) {
@@ -446,8 +471,76 @@ function parsePointExpression(
   }
 }
 
+function parseTableExpression(
+  rawExpression: string,
+  scope: Record<string, number>,
+): GraphPoint[] {
+  const lines = rawExpression
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length < 2) return [];
+
+  const firstLine = lines[0]?.toLowerCase();
+
+  if (firstLine !== "table:" && firstLine !== "table") {
+    return [];
+  }
+
+  const dataLines = lines.slice(1);
+  const rows =
+    dataLines[0]?.toLowerCase().replace(/\s/g, "") === "x,y"
+      ? dataLines.slice(1)
+      : dataLines;
+
+  const points: GraphPoint[] = [];
+
+  for (const row of rows) {
+    const parts = row.split(",").map((part) => part.trim());
+
+    if (parts.length !== 2) continue;
+
+    const [rawX, rawY] = parts;
+
+    if (!rawX || !rawY) continue;
+
+    try {
+      const x = math.evaluate(rawX, scope);
+      const y = math.evaluate(rawY, scope);
+
+      if (
+        typeof x === "number" &&
+        typeof y === "number" &&
+        Number.isFinite(x) &&
+        Number.isFinite(y)
+      ) {
+        points.push({ x, y });
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return points;
+}
+
+function isTableExpression(rawExpression: string) {
+  const firstLine = rawExpression
+    .split("\n")
+    .find((line) => line.trim().length > 0)
+    ?.trim()
+    .toLowerCase();
+
+  return firstLine === "table:" || firstLine === "table";
+}
+
 function isGraphLikeExpression(rawExpression: string) {
-  return rawExpression.trim().length > 0 && !isVariableAssignment(rawExpression);
+  return (
+    rawExpression.trim().length > 0 &&
+    !isVariableAssignment(rawExpression) &&
+    !isTableExpression(rawExpression)
+  );
 }
 
 function graphToScreenX(x: number, width: number, viewport: Viewport) {

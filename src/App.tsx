@@ -222,6 +222,16 @@ function isPointExpression(rawExpression: string) {
   return /^\(\s*(.+)\s*,\s*(.+)\s*\)$/.test(rawExpression.trim());
 }
 
+function isTableExpression(rawExpression: string) {
+  const firstLine = rawExpression
+    .split("\n")
+    .find((line) => line.trim().length > 0)
+    ?.trim()
+    .toLowerCase();
+
+  return firstLine === "table:" || firstLine === "table";
+}
+
 function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
   const expression = normalizeMathExpression(raw);
   const assignment = parseVariableAssignment(raw);
@@ -229,7 +239,7 @@ function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
 
   if (!expression) return "";
 
-  if (isPointExpression(raw)) {
+  if (isPointExpression(raw) || isTableExpression(raw)) {
     return "";
   }
 
@@ -271,8 +281,11 @@ function App() {
 
   const [activeGraphId, setActiveGraphId] = useState<string>(crypto.randomUUID());
   const [title, setTitle] = useState("Untitled Graph");
-  const [expressions, setExpressions] = useState<GraphExpression[]>(startingExpressions);
-  const [nextColorIndex, setNextColorIndex] = useState(startingExpressions.length);
+  const [expressions, setExpressions] =
+    useState<GraphExpression[]>(startingExpressions);
+  const [nextColorIndex, setNextColorIndex] = useState(
+    startingExpressions.length,
+  );
   const [library, setLibrary] = useState<SavedGraph[]>(() => loadGraphLibrary());
   const [saveStatus, setSaveStatus] = useState("Clean graph");
   const [focusedExpressionId, setFocusedExpressionId] = useState<string | null>(
@@ -374,24 +387,27 @@ function App() {
     markUnsaved();
   }
 
-function removeExpression(id: string) {
-  const index = expressions.findIndex((expression) => expression.id === id);
-  const nextExpressions = expressions.filter((expression) => expression.id !== id);
+  function removeExpression(id: string) {
+    const index = expressions.findIndex((expression) => expression.id === id);
+    const nextExpressions = expressions.filter(
+      (expression) => expression.id !== id,
+    );
 
-  const nextFocusedExpression =
-    nextExpressions[Math.min(index, nextExpressions.length - 1)] ?? null;
+    const nextFocusedExpression =
+      nextExpressions[Math.min(index, nextExpressions.length - 1)] ?? null;
 
-  setExpressions(nextExpressions);
-  setFocusedExpressionId(nextFocusedExpression?.id ?? null);
+    setExpressions(nextExpressions);
+    setFocusedExpressionId(nextFocusedExpression?.id ?? null);
 
-  requestAnimationFrame(() => {
-    if (nextFocusedExpression) {
-      focusExpression(nextFocusedExpression.id);
-    }
-  });
+    requestAnimationFrame(() => {
+      if (nextFocusedExpression) {
+        focusExpression(nextFocusedExpression.id);
+      }
+    });
 
-  markUnsaved();
-}
+    markUnsaved();
+  }
+
   function createGraphSnapshot(): SavedGraph {
     return {
       id: activeGraphId,
@@ -694,7 +710,7 @@ function removeExpression(id: string) {
             </div>
           )}
 
-          <p className="hint">Try: a = 2, b = 3, y = a*x + b, a + b</p>
+          <p className="hint">Try: table:, x, y, -2, 4</p>
         </section>
 
         <section className="panel library-panel">
