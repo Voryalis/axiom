@@ -41,6 +41,8 @@ Main goals:
 - deletable final expression
 - scrollable sidebar for many expressions and library items
 - normal math evaluation for non-graph expressions
+- Ctrl+S to save
+- Ctrl+R to reset
 
 ## Future ideas
 
@@ -58,13 +60,12 @@ Main goals:
 - PNG export
 - themes
 - keyboard shortcuts
-- Ctrl+S to save
-- Ctrl+R to reset
 - collapsible sidebar / graph-only mode
 - intersection points between graphs
 - show a dot where curves intersect
 - display the intersection coordinates
 - Desmos-like point hover / selection behavior
+- pressing Enter in an expression creates a new expression
 
 - long-term goal: functionality on par with or beyond Desmos
 
