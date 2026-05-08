@@ -59,6 +59,8 @@ Main goals:
 - Ctrl+R to reset
 - collapsible sidebar / graph-only mode
 
+- long-term goal: functionality on par with or beyond Desmos
+
 ## Development
 
 Run:
