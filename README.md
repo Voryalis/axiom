@@ -52,6 +52,7 @@ Main goals:
 - normal calculator/math evaluation like Desmos
 - on-screen math keyboard
 - sliders for variable expressions
+- slider accent colors should match their graph line colors
 - custom slider min, max, and step values
 - animated sliders
 - points
