@@ -1,11 +1,18 @@
 import { useEffect, useRef } from "react";
+import { all, create } from "mathjs";
+
+const math = create(all, {});
 
 const X_MIN = -10;
 const X_MAX = 10;
 const Y_MIN = -10;
 const Y_MAX = 10;
 
-function GraphCanvas() {
+type GraphCanvasProps = {
+  expression: string;
+};
+
+function GraphCanvas({ expression }: GraphCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -18,7 +25,7 @@ function GraphCanvas() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const resizeObserver = new ResizeObserver(() => {
+    const render = () => {
       const rect = parent.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
 
@@ -28,24 +35,46 @@ function GraphCanvas() {
       canvas.style.height = `${rect.height}px`;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      draw(ctx, rect.width, rect.height);
-    });
+      draw(ctx, rect.width, rect.height, expression);
+    };
 
+    render();
+
+    const resizeObserver = new ResizeObserver(render);
     resizeObserver.observe(parent);
 
     return () => resizeObserver.disconnect();
-  }, []);
+  }, [expression]);
 
   return <canvas ref={canvasRef} className="graph-canvas" />;
 }
 
-function draw(ctx: CanvasRenderingContext2D, width: number, height: number) {
+function draw(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  expression: string,
+) {
   ctx.clearRect(0, 0, width, height);
 
   drawBackground(ctx, width, height);
   drawGrid(ctx, width, height);
-  drawAxes(ctx, width, height);
-  drawParabola(ctx, width, height);
+  drawLabels(ctx, width, height);
+  drawExpression(ctx, width, height, expression);
+}
+
+function normalizeExpression(raw: string) {
+  const trimmed = raw.trim();
+
+  if (trimmed.toLowerCase().startsWith("y=")) {
+    return trimmed.slice(2).trim();
+  }
+
+  if (trimmed.toLowerCase().startsWith("y =")) {
+    return trimmed.slice(3).trim();
+  }
+
+  return trimmed;
 }
 
 function toScreenX(x: number, width: number) {
@@ -83,7 +112,7 @@ function drawGrid(ctx: CanvasRenderingContext2D, width: number, height: number) 
   }
 }
 
-function drawAxes(ctx: CanvasRenderingContext2D, width: number, height: number) {
+function drawLabels(ctx: CanvasRenderingContext2D, width: number, height: number) {
   ctx.fillStyle = "#8b909b";
   ctx.font = "12px system-ui, sans-serif";
 
@@ -102,7 +131,23 @@ function drawAxes(ctx: CanvasRenderingContext2D, width: number, height: number) 
   }
 }
 
-function drawParabola(ctx: CanvasRenderingContext2D, width: number, height: number) {
+function drawExpression(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  rawExpression: string,
+) {
+  const expression = normalizeExpression(rawExpression);
+
+  let compiled;
+
+  try {
+    compiled = math.compile(expression);
+  } catch {
+    drawError(ctx, "Invalid expression");
+    return;
+  }
+
   ctx.beginPath();
   ctx.strokeStyle = "#8ab4f8";
   ctx.lineWidth = 2.5;
@@ -111,7 +156,20 @@ function drawParabola(ctx: CanvasRenderingContext2D, width: number, height: numb
 
   for (let px = 0; px <= width; px++) {
     const x = X_MIN + (px / width) * (X_MAX - X_MIN);
-    const y = x * x;
+
+    let y: unknown;
+
+    try {
+      y = compiled.evaluate({ x });
+    } catch {
+      started = false;
+      continue;
+    }
+
+    if (typeof y !== "number" || !Number.isFinite(y)) {
+      started = false;
+      continue;
+    }
 
     if (y < Y_MIN || y > Y_MAX) {
       started = false;
@@ -130,6 +188,12 @@ function drawParabola(ctx: CanvasRenderingContext2D, width: number, height: numb
   }
 
   ctx.stroke();
+}
+
+function drawError(ctx: CanvasRenderingContext2D, message: string) {
+  ctx.fillStyle = "#f28b82";
+  ctx.font = "14px system-ui, sans-serif";
+  ctx.fillText(message, 24, 32);
 }
 
 export default GraphCanvas;

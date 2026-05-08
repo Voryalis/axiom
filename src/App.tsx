@@ -1,7 +1,10 @@
+import { useState } from "react";
 import GraphCanvas from "./components/GraphCanvas";
 import "./App.css";
 
 function App() {
+  const [expression, setExpression] = useState("y = x^2");
+
   return (
     <main className="app">
       <aside className="sidebar">
@@ -17,8 +20,13 @@ function App() {
           <h2>Expressions</h2>
           <div className="expression-card">
             <span className="color-dot" />
-            <input value="y = x²" readOnly />
+            <input
+              value={expression}
+              onChange={(event) => setExpression(event.target.value)}
+              spellCheck={false}
+            />
           </div>
+          <p className="hint">Try: y = sin(x), y = x^2, y = sqrt(x)</p>
         </section>
       </aside>
 
@@ -29,7 +37,7 @@ function App() {
         </div>
 
         <div className="graph-stage">
-          <GraphCanvas />
+          <GraphCanvas expression={expression} />
         </div>
       </section>
     </main>
