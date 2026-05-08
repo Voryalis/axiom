@@ -26,6 +26,14 @@ type GraphPoint = {
   y: number;
 };
 
+type RenderedPoint = {
+  expressionId: string;
+  point: GraphPoint;
+  screenX: number;
+  screenY: number;
+  color: string;
+};
+
 const INITIAL_VIEWPORT: Viewport = {
   xMin: -10,
   xMax: 10,
@@ -34,12 +42,16 @@ const INITIAL_VIEWPORT: Viewport = {
 };
 
 const ZOOM_SENSITIVITY = 0.0015;
+const POINT_HIT_RADIUS = 10;
 
 function GraphCanvas({ expressions }: GraphCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewportRef = useRef<Viewport>({ ...INITIAL_VIEWPORT });
   const isDraggingRef = useRef(false);
   const lastPointerRef = useRef({ x: 0, y: 0 });
+  const renderedPointsRef = useRef<RenderedPoint[]>([]);
+  const hoveredPointRef = useRef<RenderedPoint | null>(null);
+  const pinnedPointRef = useRef<RenderedPoint | null>(null);
 
   useEffect(() => {
     const preventNativeZoom = (event: WheelEvent) => {
@@ -111,7 +123,36 @@ function GraphCanvas({ expressions }: GraphCanvasProps) {
       canvas.style.height = `${rect.height}px`;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      draw(ctx, rect.width, rect.height, expressions, viewportRef.current);
+
+      const renderedPoints = draw(
+        ctx,
+        rect.width,
+        rect.height,
+        expressions,
+        viewportRef.current,
+      );
+
+      renderedPointsRef.current = renderedPoints;
+
+      const freshPinnedPoint = findMatchingRenderedPoint(
+        pinnedPointRef.current,
+        renderedPoints,
+      );
+      const freshHoveredPoint = findMatchingRenderedPoint(
+        hoveredPointRef.current,
+        renderedPoints,
+      );
+
+      pinnedPointRef.current = freshPinnedPoint;
+      hoveredPointRef.current = freshHoveredPoint;
+
+      if (freshHoveredPoint && freshHoveredPoint.expressionId !== freshPinnedPoint?.expressionId) {
+        drawPointLabel(ctx, rect.width, rect.height, freshHoveredPoint);
+      }
+
+      if (freshPinnedPoint) {
+        drawPointLabel(ctx, rect.width, rect.height, freshPinnedPoint);
+      }
     };
 
     const handleWheel = (event: WheelEvent) => {
@@ -158,29 +199,49 @@ function GraphCanvas({ expressions }: GraphCanvasProps) {
     };
 
     const handlePointerMove = (event: PointerEvent) => {
-      if (!isDraggingRef.current) return;
+      if (isDraggingRef.current) {
+        event.preventDefault();
 
-      event.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const viewport = viewportRef.current;
+        const last = lastPointerRef.current;
+
+        const dx = event.clientX - last.x;
+        const dy = event.clientY - last.y;
+
+        const graphDx = (dx / rect.width) * (viewport.xMax - viewport.xMin);
+        const graphDy = (dy / rect.height) * (viewport.yMax - viewport.yMin);
+
+        viewportRef.current = {
+          xMin: viewport.xMin - graphDx,
+          xMax: viewport.xMax - graphDx,
+          yMin: viewport.yMin + graphDy,
+          yMax: viewport.yMax + graphDy,
+        };
+
+        lastPointerRef.current = { x: event.clientX, y: event.clientY };
+        render();
+        return;
+      }
 
       const rect = canvas.getBoundingClientRect();
-      const viewport = viewportRef.current;
-      const last = lastPointerRef.current;
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
 
-      const dx = event.clientX - last.x;
-      const dy = event.clientY - last.y;
+      const nearestPoint = findNearestPoint(
+        renderedPointsRef.current,
+        mouseX,
+        mouseY,
+      );
 
-      const graphDx = (dx / rect.width) * (viewport.xMax - viewport.xMin);
-      const graphDy = (dy / rect.height) * (viewport.yMax - viewport.yMin);
+      const previousHoveredId = hoveredPointRef.current?.expressionId ?? null;
+      const nextHoveredId = nearestPoint?.expressionId ?? null;
 
-      viewportRef.current = {
-        xMin: viewport.xMin - graphDx,
-        xMax: viewport.xMax - graphDx,
-        yMin: viewport.yMin + graphDy,
-        yMax: viewport.yMax + graphDy,
-      };
-
-      lastPointerRef.current = { x: event.clientX, y: event.clientY };
-      render();
+      if (previousHoveredId !== nextHoveredId) {
+        hoveredPointRef.current = nearestPoint;
+        canvas.style.cursor = nearestPoint ? "pointer" : "grab";
+        render();
+      }
     };
 
     const handlePointerUp = (event: PointerEvent) => {
@@ -189,6 +250,28 @@ function GraphCanvas({ expressions }: GraphCanvasProps) {
       if (canvas.hasPointerCapture(event.pointerId)) {
         canvas.releasePointerCapture(event.pointerId);
       }
+    };
+
+    const handleClick = (event: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+
+      const nearestPoint = findNearestPoint(
+        renderedPointsRef.current,
+        mouseX,
+        mouseY,
+      );
+
+      pinnedPointRef.current = nearestPoint;
+      render();
+    };
+
+    const handlePointerLeave = () => {
+      isDraggingRef.current = false;
+      hoveredPointRef.current = null;
+      canvas.style.cursor = "grab";
+      render();
     };
 
     const resetViewport = () => {
@@ -206,6 +289,8 @@ function GraphCanvas({ expressions }: GraphCanvasProps) {
     canvas.addEventListener("pointermove", handlePointerMove);
     canvas.addEventListener("pointerup", handlePointerUp);
     canvas.addEventListener("pointercancel", handlePointerUp);
+    canvas.addEventListener("pointerleave", handlePointerLeave);
+    canvas.addEventListener("click", handleClick);
     canvas.addEventListener("dblclick", resetViewport);
 
     return () => {
@@ -215,6 +300,8 @@ function GraphCanvas({ expressions }: GraphCanvasProps) {
       canvas.removeEventListener("pointermove", handlePointerMove);
       canvas.removeEventListener("pointerup", handlePointerUp);
       canvas.removeEventListener("pointercancel", handlePointerUp);
+      canvas.removeEventListener("pointerleave", handlePointerLeave);
+      canvas.removeEventListener("click", handleClick);
       canvas.removeEventListener("dblclick", resetViewport);
     };
   }, [expressions]);
@@ -229,6 +316,8 @@ function draw(
   expressions: GraphExpression[],
   viewport: Viewport,
 ) {
+  const renderedPoints: RenderedPoint[] = [];
+
   ctx.clearRect(0, 0, width, height);
 
   drawBackground(ctx, width, height);
@@ -243,12 +332,27 @@ function draw(
     const point = parsePointExpression(expression.raw, scope);
 
     if (point) {
-      drawPoint(ctx, width, height, point, expression.color, viewport);
+      const renderedPoint = drawPoint(
+        ctx,
+        width,
+        height,
+        point,
+        expression.color,
+        expression.id,
+        viewport,
+      );
+
+      if (renderedPoint) {
+        renderedPoints.push(renderedPoint);
+      }
+
       continue;
     }
 
     drawExpression(ctx, width, height, expression, viewport, scope);
   }
+
+  return renderedPoints;
 }
 
 function normalizeExpression(raw: string) {
@@ -515,13 +619,14 @@ function drawPoint(
   height: number,
   point: GraphPoint,
   color: string,
+  expressionId: string,
   viewport: Viewport,
-) {
+): RenderedPoint | null {
   const sx = graphToScreenX(point.x, width, viewport);
   const sy = graphToScreenY(point.y, height, viewport);
 
   if (sx < -20 || sx > width + 20 || sy < -20 || sy > height + 20) {
-    return;
+    return null;
   }
 
   ctx.beginPath();
@@ -531,9 +636,121 @@ function drawPoint(
   ctx.arc(sx, sy, 5, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
+
+  return {
+    expressionId,
+    point,
+    screenX: sx,
+    screenY: sy,
+    color,
+  };
+}
+
+function drawPointLabel(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  renderedPoint: RenderedPoint,
+) {
+  const label = `(${formatNumber(renderedPoint.point.x)}, ${formatNumber(
+    renderedPoint.point.y,
+  )})`;
+
+  ctx.save();
+
+  ctx.font = "12px system-ui, sans-serif";
+
+  const metrics = ctx.measureText(label);
+  const labelWidth = metrics.width + 18;
+  const labelHeight = 28;
+
+  let x = renderedPoint.screenX + 12;
+  let y = renderedPoint.screenY - labelHeight - 10;
+
+  if (x + labelWidth > width - 8) {
+    x = renderedPoint.screenX - labelWidth - 12;
+  }
+
+  if (y < 8) {
+    y = renderedPoint.screenY + 14;
+  }
+
+  if (y + labelHeight > height - 8) {
+    y = height - labelHeight - 8;
+  }
+
+  ctx.fillStyle = "#24262b";
+  ctx.strokeStyle = renderedPoint.color;
+  ctx.lineWidth = 1.5;
+
+  roundedRect(ctx, x, y, labelWidth, labelHeight, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#f1f1f1";
+  ctx.fillText(label, x + 9, y + 18);
+
+  ctx.restore();
+}
+
+function roundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+function findNearestPoint(
+  points: RenderedPoint[],
+  screenX: number,
+  screenY: number,
+) {
+  let nearestPoint: RenderedPoint | null = null;
+  let nearestDistance = Infinity;
+
+  for (const point of points) {
+    const distance = Math.hypot(point.screenX - screenX, point.screenY - screenY);
+
+    if (distance <= POINT_HIT_RADIUS && distance < nearestDistance) {
+      nearestPoint = point;
+      nearestDistance = distance;
+    }
+  }
+
+  return nearestPoint;
+}
+
+function findMatchingRenderedPoint(
+  point: RenderedPoint | null,
+  points: RenderedPoint[],
+) {
+  if (!point) return null;
+
+  return (
+    points.find((candidate) => candidate.expressionId === point.expressionId) ??
+    null
+  );
 }
 
 function formatNumber(value: number) {
+  if (value === 0) {
+    return "0";
+  }
+
   if (Math.abs(value) >= 1000 || Math.abs(value) < 0.01) {
     return value.toExponential(1);
   }

@@ -47,6 +47,7 @@ Main goals:
 - pressing Enter in an expression creates a new expression
 - point plotting with expressions like (1, 2)
 - variable-based point plotting, like (a, b)
+- point coordinate labels on hover and click
 
 ## Future ideas
 
@@ -70,6 +71,10 @@ Main goals:
 - display the intersection coordinates
 - Desmos-like point hover / selection behavior
 - Ctrl+W deletes the currently focused expression
+- Desmos-style point coordinate labels on hover/click
+- restyled color picker that matches Axiom’s theme
+- settings panel
+- toggleable light/dark theme in settings
 
 - long-term goal: functionality on par with or beyond Desmos
 
