@@ -39,6 +39,7 @@ Main goals:
 - clean startup graph
 - saved graphs remain available in the local library
 - deletable final expression
+- scrollable sidebar for many expressions and library items
 
 ## Future ideas
 
@@ -56,7 +57,6 @@ Main goals:
 - keyboard shortcuts
 - Ctrl+S to save
 - Ctrl+R to reset
-- scrollable sidebar for many expressions and library items
 - collapsible sidebar / graph-only mode
 
 ## Development

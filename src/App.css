@@ -40,9 +40,15 @@ input {
 }
 
 .sidebar {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow-y: auto;
   border-right: 1px solid #34363b;
   background: #25262a;
   padding: 22px;
+  scrollbar-width: thin;
+  scrollbar-color: #4a4d55 #25262a;
 }
 
 .brand {
@@ -337,4 +343,22 @@ input {
 
 .new-graph-button:hover {
   background: #3a3d44;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: #25262a;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  border: 2px solid #25262a;
+  border-radius: 999px;
+  background: #4a4d55;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #5a5e68;
 }
