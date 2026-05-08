@@ -222,3 +222,26 @@ input {
   font-size: 12px;
   white-space: nowrap;
 }
+
+.expression-card-hidden {
+  opacity: 0.55;
+}
+
+.visibility-button {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 2px solid #8ab4f8;
+  border-radius: 999px;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.visibility-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}

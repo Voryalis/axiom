@@ -57,13 +57,28 @@ function App() {
     }
   }, []);
 
+  function markUnsaved() {
+    setSaveStatus("Unsaved changes");
+  }
+
   function updateExpression(id: string, raw: string) {
     setExpressions((current) =>
       current.map((expression) =>
         expression.id === id ? { ...expression, raw } : expression,
       ),
     );
-    setSaveStatus("Unsaved changes");
+    markUnsaved();
+  }
+
+  function toggleExpression(id: string) {
+    setExpressions((current) =>
+      current.map((expression) =>
+        expression.id === id
+          ? { ...expression, visible: !expression.visible }
+          : expression,
+      ),
+    );
+    markUnsaved();
   }
 
   function addExpression() {
@@ -76,7 +91,7 @@ function App() {
         visible: true,
       },
     ]);
-    setSaveStatus("Unsaved changes");
+    markUnsaved();
   }
 
   function removeExpression(id: string) {
@@ -84,7 +99,7 @@ function App() {
       if (current.length === 1) return current;
       return current.filter((expression) => expression.id !== id);
     });
-    setSaveStatus("Unsaved changes");
+    markUnsaved();
   }
 
   function saveGraph() {
@@ -101,7 +116,7 @@ function App() {
   function resetGraph() {
     setTitle("Untitled Graph");
     setExpressions(DEFAULT_EXPRESSIONS);
-    setSaveStatus("Unsaved changes");
+    markUnsaved();
   }
 
   return (
@@ -125,16 +140,30 @@ function App() {
 
           <div className="expression-list">
             {expressions.map((expression) => (
-              <div className="expression-card" key={expression.id}>
-                <span
-                  className="color-dot"
-                  style={{ background: expression.color }}
-                />
+              <div
+                className={`expression-card ${expression.visible ? "" : "expression-card-hidden"}`}
+                key={expression.id}
+              >
+                <button
+                  className="visibility-button"
+                  onClick={() => toggleExpression(expression.id)}
+                  title={expression.visible ? "Hide expression" : "Show expression"}
+                  style={{ borderColor: expression.color }}
+                >
+                  <span
+                    className="visibility-dot"
+                    style={{
+                      background: expression.visible ? expression.color : "transparent",
+                    }}
+                  />
+                </button>
+
                 <input
                   value={expression.raw}
                   onChange={(event) => updateExpression(expression.id, event.target.value)}
                   spellCheck={false}
                 />
+
                 <button
                   className="remove-button"
                   onClick={() => removeExpression(expression.id)}
@@ -157,7 +186,7 @@ function App() {
             value={title}
             onChange={(event) => {
               setTitle(event.target.value);
-              setSaveStatus("Unsaved changes");
+              markUnsaved();
             }}
             spellCheck={false}
           />
