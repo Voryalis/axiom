@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import GraphCanvas, { type GraphExpression } from "./components/GraphCanvas";
 import "./App.css";
 
 const STORAGE_KEY = "axiom.currentGraph";
 
 type SavedGraph = {
+  version: number;
   title: string;
   expressions: GraphExpression[];
   updatedAt: string;
@@ -27,22 +28,53 @@ const DEFAULT_EXPRESSIONS: GraphExpression[] = [
 
 const COLORS = ["#8ab4f8", "#a8d08d", "#f6c177", "#c4a7e7", "#f28b82"];
 
+function isValidExpression(value: unknown): value is GraphExpression {
+  if (typeof value !== "object" || value === null) return false;
+
+  const expression = value as GraphExpression;
+
+  return (
+    typeof expression.id === "string" &&
+    typeof expression.raw === "string" &&
+    typeof expression.color === "string" &&
+    typeof expression.visible === "boolean"
+  );
+}
+
+function isValidSavedGraph(value: unknown): value is SavedGraph {
+  if (typeof value !== "object" || value === null) return false;
+
+  const graph = value as SavedGraph;
+
+  return (
+    typeof graph.title === "string" &&
+    Array.isArray(graph.expressions) &&
+    graph.expressions.every(isValidExpression)
+  );
+}
+
 function loadSavedGraph(): SavedGraph | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
 
-    const parsed = JSON.parse(raw) as SavedGraph;
+    const parsed = JSON.parse(raw);
 
-    if (!Array.isArray(parsed.expressions)) return null;
+    if (!isValidSavedGraph(parsed)) return null;
 
-    return parsed;
+    return {
+      version: parsed.version ?? 1,
+      title: parsed.title,
+      expressions: parsed.expressions,
+      updatedAt: parsed.updatedAt ?? new Date().toISOString(),
+    };
   } catch {
     return null;
   }
 }
 
 function App() {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const savedGraph = loadSavedGraph();
 
   const [title, setTitle] = useState(savedGraph?.title ?? "Untitled Graph");
@@ -111,12 +143,17 @@ function App() {
     markUnsaved();
   }
 
-  function saveGraph() {
-    const graph: SavedGraph = {
+  function createGraphSnapshot(): SavedGraph {
+    return {
+      version: 1,
       title,
       expressions,
       updatedAt: new Date().toISOString(),
     };
+  }
+
+  function saveGraph() {
+    const graph = createGraphSnapshot();
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(graph, null, 2));
     setSaveStatus(`Saved ${new Date(graph.updatedAt).toLocaleTimeString()}`);
@@ -126,6 +163,55 @@ function App() {
     setTitle("Untitled Graph");
     setExpressions(DEFAULT_EXPRESSIONS);
     markUnsaved();
+  }
+
+  function exportJson() {
+    const graph = createGraphSnapshot();
+    const json = JSON.stringify(graph, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const safeTitle = title
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${safeTitle || "axiom-graph"}.json`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+    setSaveStatus("Exported JSON");
+  }
+
+  function openImportDialog() {
+    fileInputRef.current?.click();
+  }
+
+  async function importJson(file: File | undefined) {
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+
+      if (!isValidSavedGraph(parsed)) {
+        setSaveStatus("Invalid JSON graph file");
+        return;
+      }
+
+      setTitle(parsed.title);
+      setExpressions(parsed.expressions);
+      setSaveStatus("Imported JSON");
+    } catch {
+      setSaveStatus("Invalid JSON graph file");
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   }
 
   return (
@@ -213,9 +299,19 @@ function App() {
 
           <div className="topbar-actions">
             <span className="save-status">{saveStatus}</span>
+            <button onClick={openImportDialog}>Import JSON</button>
+            <button onClick={exportJson}>Export JSON</button>
             <button onClick={resetGraph}>Reset</button>
             <button onClick={saveGraph}>Save</button>
           </div>
+
+          <input
+            ref={fileInputRef}
+            className="hidden-file-input"
+            type="file"
+            accept="application/json,.json"
+            onChange={(event) => importJson(event.target.files?.[0])}
+          />
         </div>
 
         <div className="graph-stage">

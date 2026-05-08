@@ -30,16 +30,17 @@ Main goals:
 - drag to pan
 - square graph units
 - double-click to reset viewport
-
-## Future ideas
-
 - multiple expressions
 - turn graph lines on and off
 - change each line color
+- local current graph saving
+- import and export JSON graph files
+
+## Future ideas
+
 - zoom in and zoom out buttons
 - reset view button
 - local graph library
-- import and export JSON graph files
 - normal calculator/math evaluation like Desmos
 - on-screen math keyboard
 - sliders

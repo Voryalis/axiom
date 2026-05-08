@@ -264,3 +264,7 @@ input {
   background: transparent;
   cursor: pointer;
 }
+
+.hidden-file-input {
+  display: none;
+}
