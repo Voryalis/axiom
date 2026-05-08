@@ -70,6 +70,15 @@ function App() {
     markUnsaved();
   }
 
+  function updateExpressionColor(id: string, color: string) {
+    setExpressions((current) =>
+      current.map((expression) =>
+        expression.id === id ? { ...expression, color } : expression,
+      ),
+    );
+    markUnsaved();
+  }
+
   function toggleExpression(id: string) {
     setExpressions((current) =>
       current.map((expression) =>
@@ -163,6 +172,17 @@ function App() {
                   onChange={(event) => updateExpression(expression.id, event.target.value)}
                   spellCheck={false}
                 />
+
+                <label className="color-picker-label" title="Change line color">
+                  <input
+                    className="color-picker"
+                    type="color"
+                    value={expression.color}
+                    onChange={(event) =>
+                      updateExpressionColor(expression.id, event.target.value)
+                    }
+                  />
+                </label>
 
                 <button
                   className="remove-button"
