@@ -72,3 +72,10 @@ npm run tauri dev
 ## Status
 
 Early development.
+
+## Build
+
+For a production desktop build:
+
+```bash
+npm run tauri build
