@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { all, create } from "mathjs";
-import GraphCanvas, { type GraphExpression } from "./components/GraphCanvas";
+import GraphCanvas, { type GraphCanvasHandle, type GraphExpression } from "./components/GraphCanvas";
 import "./App.css";
 
 const math = create(all, {});
@@ -280,6 +280,7 @@ function updateVariableAssignment(raw: string, value: number) {
 
 function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const graphCanvasRef = useRef<GraphCanvasHandle | null>(null);
   const expressionInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>(
     {},
   );
@@ -516,6 +517,11 @@ function App() {
 
   function openImportDialog() {
     fileInputRef.current?.click();
+  }
+
+  function exportPng() {
+    graphCanvasRef.current?.exportPng();
+    setSaveStatus("Exported PNG");
   }
 
   async function importJson(file: File | undefined) {
@@ -777,6 +783,7 @@ function App() {
             <span className="save-status">{saveStatus}</span>
             <button onClick={openImportDialog}>Import JSON</button>
             <button onClick={exportJson}>Export JSON</button>
+            <button onClick={exportPng}>Export PNG</button>
             <button onClick={resetGraph}>Reset</button>
             <button onClick={saveGraph}>Save</button>
           </div>
@@ -791,7 +798,7 @@ function App() {
         </div>
 
         <div className="graph-stage">
-          <GraphCanvas expressions={expressions} />
+          <GraphCanvas ref={graphCanvasRef} expressions={expressions} />
         </div>
       </section>
     </main>

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { all, create } from "mathjs";
 
 const math = create(all, {});
@@ -19,6 +19,10 @@ export type GraphExpression = {
 
 type GraphCanvasProps = {
   expressions: GraphExpression[];
+};
+
+export type GraphCanvasHandle = {
+  exportPng: () => void;
 };
 
 type GraphPoint = {
@@ -49,7 +53,10 @@ const INITIAL_VIEWPORT: Viewport = {
 const ZOOM_SENSITIVITY = 0.0015;
 const POINT_HIT_RADIUS = 10;
 
-function GraphCanvas({ expressions }: GraphCanvasProps) {
+const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(function GraphCanvas(
+  { expressions },
+  ref,
+) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewportRef = useRef<Viewport>({ ...INITIAL_VIEWPORT });
   const isDraggingRef = useRef(false);
@@ -57,6 +64,19 @@ function GraphCanvas({ expressions }: GraphCanvasProps) {
   const renderedPointsRef = useRef<RenderedPoint[]>([]);
   const hoveredPointRef = useRef<RenderedPoint | null>(null);
   const pinnedPointRef = useRef<RenderedPoint | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    exportPng() {
+      const canvas = canvasRef.current;
+
+      if (!canvas) return;
+
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      link.download = "axiom-graph.png";
+      link.click();
+    },
+  }));
 
   useEffect(() => {
     const preventNativeZoom = (event: WheelEvent) => {
@@ -315,7 +335,7 @@ function GraphCanvas({ expressions }: GraphCanvasProps) {
   }, [expressions]);
 
   return <canvas ref={canvasRef} className="graph-canvas" />;
-}
+});
 
 function draw(
   ctx: CanvasRenderingContext2D,

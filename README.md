@@ -49,6 +49,9 @@ Main goals:
 - normal math evaluation for non-graph expressions
 - basic sliders for numeric variable expressions
 
+### Export and sharing
+- PNG export of the current graph canvas
+
 ### Points
 
 - point plotting with expressions like `(1, 2)`
@@ -122,8 +125,6 @@ Table expression
 - implicit equations
 
 ### Export and sharing
-
-- PNG export
 
 ### Design and settings
 
