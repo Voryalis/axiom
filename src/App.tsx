@@ -524,6 +524,10 @@ function App() {
     setSaveStatus("Exported PNG");
   }
 
+function resetView() {
+  graphCanvasRef.current?.resetView();
+}
+
   async function importJson(file: File | undefined) {
     if (!file) return;
 
@@ -799,6 +803,14 @@ function App() {
 
         <div className="graph-stage">
           <GraphCanvas ref={graphCanvasRef} expressions={expressions} />
+           <button
+    className="reset-view-floating-button"
+    onClick={resetView}
+    title="Reset view"
+    aria-label="Reset view"
+  >
+    ↺
+  </button>
         </div>
       </section>
     </main>

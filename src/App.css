@@ -435,3 +435,41 @@ input {
   color: #7f858f;
   font-size: 11px;
 }
+
+.reset-view-floating-button {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  width: 46px;
+  height: 46px;
+  border: 1px solid #3a3f4b;
+  border-radius: 12px;
+  background: rgba(38, 40, 46, 0.95);
+  color: #e7eaf0;
+  font-size: 22px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+  z-index: 5;
+}
+
+.reset-view-floating-button:hover {
+  background: rgba(48, 51, 58, 0.98);
+  border-color: #4b5260;
+  transform: translateY(-1px);
+}
+
+.reset-view-floating-button:active {
+  transform: translateY(0);
+}
+
+.reset-view-floating-button:focus-visible {
+  outline: 2px solid #8ab4f8;
+  outline-offset: 2px;
+}

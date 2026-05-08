@@ -23,6 +23,7 @@ type GraphCanvasProps = {
 
 export type GraphCanvasHandle = {
   exportPng: () => void;
+  resetView: () => void;
 };
 
 type GraphPoint = {
@@ -75,6 +76,37 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(function Gra
       link.href = canvas.toDataURL("image/png");
       link.download = "axiom-graph.png";
       link.click();
+    },
+    resetView() {
+      viewportRef.current = { ...INITIAL_VIEWPORT };
+
+      const canvas = canvasRef.current;
+      const parent = canvas?.parentElement;
+      const ctx = canvas?.getContext("2d");
+
+      if (!canvas || !parent || !ctx) return;
+
+      const rect = parent.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const renderedPoints = draw(
+        ctx,
+        rect.width,
+        rect.height,
+        expressions,
+        viewportRef.current,
+      );
+
+      renderedPointsRef.current = renderedPoints;
+      hoveredPointRef.current = null;
+      pinnedPointRef.current = null;
     },
   }));
 
