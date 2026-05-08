@@ -330,14 +330,36 @@ function App() {
     markUnsaved();
   }
 
-  function addExpression() {
-    const expression = createEmptyExpression(nextColorIndex);
+function addExpression() {
+  const expression = createEmptyExpression(nextColorIndex);
 
-    setExpressions((current) => [...current, expression]);
-    setNextColorIndex((current) => current + 1);
-    focusExpression(expression.id);
-    markUnsaved();
-  }
+  setExpressions((current) => [...current, expression]);
+  setNextColorIndex((current) => current + 1);
+  focusExpression(expression.id);
+  markUnsaved();
+}
+
+function addExpressionAfter(id: string) {
+  const expression = createEmptyExpression(nextColorIndex);
+
+  setExpressions((current) => {
+    const index = current.findIndex((item) => item.id === id);
+
+    if (index === -1) {
+      return [...current, expression];
+    }
+
+    return [
+      ...current.slice(0, index + 1),
+      expression,
+      ...current.slice(index + 1),
+    ];
+  });
+
+  setNextColorIndex((current) => current + 1);
+  focusExpression(expression.id);
+  markUnsaved();
+}
 
   function removeExpression(id: string) {
     setExpressions((current) =>
@@ -573,13 +595,19 @@ function App() {
                         onChange={(event) =>
                           updateExpression(expression.id, event.target.value)
                         }
-                        onInput={(event) =>
-                          resizeExpressionInput(
-                            event.currentTarget as HTMLTextAreaElement,
-                          )
-                        }
-                        placeholder="Type an expression..."
-                        spellCheck={false}
+onInput={(event) =>
+  resizeExpressionInput(
+    event.currentTarget as HTMLTextAreaElement,
+  )
+}
+onKeyDown={(event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    addExpressionAfter(expression.id);
+  }
+}}
+placeholder="Type an expression..."
+spellCheck={false}
                       />
 
                       {result ? (

@@ -44,6 +44,7 @@ Main goals:
 - Ctrl+S to save
 - Ctrl+R to reset
 - basic sliders for numeric variable expressions
+- pressing Enter in an expression creates a new expression
 
 ## Future ideas
 
@@ -67,7 +68,6 @@ Main goals:
 - show a dot where curves intersect
 - display the intersection coordinates
 - Desmos-like point hover / selection behavior
-- pressing Enter in an expression creates a new expression
 
 - long-term goal: functionality on par with or beyond Desmos
 
