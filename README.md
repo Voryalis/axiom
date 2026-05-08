@@ -49,6 +49,9 @@ Main goals:
 - implicit equations
 - PNG export
 - themes
+- keyboard shortcuts
+- Ctrl+S to save
+- Ctrl+R to reset
 
 ## Development
 
