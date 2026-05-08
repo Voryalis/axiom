@@ -1,3 +1,4 @@
+import GraphCanvas from "./components/GraphCanvas";
 import "./App.css";
 
 function App() {
@@ -27,10 +28,8 @@ function App() {
           <button>Save</button>
         </div>
 
-        <div className="graph-placeholder">
-          <div className="axis axis-x" />
-          <div className="axis axis-y" />
-          <p>Graph canvas coming next</p>
+        <div className="graph-stage">
+          <GraphCanvas />
         </div>
       </section>
     </main>

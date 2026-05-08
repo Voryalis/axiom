@@ -126,38 +126,14 @@ input {
   cursor: pointer;
 }
 
-.graph-placeholder {
+.graph-stage {
   position: relative;
   overflow: hidden;
-  background:
-    linear-gradient(#2a2c31 1px, transparent 1px),
-    linear-gradient(90deg, #2a2c31 1px, transparent 1px);
-  background-size: 42px 42px;
+  background: #1d1e21;
 }
 
-.axis {
-  position: absolute;
-  background: #555963;
-}
-
-.axis-x {
-  top: 50%;
-  left: 0;
+.graph-canvas {
+  display: block;
   width: 100%;
-  height: 1px;
-}
-
-.axis-y {
-  top: 0;
-  left: 50%;
-  width: 1px;
   height: 100%;
-}
-
-.graph-placeholder p {
-  position: absolute;
-  left: 24px;
-  bottom: 18px;
-  margin: 0;
-  color: #777c87;
 }
