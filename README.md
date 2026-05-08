@@ -43,6 +43,7 @@ Main goals:
 - normal math evaluation for non-graph expressions
 - Ctrl+S to save
 - Ctrl+R to reset
+- basic sliders for numeric variable expressions
 
 ## Future ideas
 

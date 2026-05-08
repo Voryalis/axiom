@@ -60,9 +60,7 @@ function hslToHex(hue: number, saturation: number, lightness: number) {
 }
 
 function generateExpressionColor(index: number) {
-  if (index < COLORS.length) {
-    return COLORS[index];
-  }
+  if (index < COLORS.length) return COLORS[index];
 
   const generatedIndex = index - COLORS.length;
   const hue = (generatedIndex * 137.508 + 28) % 360;
@@ -127,7 +125,6 @@ function loadGraphLibrary(): SavedGraph[] {
     if (!raw) return [];
 
     const parsed = JSON.parse(raw);
-
     if (!Array.isArray(parsed)) return [];
 
     return parsed.filter(isValidSavedGraph).map(normalizeGraph);
@@ -165,6 +162,25 @@ function parseVariableAssignment(rawExpression: string) {
   if (name === "x" || name === "y") return null;
 
   return { name, expression };
+}
+
+function parseNumericVariableAssignment(rawExpression: string) {
+  const assignment = parseVariableAssignment(rawExpression);
+
+  if (!assignment) return null;
+
+  try {
+    const value = math.evaluate(assignment.expression);
+
+    if (typeof value !== "number" || !Number.isFinite(value)) return null;
+
+    return {
+      name: assignment.name,
+      value,
+    };
+  } catch {
+    return null;
+  }
 }
 
 function buildEvaluationScope(expressions: GraphExpression[]) {
@@ -218,9 +234,7 @@ function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
     const compiled = math.compile(expression);
     const usesX = /\bx\b/.test(expression);
 
-    if (usesX) {
-      return "";
-    }
+    if (usesX) return "";
 
     const value = compiled.evaluate(scope);
     return formatEvaluatedValue(value);
@@ -229,19 +243,25 @@ function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
   }
 }
 
+function updateVariableAssignment(raw: string, value: number) {
+  const assignment = parseVariableAssignment(raw);
+
+  if (!assignment) return raw;
+
+  const rounded = Number(value.toFixed(6)).toString();
+
+  return `${assignment.name} = ${rounded}`;
+}
+
 function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const expressionInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>(
-    {},
-  );
+  const expressionInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
 
   const startingExpressions = useMemo(() => createDefaultExpressions(), []);
 
   const [activeGraphId, setActiveGraphId] = useState<string>(crypto.randomUUID());
   const [title, setTitle] = useState("Untitled Graph");
-  const [expressions, setExpressions] = useState<GraphExpression[]>(
-    startingExpressions,
-  );
+  const [expressions, setExpressions] = useState<GraphExpression[]>(startingExpressions);
   const [nextColorIndex, setNextColorIndex] = useState(startingExpressions.length);
   const [library, setLibrary] = useState<SavedGraph[]>(() => loadGraphLibrary());
   const [saveStatus, setSaveStatus] = useState("Clean graph");
@@ -283,6 +303,17 @@ function App() {
     setExpressions((current) =>
       current.map((expression) =>
         expression.id === id ? { ...expression, color } : expression,
+      ),
+    );
+    markUnsaved();
+  }
+
+  function updateExpressionFromSlider(id: string, value: number) {
+    setExpressions((current) =>
+      current.map((expression) =>
+        expression.id === id
+          ? { ...expression, raw: updateVariableAssignment(expression.raw, value) }
+          : expression,
       ),
     );
     markUnsaved();
@@ -503,6 +534,7 @@ function App() {
             <div className="expression-list">
               {expressions.map((expression) => {
                 const result = evaluateMathExpression(expression.raw, expressions);
+                const slider = parseNumericVariableAssignment(expression.raw);
 
                 return (
                   <div
@@ -553,6 +585,26 @@ function App() {
                       {result ? (
                         <span className="expression-result">{result}</span>
                       ) : null}
+
+                      {slider ? (
+                        <div className="slider-control">
+                          <span className="slider-label">−10</span>
+                          <input
+                            type="range"
+                            min="-10"
+                            max="10"
+                            step="0.1"
+                            value={Math.max(-10, Math.min(10, slider.value))}
+                            onChange={(event) =>
+                              updateExpressionFromSlider(
+                                expression.id,
+                                Number(event.target.value),
+                              )
+                            }
+                          />
+                          <span className="slider-label">10</span>
+                        </div>
+                      ) : null}
                     </div>
 
                     <label className="color-picker-label" title="Change line color">
@@ -579,9 +631,7 @@ function App() {
             </div>
           )}
 
-          <p className="hint">
-            Try: a = 2, b = 3, y = a*x + b, a + b
-          </p>
+          <p className="hint">Try: a = 2, b = 3, y = a*x + b, a + b</p>
         </section>
 
         <section className="panel library-panel">

@@ -417,3 +417,21 @@ input {
 .remove-button {
   margin-top: 2px;
 }
+
+.slider-control {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.slider-control input[type="range"] {
+  width: 100%;
+  accent-color: #8ab4f8;
+}
+
+.slider-label {
+  color: #7f858f;
+  font-size: 11px;
+}
