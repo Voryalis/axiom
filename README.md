@@ -48,7 +48,9 @@ Main goals:
 - reset view button
 - normal calculator/math evaluation like Desmos
 - on-screen math keyboard
-- sliders
+- sliders for variable expressions
+- custom slider min, max, and step values
+- animated sliders
 - points
 - tables
 - inequalities
