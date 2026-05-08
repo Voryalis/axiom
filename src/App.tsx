@@ -255,7 +255,9 @@ function updateVariableAssignment(raw: string, value: number) {
 
 function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const expressionInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+  const expressionInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>(
+    {},
+  );
 
   const startingExpressions = useMemo(() => createDefaultExpressions(), []);
 
@@ -265,6 +267,9 @@ function App() {
   const [nextColorIndex, setNextColorIndex] = useState(startingExpressions.length);
   const [library, setLibrary] = useState<SavedGraph[]>(() => loadGraphLibrary());
   const [saveStatus, setSaveStatus] = useState("Clean graph");
+  const [focusedExpressionId, setFocusedExpressionId] = useState<string | null>(
+    null,
+  );
 
   function resizeExpressionInput(element: HTMLTextAreaElement | null) {
     if (!element) return;
@@ -330,44 +335,55 @@ function App() {
     markUnsaved();
   }
 
-function addExpression() {
-  const expression = createEmptyExpression(nextColorIndex);
+  function addExpression() {
+    const expression = createEmptyExpression(nextColorIndex);
 
-  setExpressions((current) => [...current, expression]);
-  setNextColorIndex((current) => current + 1);
-  focusExpression(expression.id);
-  markUnsaved();
-}
-
-function addExpressionAfter(id: string) {
-  const expression = createEmptyExpression(nextColorIndex);
-
-  setExpressions((current) => {
-    const index = current.findIndex((item) => item.id === id);
-
-    if (index === -1) {
-      return [...current, expression];
-    }
-
-    return [
-      ...current.slice(0, index + 1),
-      expression,
-      ...current.slice(index + 1),
-    ];
-  });
-
-  setNextColorIndex((current) => current + 1);
-  focusExpression(expression.id);
-  markUnsaved();
-}
-
-  function removeExpression(id: string) {
-    setExpressions((current) =>
-      current.filter((expression) => expression.id !== id),
-    );
+    setExpressions((current) => [...current, expression]);
+    setNextColorIndex((current) => current + 1);
+    focusExpression(expression.id);
     markUnsaved();
   }
 
+  function addExpressionAfter(id: string) {
+    const expression = createEmptyExpression(nextColorIndex);
+
+    setExpressions((current) => {
+      const index = current.findIndex((item) => item.id === id);
+
+      if (index === -1) {
+        return [...current, expression];
+      }
+
+      return [
+        ...current.slice(0, index + 1),
+        expression,
+        ...current.slice(index + 1),
+      ];
+    });
+
+    setNextColorIndex((current) => current + 1);
+    focusExpression(expression.id);
+    markUnsaved();
+  }
+
+function removeExpression(id: string) {
+  const index = expressions.findIndex((expression) => expression.id === id);
+  const nextExpressions = expressions.filter((expression) => expression.id !== id);
+
+  const nextFocusedExpression =
+    nextExpressions[Math.min(index, nextExpressions.length - 1)] ?? null;
+
+  setExpressions(nextExpressions);
+  setFocusedExpressionId(nextFocusedExpression?.id ?? null);
+
+  requestAnimationFrame(() => {
+    if (nextFocusedExpression) {
+      focusExpression(nextFocusedExpression.id);
+    }
+  });
+
+  markUnsaved();
+}
   function createGraphSnapshot(): SavedGraph {
     return {
       id: activeGraphId,
@@ -400,6 +416,7 @@ function addExpressionAfter(id: string) {
     setTitle(normalized.title);
     setExpressions(normalized.expressions);
     setNextColorIndex(normalized.expressions.length);
+    setFocusedExpressionId(null);
 
     setSaveStatus(`Loaded ${new Date(normalized.updatedAt).toLocaleString()}`);
   }
@@ -492,6 +509,7 @@ function addExpressionAfter(id: string) {
       setTitle(imported.title);
       setExpressions(imported.expressions);
       setNextColorIndex(imported.expressions.length);
+      setFocusedExpressionId(null);
       setSaveStatus("Imported JSON");
     } catch {
       setSaveStatus("Invalid JSON graph file");
@@ -516,6 +534,14 @@ function addExpressionAfter(id: string) {
         event.preventDefault();
         resetGraph();
       }
+
+      if (isModifierPressed && key === "w") {
+        event.preventDefault();
+
+        if (focusedExpressionId) {
+          removeExpression(focusedExpressionId);
+        }
+      }
     }
 
     window.addEventListener("keydown", handleKeyDown);
@@ -523,7 +549,7 @@ function addExpressionAfter(id: string) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [activeGraphId, title, expressions, nextColorIndex]);
+  }, [activeGraphId, title, expressions, nextColorIndex, focusedExpressionId]);
 
   useEffect(() => {
     for (const expression of expressions) {
@@ -592,22 +618,23 @@ function addExpressionAfter(id: string) {
                         className="expression-textarea"
                         rows={1}
                         value={expression.raw}
+                        onFocus={() => setFocusedExpressionId(expression.id)}
                         onChange={(event) =>
                           updateExpression(expression.id, event.target.value)
                         }
-onInput={(event) =>
-  resizeExpressionInput(
-    event.currentTarget as HTMLTextAreaElement,
-  )
-}
-onKeyDown={(event) => {
-  if (event.key === "Enter" && !event.shiftKey) {
-    event.preventDefault();
-    addExpressionAfter(expression.id);
-  }
-}}
-placeholder="Type an expression..."
-spellCheck={false}
+                        onInput={(event) =>
+                          resizeExpressionInput(
+                            event.currentTarget as HTMLTextAreaElement,
+                          )
+                        }
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" && !event.shiftKey) {
+                            event.preventDefault();
+                            addExpressionAfter(expression.id);
+                          }
+                        }}
+                        placeholder="Type an expression..."
+                        spellCheck={false}
                       />
 
                       {result ? (
