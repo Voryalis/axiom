@@ -68,6 +68,7 @@ Main goals:
 - show a dot where curves intersect
 - display the intersection coordinates
 - Desmos-like point hover / selection behavior
+- Ctrl+W deletes the currently focused expression
 
 - long-term goal: functionality on par with or beyond Desmos
 
