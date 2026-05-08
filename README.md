@@ -45,6 +45,8 @@ Main goals:
 - Ctrl+R to reset
 - basic sliders for numeric variable expressions
 - pressing Enter in an expression creates a new expression
+- point plotting with expressions like (1, 2)
+- variable-based point plotting, like (a, b)
 
 ## Future ideas
 
@@ -56,7 +58,6 @@ Main goals:
 - slider accent colors should match their graph line colors
 - custom slider min, max, and step values
 - animated sliders
-- points
 - tables
 - inequalities
 - implicit equations

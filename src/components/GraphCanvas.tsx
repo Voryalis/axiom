@@ -21,6 +21,11 @@ type GraphCanvasProps = {
   expressions: GraphExpression[];
 };
 
+type GraphPoint = {
+  x: number;
+  y: number;
+};
+
 const INITIAL_VIEWPORT: Viewport = {
   xMin: -10,
   xMax: 10,
@@ -234,6 +239,14 @@ function draw(
 
   for (const expression of expressions) {
     if (!expression.visible) continue;
+
+    const point = parsePointExpression(expression.raw, scope);
+
+    if (point) {
+      drawPoint(ctx, width, height, point, expression.color, viewport);
+      continue;
+    }
+
     drawExpression(ctx, width, height, expression, viewport, scope);
   }
 }
@@ -294,6 +307,39 @@ function buildEvaluationScope(expressions: GraphExpression[]) {
   }
 
   return scope;
+}
+
+function parsePointExpression(
+  rawExpression: string,
+  scope: Record<string, number>,
+): GraphPoint | null {
+  const trimmed = rawExpression.trim();
+
+  const match = trimmed.match(/^\(\s*(.+)\s*,\s*(.+)\s*\)$/);
+
+  if (!match) return null;
+
+  const [, rawX, rawY] = match;
+
+  if (!rawX || !rawY) return null;
+
+  try {
+    const x = math.evaluate(rawX, scope);
+    const y = math.evaluate(rawY, scope);
+
+    if (
+      typeof x !== "number" ||
+      typeof y !== "number" ||
+      !Number.isFinite(x) ||
+      !Number.isFinite(y)
+    ) {
+      return null;
+    }
+
+    return { x, y };
+  } catch {
+    return null;
+  }
 }
 
 function isGraphLikeExpression(rawExpression: string) {
@@ -460,6 +506,30 @@ function drawExpression(
     }
   }
 
+  ctx.stroke();
+}
+
+function drawPoint(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  point: GraphPoint,
+  color: string,
+  viewport: Viewport,
+) {
+  const sx = graphToScreenX(point.x, width, viewport);
+  const sy = graphToScreenY(point.y, height, viewport);
+
+  if (sx < -20 || sx > width + 20 || sy < -20 || sy > height + 20) {
+    return;
+  }
+
+  ctx.beginPath();
+  ctx.fillStyle = color;
+  ctx.strokeStyle = "#1d1e21";
+  ctx.lineWidth = 2;
+  ctx.arc(sx, sy, 5, 0, Math.PI * 2);
+  ctx.fill();
   ctx.stroke();
 }
 

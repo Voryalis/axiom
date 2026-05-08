@@ -218,12 +218,20 @@ function formatEvaluatedValue(value: unknown) {
   return "";
 }
 
+function isPointExpression(rawExpression: string) {
+  return /^\(\s*(.+)\s*,\s*(.+)\s*\)$/.test(rawExpression.trim());
+}
+
 function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
   const expression = normalizeMathExpression(raw);
   const assignment = parseVariableAssignment(raw);
   const scope = buildEvaluationScope(expressions);
 
   if (!expression) return "";
+
+  if (isPointExpression(raw)) {
+    return "";
+  }
 
   try {
     if (assignment) {
