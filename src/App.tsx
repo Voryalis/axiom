@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import GraphCanvas, { type GraphExpression } from "./components/GraphCanvas";
 import "./App.css";
 
-const CURRENT_GRAPH_KEY = "axiom.currentGraph";
 const GRAPH_LIBRARY_KEY = "axiom.graphLibrary";
 
 type SavedGraph = {
@@ -14,21 +13,6 @@ type SavedGraph = {
 };
 
 const COLORS = ["#8ab4f8", "#a8d08d", "#f6c177", "#c4a7e7", "#f28b82"];
-
-const DEFAULT_EXPRESSIONS: GraphExpression[] = [
-  {
-    id: "expr-1",
-    raw: "y = x^2",
-    color: COLORS[0],
-    visible: true,
-  },
-  {
-    id: "expr-2",
-    raw: "y = sin(x)",
-    color: COLORS[1],
-    visible: true,
-  },
-];
 
 function hslToHex(hue: number, saturation: number, lightness: number) {
   const s = saturation / 100;
@@ -83,6 +67,19 @@ function generateExpressionColor(index: number) {
   return hslToHex(hue, 78, 72);
 }
 
+function createEmptyExpression(index: number): GraphExpression {
+  return {
+    id: crypto.randomUUID(),
+    raw: "",
+    color: generateExpressionColor(index),
+    visible: true,
+  };
+}
+
+function createDefaultExpressions(): GraphExpression[] {
+  return [createEmptyExpression(0)];
+}
+
 function isValidExpression(value: unknown): value is GraphExpression {
   if (typeof value !== "object" || value === null) return false;
 
@@ -121,21 +118,6 @@ function normalizeGraph(value: SavedGraph): SavedGraph {
   };
 }
 
-function loadCurrentGraph(): SavedGraph | null {
-  try {
-    const raw = localStorage.getItem(CURRENT_GRAPH_KEY);
-    if (!raw) return null;
-
-    const parsed = JSON.parse(raw);
-
-    if (!isValidSavedGraph(parsed)) return null;
-
-    return normalizeGraph(parsed);
-  } catch {
-    return null;
-  }
-}
-
 function loadGraphLibrary(): SavedGraph[] {
   try {
     const raw = localStorage.getItem(GRAPH_LIBRARY_KEY);
@@ -157,26 +139,22 @@ function saveGraphLibrary(graphs: SavedGraph[]) {
 
 function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const savedGraph = useMemo(() => loadCurrentGraph(), []);
+  const expressionInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const [activeGraphId, setActiveGraphId] = useState(
-    savedGraph?.id ?? crypto.randomUUID(),
-  );
-  const [title, setTitle] = useState(savedGraph?.title ?? "Untitled Graph");
-  const [expressions, setExpressions] = useState<GraphExpression[]>(
-    savedGraph?.expressions ?? DEFAULT_EXPRESSIONS,
-  );
-  const [nextColorIndex, setNextColorIndex] = useState(
-    savedGraph?.expressions?.length ?? DEFAULT_EXPRESSIONS.length,
-  );
+  const startingExpressions = useMemo(() => createDefaultExpressions(), []);
+
+  const [activeGraphId, setActiveGraphId] = useState<string>(crypto.randomUUID());
+  const [title, setTitle] = useState("Untitled Graph");
+  const [expressions, setExpressions] = useState<GraphExpression[]>(startingExpressions);
+  const [nextColorIndex, setNextColorIndex] = useState(startingExpressions.length);
   const [library, setLibrary] = useState<SavedGraph[]>(() => loadGraphLibrary());
-  const [saveStatus, setSaveStatus] = useState("Not saved");
+  const [saveStatus, setSaveStatus] = useState("Clean graph");
 
-  useEffect(() => {
-    if (savedGraph?.updatedAt) {
-      setSaveStatus(`Loaded ${new Date(savedGraph.updatedAt).toLocaleString()}`);
-    }
-  }, [savedGraph]);
+  function focusExpression(id: string) {
+    requestAnimationFrame(() => {
+      expressionInputRefs.current[id]?.focus();
+    });
+  }
 
   function markUnsaved() {
     setSaveStatus("Unsaved changes");
@@ -212,27 +190,16 @@ function App() {
   }
 
   function addExpression() {
-    const color = generateExpressionColor(nextColorIndex);
+    const expression = createEmptyExpression(nextColorIndex);
 
-    setExpressions((current) => [
-      ...current,
-      {
-        id: crypto.randomUUID(),
-        raw: "y = x",
-        color,
-        visible: true,
-      },
-    ]);
-
+    setExpressions((current) => [...current, expression]);
     setNextColorIndex((current) => current + 1);
+    focusExpression(expression.id);
     markUnsaved();
   }
 
   function removeExpression(id: string) {
-    setExpressions((current) => {
-      if (current.length === 1) return current;
-      return current.filter((expression) => expression.id !== id);
-    });
+    setExpressions((current) => current.filter((expression) => expression.id !== id));
     markUnsaved();
   }
 
@@ -249,8 +216,6 @@ function App() {
   function saveGraph() {
     const graph = createGraphSnapshot();
 
-    localStorage.setItem(CURRENT_GRAPH_KEY, JSON.stringify(graph, null, 2));
-
     setLibrary((current) => {
       const withoutCurrent = current.filter((item) => item.id !== graph.id);
       const next = [graph, ...withoutCurrent];
@@ -258,7 +223,7 @@ function App() {
       return next;
     });
 
-    setSaveStatus(`Saved ${new Date(graph.updatedAt).toLocaleTimeString()}`);
+    setSaveStatus(`Saved to library ${new Date(graph.updatedAt).toLocaleTimeString()}`);
   }
 
   function loadGraph(graph: SavedGraph) {
@@ -269,16 +234,22 @@ function App() {
     setExpressions(normalized.expressions);
     setNextColorIndex(normalized.expressions.length);
 
-    localStorage.setItem(CURRENT_GRAPH_KEY, JSON.stringify(normalized, null, 2));
     setSaveStatus(`Loaded ${new Date(normalized.updatedAt).toLocaleString()}`);
   }
 
   function newGraph() {
+    const defaultExpressions = createDefaultExpressions();
+    const firstExpression = defaultExpressions[0];
+
     setActiveGraphId(crypto.randomUUID());
     setTitle("Untitled Graph");
-    setExpressions(DEFAULT_EXPRESSIONS);
-    setNextColorIndex(DEFAULT_EXPRESSIONS.length);
-    markUnsaved();
+    setExpressions(defaultExpressions);
+    setNextColorIndex(defaultExpressions.length);
+    setSaveStatus("Clean graph");
+
+    if (firstExpression) {
+      focusExpression(firstExpression.id);
+    }
   }
 
   function deleteGraph(id: string) {
@@ -294,10 +265,17 @@ function App() {
   }
 
   function resetGraph() {
+    const defaultExpressions = createDefaultExpressions();
+    const firstExpression = defaultExpressions[0];
+
     setTitle("Untitled Graph");
-    setExpressions(DEFAULT_EXPRESSIONS);
-    setNextColorIndex(DEFAULT_EXPRESSIONS.length);
+    setExpressions(defaultExpressions);
+    setNextColorIndex(defaultExpressions.length);
     markUnsaved();
+
+    if (firstExpression) {
+      focusExpression(firstExpression.id);
+    }
   }
 
   function exportJson() {
@@ -376,59 +354,67 @@ function App() {
             </button>
           </div>
 
-          <div className="expression-list">
-            {expressions.map((expression) => (
-              <div
-                className={`expression-card ${
-                  expression.visible ? "" : "expression-card-hidden"
-                }`}
-                key={expression.id}
-              >
-                <button
-                  className="visibility-button"
-                  onClick={() => toggleExpression(expression.id)}
-                  title={expression.visible ? "Hide expression" : "Show expression"}
-                  style={{ borderColor: expression.color }}
+          {expressions.length === 0 ? (
+            <p className="empty-library">No expressions. Click + to add one.</p>
+          ) : (
+            <div className="expression-list">
+              {expressions.map((expression) => (
+                <div
+                  className={`expression-card ${
+                    expression.visible ? "" : "expression-card-hidden"
+                  }`}
+                  key={expression.id}
                 >
-                  <span
-                    className="visibility-dot"
-                    style={{
-                      background: expression.visible
-                        ? expression.color
-                        : "transparent",
-                    }}
-                  />
-                </button>
+                  <button
+                    className="visibility-button"
+                    onClick={() => toggleExpression(expression.id)}
+                    title={expression.visible ? "Hide expression" : "Show expression"}
+                    style={{ borderColor: expression.color }}
+                  >
+                    <span
+                      className="visibility-dot"
+                      style={{
+                        background: expression.visible
+                          ? expression.color
+                          : "transparent",
+                      }}
+                    />
+                  </button>
 
-                <input
-                  value={expression.raw}
-                  onChange={(event) =>
-                    updateExpression(expression.id, event.target.value)
-                  }
-                  spellCheck={false}
-                />
-
-                <label className="color-picker-label" title="Change line color">
                   <input
-                    className="color-picker"
-                    type="color"
-                    value={expression.color}
+                    ref={(element) => {
+                      expressionInputRefs.current[expression.id] = element;
+                    }}
+                    value={expression.raw}
                     onChange={(event) =>
-                      updateExpressionColor(expression.id, event.target.value)
+                      updateExpression(expression.id, event.target.value)
                     }
+                    placeholder="Type an expression..."
+                    spellCheck={false}
                   />
-                </label>
 
-                <button
-                  className="remove-button"
-                  onClick={() => removeExpression(expression.id)}
-                  title="Remove expression"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
+                  <label className="color-picker-label" title="Change line color">
+                    <input
+                      className="color-picker"
+                      type="color"
+                      value={expression.color}
+                      onChange={(event) =>
+                        updateExpressionColor(expression.id, event.target.value)
+                      }
+                    />
+                  </label>
+
+                  <button
+                    className="remove-button"
+                    onClick={() => removeExpression(expression.id)}
+                    title="Remove expression"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           <p className="hint">
             Try: y = x^2, y = sin(x), y = cos(x), y = sqrt(x)
