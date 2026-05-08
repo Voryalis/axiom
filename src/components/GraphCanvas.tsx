@@ -10,8 +10,15 @@ type Viewport = {
   yMax: number;
 };
 
+export type GraphExpression = {
+  id: string;
+  raw: string;
+  color: string;
+  visible: boolean;
+};
+
 type GraphCanvasProps = {
-  expression: string;
+  expressions: GraphExpression[];
 };
 
 const INITIAL_VIEWPORT: Viewport = {
@@ -23,7 +30,7 @@ const INITIAL_VIEWPORT: Viewport = {
 
 const ZOOM_SENSITIVITY = 0.0015;
 
-function GraphCanvas({ expression }: GraphCanvasProps) {
+function GraphCanvas({ expressions }: GraphCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewportRef = useRef<Viewport>({ ...INITIAL_VIEWPORT });
   const isDraggingRef = useRef(false);
@@ -88,7 +95,7 @@ function GraphCanvas({ expression }: GraphCanvasProps) {
       canvas.style.height = `${rect.height}px`;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      draw(ctx, rect.width, rect.height, expression, viewportRef.current);
+      draw(ctx, rect.width, rect.height, expressions, viewportRef.current);
     };
 
     const handleWheel = (event: WheelEvent) => {
@@ -109,7 +116,6 @@ function GraphCanvas({ expression }: GraphCanvasProps) {
 
       const newXMin = graphX + (viewport.xMin - graphX) * zoomFactor;
       const newXMax = graphX + (viewport.xMax - graphX) * zoomFactor;
-
       const newYMin = graphY + (viewport.yMin - graphY) * zoomFactor;
       const newYMax = graphY + (viewport.yMax - graphY) * zoomFactor;
 
@@ -195,7 +201,7 @@ function GraphCanvas({ expression }: GraphCanvasProps) {
       canvas.removeEventListener("pointercancel", handlePointerUp);
       canvas.removeEventListener("dblclick", resetViewport);
     };
-  }, [expression]);
+  }, [expressions]);
 
   return <canvas ref={canvasRef} className="graph-canvas" />;
 }
@@ -204,7 +210,7 @@ function draw(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  expression: string,
+  expressions: GraphExpression[],
   viewport: Viewport,
 ) {
   ctx.clearRect(0, 0, width, height);
@@ -212,7 +218,11 @@ function draw(
   drawBackground(ctx, width, height);
   drawGrid(ctx, width, height, viewport);
   drawLabels(ctx, width, height, viewport);
-  drawExpression(ctx, width, height, expression, viewport);
+
+  for (const expression of expressions) {
+    if (!expression.visible) continue;
+    drawExpression(ctx, width, height, expression, viewport);
+  }
 }
 
 function normalizeExpression(raw: string) {
@@ -322,10 +332,12 @@ function drawExpression(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  rawExpression: string,
+  graphExpression: GraphExpression,
   viewport: Viewport,
 ) {
-  const expression = normalizeExpression(rawExpression);
+  const expression = normalizeExpression(graphExpression.raw);
+
+  if (!expression) return;
 
   let compiled;
 
@@ -337,7 +349,7 @@ function drawExpression(
   }
 
   ctx.beginPath();
-  ctx.strokeStyle = "#8ab4f8";
+  ctx.strokeStyle = graphExpression.color;
   ctx.lineWidth = 2.5;
 
   let started = false;

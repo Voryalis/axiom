@@ -157,3 +157,46 @@ input {
   color: #7f858f;
   font-size: 12px;
 }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.small-button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #484b53;
+  border-radius: 10px;
+  background: #2f3137;
+  color: #f1f1f1;
+  cursor: pointer;
+}
+
+.expression-list {
+  display: grid;
+  gap: 10px;
+}
+
+.remove-button {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #8d929d;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.remove-button:hover {
+  background: #2b2d32;
+  color: #f1f1f1;
+}
