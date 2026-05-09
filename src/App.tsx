@@ -243,7 +243,7 @@ function isTableExpression(rawExpression: string) {
 }
 
 function isInequalityExpression(rawExpression: string) {
-  return /^y\s*(>=|<=|>|<)\s*(.+)$/i.test(rawExpression.trim());
+  return /^(x|y)\s*(>=|<=|>|<)\s*(.+)$/i.test(rawExpression.trim());
 }
 
 function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {

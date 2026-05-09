@@ -39,6 +39,7 @@ type ParsedTable = {
 };
 
 type ParsedInequality = {
+  variable: "x" | "y";
   operator: ">" | ">=" | "<" | "<=";
   expression: string;
 };
@@ -715,11 +716,13 @@ function parseTableExpression(
 
 function parseInequalityExpression(rawExpression: string): ParsedInequality | null {
   const trimmed = rawExpression.trim();
-  const match = trimmed.match(/^y\s*(>=|<=|>|<)\s*(.+)$/i);
+  const match = trimmed.match(/^(x|y)\s*(>=|<=|>|<)\s*(.+)$/i);
 
   if (!match) return null;
 
-  const [, operator, expression] = match;
+  const [, variable, operator, expression] = match;
+
+  if (variable !== "x" && variable !== "y") return null;
 
   if (
     operator !== ">" &&
@@ -733,6 +736,7 @@ function parseInequalityExpression(rawExpression: string): ParsedInequality | nu
   if (!expression?.trim()) return null;
 
   return {
+    variable,
     operator,
     expression: expression.trim(),
   };
@@ -943,6 +947,23 @@ function drawInequality(
   viewport: Viewport,
   scope: Record<string, number>,
 ) {
+  if (inequality.variable === "x") {
+    drawVerticalInequality(ctx, width, height, inequality, color, viewport, scope);
+    return;
+  }
+
+  drawYInequality(ctx, width, height, inequality, color, viewport, scope);
+}
+
+function drawYInequality(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  inequality: ParsedInequality,
+  color: string,
+  viewport: Viewport,
+  scope: Record<string, number>,
+) {
   let compiled;
 
   try {
@@ -953,7 +974,6 @@ function drawInequality(
   }
 
   ctx.save();
-
   ctx.fillStyle = hexToRgba(color, 0.14);
 
   for (let px = 0; px <= width; px++) {
@@ -967,9 +987,7 @@ function drawInequality(
       continue;
     }
 
-    if (typeof y !== "number" || !Number.isFinite(y)) {
-      continue;
-    }
+    if (typeof y !== "number" || !Number.isFinite(y)) continue;
 
     const sy = graphToScreenY(y, height, viewport);
 
@@ -978,6 +996,62 @@ function drawInequality(
     } else {
       ctx.fillRect(px, Math.min(height, sy), 1, Math.max(0, height - sy));
     }
+  }
+
+  drawInequalityBoundary(
+    ctx,
+    width,
+    height,
+    color,
+    inequality.operator,
+    (px) => {
+      const x = screenToGraphX(px, width, viewport);
+      const y = compiled.evaluate({ ...scope, x });
+
+      if (typeof y !== "number" || !Number.isFinite(y)) return null;
+
+      return {
+        screenX: px,
+        screenY: graphToScreenY(y, height, viewport),
+      };
+    },
+  );
+
+  ctx.restore();
+}
+
+function drawVerticalInequality(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  inequality: ParsedInequality,
+  color: string,
+  viewport: Viewport,
+  scope: Record<string, number>,
+) {
+  let value: unknown;
+
+  try {
+    value = math.evaluate(inequality.expression, scope);
+  } catch {
+    drawError(ctx, "Invalid inequality");
+    return;
+  }
+
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    drawError(ctx, "Invalid inequality");
+    return;
+  }
+
+  const sx = graphToScreenX(value, width, viewport);
+
+  ctx.save();
+  ctx.fillStyle = hexToRgba(color, 0.14);
+
+  if (inequality.operator === ">" || inequality.operator === ">=") {
+    ctx.fillRect(Math.max(0, sx), 0, Math.max(0, width - sx), height);
+  } else {
+    ctx.fillRect(0, 0, Math.min(width, sx), height);
   }
 
   ctx.beginPath();
@@ -990,42 +1064,62 @@ function drawInequality(
     ctx.setLineDash([]);
   }
 
+  ctx.moveTo(sx, 0);
+  ctx.lineTo(sx, height);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawInequalityBoundary(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  color: string,
+  operator: ParsedInequality["operator"],
+  getPoint: (screenX: number) => { screenX: number; screenY: number } | null,
+) {
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+
+  if (operator === ">" || operator === "<") {
+    ctx.setLineDash([8, 6]);
+  } else {
+    ctx.setLineDash([]);
+  }
+
   let started = false;
 
   for (let px = 0; px <= width; px++) {
-    const x = screenToGraphX(px, width, viewport);
-
-    let y: unknown;
+    let point: { screenX: number; screenY: number } | null = null;
 
     try {
-      y = compiled.evaluate({ ...scope, x });
+      point = getPoint(px);
     } catch {
       started = false;
       continue;
     }
 
-    if (typeof y !== "number" || !Number.isFinite(y)) {
+    if (!point) {
       started = false;
       continue;
     }
 
-    const sy = graphToScreenY(y, height, viewport);
-
-    if (sy < -height || sy > height * 2) {
+    if (point.screenY < -height || point.screenY > height * 2) {
       started = false;
       continue;
     }
 
     if (!started) {
-      ctx.moveTo(px, sy);
+      ctx.moveTo(point.screenX, point.screenY);
       started = true;
     } else {
-      ctx.lineTo(px, sy);
+      ctx.lineTo(point.screenX, point.screenY);
     }
   }
 
   ctx.stroke();
-  ctx.restore();
 }
 
 function hexToRgba(hex: string, alpha: number) {
