@@ -44,6 +44,11 @@ type ParsedInequality = {
   expression: string;
 };
 
+type ParsedEquation = {
+  left: "x" | "y";
+  right: string;
+};
+
 type RenderedPoint = {
   expressionId: string;
   point: GraphPoint;
@@ -62,91 +67,17 @@ const INITIAL_VIEWPORT: Viewport = {
 const ZOOM_SENSITIVITY = 0.0015;
 const POINT_HIT_RADIUS = 10;
 
-const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(function GraphCanvas(
-  { expressions },
-  ref,
-) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const viewportRef = useRef<Viewport>({ ...INITIAL_VIEWPORT });
-  const isDraggingRef = useRef(false);
-  const lastPointerRef = useRef({ x: 0, y: 0 });
-  const renderedPointsRef = useRef<RenderedPoint[]>([]);
-  const hoveredPointRef = useRef<RenderedPoint | null>(null);
-  const pinnedPointRef = useRef<RenderedPoint | null>(null);
+const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
+  function GraphCanvas({ expressions }, ref) {
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const viewportRef = useRef<Viewport>({ ...INITIAL_VIEWPORT });
+    const isDraggingRef = useRef(false);
+    const lastPointerRef = useRef({ x: 0, y: 0 });
+    const renderedPointsRef = useRef<RenderedPoint[]>([]);
+    const hoveredPointRef = useRef<RenderedPoint | null>(null);
+    const pinnedPointRef = useRef<RenderedPoint | null>(null);
 
     function renderCurrentViewport() {
-    const canvas = canvasRef.current;
-    const parent = canvas?.parentElement;
-    const ctx = canvas?.getContext("2d");
-
-    if (!canvas || !parent || !ctx) return;
-
-    const rect = parent.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-
-    canvas.width = Math.floor(rect.width * dpr);
-    canvas.height = Math.floor(rect.height * dpr);
-    canvas.style.width = `${rect.width}px`;
-    canvas.style.height = `${rect.height}px`;
-
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    const renderedPoints = draw(
-      ctx,
-      rect.width,
-      rect.height,
-      expressions,
-      viewportRef.current,
-    );
-
-    renderedPointsRef.current = renderedPoints;
-  }
-
-  function zoomViewport(factor: number) {
-    const viewport = viewportRef.current;
-
-    const centerX = (viewport.xMin + viewport.xMax) / 2;
-    const centerY = (viewport.yMin + viewport.yMax) / 2;
-
-    const halfWidth = ((viewport.xMax - viewport.xMin) * factor) / 2;
-    const halfHeight = ((viewport.yMax - viewport.yMin) * factor) / 2;
-
-    viewportRef.current = {
-      xMin: centerX - halfWidth,
-      xMax: centerX + halfWidth,
-      yMin: centerY - halfHeight,
-      yMax: centerY + halfHeight,
-    };
-
-    hoveredPointRef.current = null;
-    pinnedPointRef.current = null;
-
-    renderCurrentViewport();
-  }
-  useImperativeHandle(ref, () => ({
-
-        zoomIn() {
-      zoomViewport(0.8);
-    },
-    zoomOut() {
-      zoomViewport(1.25);
-    },
-
-    exportPng() {
-      const canvas = canvasRef.current;
-
-      if (!canvas) return;
-
-      const link = document.createElement("a");
-      link.href = canvas.toDataURL("image/png");
-      link.download = "axiom-graph.png";
-      link.click();
-    },
-    resetView() {
-      viewportRef.current = { ...INITIAL_VIEWPORT };
-
-    
-
       const canvas = canvasRef.current;
       const parent = canvas?.parentElement;
       const ctx = canvas?.getContext("2d");
@@ -172,297 +103,342 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(function Gra
       );
 
       renderedPointsRef.current = renderedPoints;
-      hoveredPointRef.current = null;
-      pinnedPointRef.current = null;
-    },
-  }));
+    }
 
-  useEffect(() => {
-    const preventNativeZoom = (event: WheelEvent) => {
-      if (event.ctrlKey || event.metaKey) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    };
-
-    const preventGesture = (event: Event) => {
-      event.preventDefault();
-      event.stopPropagation();
-    };
-
-    document.addEventListener("wheel", preventNativeZoom, {
-      passive: false,
-      capture: true,
-    });
-
-    window.addEventListener("wheel", preventNativeZoom, {
-      passive: false,
-      capture: true,
-    });
-
-    document.addEventListener("gesturestart", preventGesture, {
-      passive: false,
-      capture: true,
-    });
-    document.addEventListener("gesturechange", preventGesture, {
-      passive: false,
-      capture: true,
-    });
-    document.addEventListener("gestureend", preventGesture, {
-      passive: false,
-      capture: true,
-    });
-
-    return () => {
-      document.removeEventListener("wheel", preventNativeZoom, {
-        capture: true,
-      });
-      window.removeEventListener("wheel", preventNativeZoom, {
-        capture: true,
-      });
-      document.removeEventListener("gesturestart", preventGesture, {
-        capture: true,
-      });
-      document.removeEventListener("gesturechange", preventGesture, {
-        capture: true,
-      });
-      document.removeEventListener("gestureend", preventGesture, {
-        capture: true,
-      });
-    };
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const parent = canvas.parentElement;
-    if (!parent) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const enforceSquareUnits = (
-      viewport: Viewport,
-      width: number,
-      height: number,
-    ): Viewport => {
-      const xRange = viewport.xMax - viewport.xMin;
-      const yRange = xRange * (height / width);
-      const yCenter = (viewport.yMin + viewport.yMax) / 2;
-
-      return {
-        xMin: viewport.xMin,
-        xMax: viewport.xMax,
-        yMin: yCenter - yRange / 2,
-        yMax: yCenter + yRange / 2,
-      };
-    };
-
-    const render = () => {
-      const rect = parent.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-
-      viewportRef.current = enforceSquareUnits(
-        viewportRef.current,
-        rect.width,
-        rect.height,
-      );
-
-      canvas.width = Math.floor(rect.width * dpr);
-      canvas.height = Math.floor(rect.height * dpr);
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
-
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      const renderedPoints = draw(
-        ctx,
-        rect.width,
-        rect.height,
-        expressions,
-        viewportRef.current,
-      );
-
-      renderedPointsRef.current = renderedPoints;
-
-      const freshPinnedPoint = findMatchingRenderedPoint(
-        pinnedPointRef.current,
-        renderedPoints,
-      );
-      const freshHoveredPoint = findMatchingRenderedPoint(
-        hoveredPointRef.current,
-        renderedPoints,
-      );
-
-      pinnedPointRef.current = freshPinnedPoint;
-      hoveredPointRef.current = freshHoveredPoint;
-
-      if (
-        freshHoveredPoint &&
-        freshHoveredPoint.expressionId !== freshPinnedPoint?.expressionId
-      ) {
-        drawPointLabel(ctx, rect.width, rect.height, freshHoveredPoint);
-      }
-
-      if (freshPinnedPoint) {
-        drawPointLabel(ctx, rect.width, rect.height, freshPinnedPoint);
-      }
-    };
-
-    const handleWheel = (event: WheelEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const rect = canvas.getBoundingClientRect();
+    function zoomViewport(factor: number) {
       const viewport = viewportRef.current;
 
-      const mouseX = event.clientX - rect.left;
-      const mouseY = event.clientY - rect.top;
+      const centerX = (viewport.xMin + viewport.xMax) / 2;
+      const centerY = (viewport.yMin + viewport.yMax) / 2;
 
-      const graphX = screenToGraphX(mouseX, rect.width, viewport);
-      const graphY = screenToGraphY(mouseY, rect.height, viewport);
+      const halfWidth = ((viewport.xMax - viewport.xMin) * factor) / 2;
+      const halfHeight = ((viewport.yMax - viewport.yMin) * factor) / 2;
 
-      const rawZoomFactor = Math.exp(event.deltaY * ZOOM_SENSITIVITY);
-      const zoomFactor = Math.min(Math.max(rawZoomFactor, 0.85), 1.15);
+      viewportRef.current = {
+        xMin: centerX - halfWidth,
+        xMax: centerX + halfWidth,
+        yMin: centerY - halfHeight,
+        yMax: centerY + halfHeight,
+      };
 
-      const newXMin = graphX + (viewport.xMin - graphX) * zoomFactor;
-      const newXMax = graphX + (viewport.xMax - graphX) * zoomFactor;
-      const newYMin = graphY + (viewport.yMin - graphY) * zoomFactor;
-      const newYMax = graphY + (viewport.yMax - graphY) * zoomFactor;
+      hoveredPointRef.current = null;
+      pinnedPointRef.current = null;
 
-      viewportRef.current = enforceSquareUnits(
-        {
-          xMin: newXMin,
-          xMax: newXMax,
-          yMin: newYMin,
-          yMax: newYMax,
-        },
-        rect.width,
-        rect.height,
-      );
+      renderCurrentViewport();
+    }
 
-      render();
-    };
+    useImperativeHandle(ref, () => ({
+      exportPng() {
+        const canvas = canvasRef.current;
 
-    const handlePointerDown = (event: PointerEvent) => {
-      event.preventDefault();
+        if (!canvas) return;
 
-      isDraggingRef.current = true;
-      lastPointerRef.current = { x: event.clientX, y: event.clientY };
-      canvas.setPointerCapture(event.pointerId);
-    };
+        const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/png");
+        link.download = "axiom-graph.png";
+        link.click();
+      },
+      resetView() {
+        viewportRef.current = { ...INITIAL_VIEWPORT };
+        hoveredPointRef.current = null;
+        pinnedPointRef.current = null;
+        renderCurrentViewport();
+      },
+      zoomIn() {
+        zoomViewport(0.8);
+      },
+      zoomOut() {
+        zoomViewport(1.25);
+      },
+    }));
 
-    const handlePointerMove = (event: PointerEvent) => {
-      if (isDraggingRef.current) {
+    useEffect(() => {
+      const preventNativeZoom = (event: WheelEvent) => {
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      };
+
+      const preventGesture = (event: Event) => {
         event.preventDefault();
+        event.stopPropagation();
+      };
+
+      document.addEventListener("wheel", preventNativeZoom, {
+        passive: false,
+        capture: true,
+      });
+
+      window.addEventListener("wheel", preventNativeZoom, {
+        passive: false,
+        capture: true,
+      });
+
+      document.addEventListener("gesturestart", preventGesture, {
+        passive: false,
+        capture: true,
+      });
+      document.addEventListener("gesturechange", preventGesture, {
+        passive: false,
+        capture: true,
+      });
+      document.addEventListener("gestureend", preventGesture, {
+        passive: false,
+        capture: true,
+      });
+
+      return () => {
+        document.removeEventListener("wheel", preventNativeZoom, {
+          capture: true,
+        });
+        window.removeEventListener("wheel", preventNativeZoom, {
+          capture: true,
+        });
+        document.removeEventListener("gesturestart", preventGesture, {
+          capture: true,
+        });
+        document.removeEventListener("gesturechange", preventGesture, {
+          capture: true,
+        });
+        document.removeEventListener("gestureend", preventGesture, {
+          capture: true,
+        });
+      };
+    }, []);
+
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const parent = canvas.parentElement;
+      if (!parent) return;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const enforceSquareUnits = (
+        viewport: Viewport,
+        width: number,
+        height: number,
+      ): Viewport => {
+        const xRange = viewport.xMax - viewport.xMin;
+        const yRange = xRange * (height / width);
+        const yCenter = (viewport.yMin + viewport.yMax) / 2;
+
+        return {
+          xMin: viewport.xMin,
+          xMax: viewport.xMax,
+          yMin: yCenter - yRange / 2,
+          yMax: yCenter + yRange / 2,
+        };
+      };
+
+      const render = () => {
+        const rect = parent.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+
+        viewportRef.current = enforceSquareUnits(
+          viewportRef.current,
+          rect.width,
+          rect.height,
+        );
+
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const renderedPoints = draw(
+          ctx,
+          rect.width,
+          rect.height,
+          expressions,
+          viewportRef.current,
+        );
+
+        renderedPointsRef.current = renderedPoints;
+
+        const freshPinnedPoint = findMatchingRenderedPoint(
+          pinnedPointRef.current,
+          renderedPoints,
+        );
+        const freshHoveredPoint = findMatchingRenderedPoint(
+          hoveredPointRef.current,
+          renderedPoints,
+        );
+
+        pinnedPointRef.current = freshPinnedPoint;
+        hoveredPointRef.current = freshHoveredPoint;
+
+        if (
+          freshHoveredPoint &&
+          freshHoveredPoint.expressionId !== freshPinnedPoint?.expressionId
+        ) {
+          drawPointLabel(ctx, rect.width, rect.height, freshHoveredPoint);
+        }
+
+        if (freshPinnedPoint) {
+          drawPointLabel(ctx, rect.width, rect.height, freshPinnedPoint);
+        }
+      };
+
+      const handleWheel = (event: WheelEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
 
         const rect = canvas.getBoundingClientRect();
         const viewport = viewportRef.current;
-        const last = lastPointerRef.current;
 
-        const dx = event.clientX - last.x;
-        const dy = event.clientY - last.y;
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
 
-        const graphDx = (dx / rect.width) * (viewport.xMax - viewport.xMin);
-        const graphDy = (dy / rect.height) * (viewport.yMax - viewport.yMin);
+        const graphX = screenToGraphX(mouseX, rect.width, viewport);
+        const graphY = screenToGraphY(mouseY, rect.height, viewport);
 
-        viewportRef.current = {
-          xMin: viewport.xMin - graphDx,
-          xMax: viewport.xMax - graphDx,
-          yMin: viewport.yMin + graphDy,
-          yMax: viewport.yMax + graphDy,
-        };
+        const rawZoomFactor = Math.exp(event.deltaY * ZOOM_SENSITIVITY);
+        const zoomFactor = Math.min(Math.max(rawZoomFactor, 0.85), 1.15);
 
+        const newXMin = graphX + (viewport.xMin - graphX) * zoomFactor;
+        const newXMax = graphX + (viewport.xMax - graphX) * zoomFactor;
+        const newYMin = graphY + (viewport.yMin - graphY) * zoomFactor;
+        const newYMax = graphY + (viewport.yMax - graphY) * zoomFactor;
+
+        viewportRef.current = enforceSquareUnits(
+          {
+            xMin: newXMin,
+            xMax: newXMax,
+            yMin: newYMin,
+            yMax: newYMax,
+          },
+          rect.width,
+          rect.height,
+        );
+
+        render();
+      };
+
+      const handlePointerDown = (event: PointerEvent) => {
+        event.preventDefault();
+
+        isDraggingRef.current = true;
         lastPointerRef.current = { x: event.clientX, y: event.clientY };
+        canvas.setPointerCapture(event.pointerId);
+      };
+
+      const handlePointerMove = (event: PointerEvent) => {
+        if (isDraggingRef.current) {
+          event.preventDefault();
+
+          const rect = canvas.getBoundingClientRect();
+          const viewport = viewportRef.current;
+          const last = lastPointerRef.current;
+
+          const dx = event.clientX - last.x;
+          const dy = event.clientY - last.y;
+
+          const graphDx = (dx / rect.width) * (viewport.xMax - viewport.xMin);
+          const graphDy = (dy / rect.height) * (viewport.yMax - viewport.yMin);
+
+          viewportRef.current = {
+            xMin: viewport.xMin - graphDx,
+            xMax: viewport.xMax - graphDx,
+            yMin: viewport.yMin + graphDy,
+            yMax: viewport.yMax + graphDy,
+          };
+
+          lastPointerRef.current = { x: event.clientX, y: event.clientY };
+          render();
+          return;
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        const nearestPoint = findNearestPoint(
+          renderedPointsRef.current,
+          mouseX,
+          mouseY,
+        );
+
+        const previousHoveredId = hoveredPointRef.current?.expressionId ?? null;
+        const nextHoveredId = nearestPoint?.expressionId ?? null;
+
+        if (previousHoveredId !== nextHoveredId) {
+          hoveredPointRef.current = nearestPoint;
+          canvas.style.cursor = nearestPoint ? "pointer" : "grab";
+          render();
+        }
+      };
+
+      const handlePointerUp = (event: PointerEvent) => {
+        isDraggingRef.current = false;
+
+        if (canvas.hasPointerCapture(event.pointerId)) {
+          canvas.releasePointerCapture(event.pointerId);
+        }
+      };
+
+      const handleClick = (event: MouseEvent) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        const nearestPoint = findNearestPoint(
+          renderedPointsRef.current,
+          mouseX,
+          mouseY,
+        );
+
+        pinnedPointRef.current = nearestPoint;
         render();
-        return;
-      }
+      };
 
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = event.clientX - rect.left;
-      const mouseY = event.clientY - rect.top;
-
-      const nearestPoint = findNearestPoint(
-        renderedPointsRef.current,
-        mouseX,
-        mouseY,
-      );
-
-      const previousHoveredId = hoveredPointRef.current?.expressionId ?? null;
-      const nextHoveredId = nearestPoint?.expressionId ?? null;
-
-      if (previousHoveredId !== nextHoveredId) {
-        hoveredPointRef.current = nearestPoint;
-        canvas.style.cursor = nearestPoint ? "pointer" : "grab";
+      const handlePointerLeave = () => {
+        isDraggingRef.current = false;
+        hoveredPointRef.current = null;
+        canvas.style.cursor = "grab";
         render();
-      }
-    };
+      };
 
-    const handlePointerUp = (event: PointerEvent) => {
-      isDraggingRef.current = false;
+      const resetViewport = () => {
+        viewportRef.current = { ...INITIAL_VIEWPORT };
+        render();
+      };
 
-      if (canvas.hasPointerCapture(event.pointerId)) {
-        canvas.releasePointerCapture(event.pointerId);
-      }
-    };
-
-    const handleClick = (event: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = event.clientX - rect.left;
-      const mouseY = event.clientY - rect.top;
-
-      const nearestPoint = findNearestPoint(
-        renderedPointsRef.current,
-        mouseX,
-        mouseY,
-      );
-
-      pinnedPointRef.current = nearestPoint;
       render();
-    };
 
-    const handlePointerLeave = () => {
-      isDraggingRef.current = false;
-      hoveredPointRef.current = null;
-      canvas.style.cursor = "grab";
-      render();
-    };
+      const resizeObserver = new ResizeObserver(render);
+      resizeObserver.observe(parent);
 
-    const resetViewport = () => {
-      viewportRef.current = { ...INITIAL_VIEWPORT };
-      render();
-    };
+      canvas.addEventListener("wheel", handleWheel, { passive: false });
+      canvas.addEventListener("pointerdown", handlePointerDown);
+      canvas.addEventListener("pointermove", handlePointerMove);
+      canvas.addEventListener("pointerup", handlePointerUp);
+      canvas.addEventListener("pointercancel", handlePointerUp);
+      canvas.addEventListener("pointerleave", handlePointerLeave);
+      canvas.addEventListener("click", handleClick);
+      canvas.addEventListener("dblclick", resetViewport);
 
-    render();
+      return () => {
+        resizeObserver.disconnect();
+        canvas.removeEventListener("wheel", handleWheel);
+        canvas.removeEventListener("pointerdown", handlePointerDown);
+        canvas.removeEventListener("pointermove", handlePointerMove);
+        canvas.removeEventListener("pointerup", handlePointerUp);
+        canvas.removeEventListener("pointercancel", handlePointerUp);
+        canvas.removeEventListener("pointerleave", handlePointerLeave);
+        canvas.removeEventListener("click", handleClick);
+        canvas.removeEventListener("dblclick", resetViewport);
+      };
+    }, [expressions]);
 
-    const resizeObserver = new ResizeObserver(render);
-    resizeObserver.observe(parent);
-
-    canvas.addEventListener("wheel", handleWheel, { passive: false });
-    canvas.addEventListener("pointerdown", handlePointerDown);
-    canvas.addEventListener("pointermove", handlePointerMove);
-    canvas.addEventListener("pointerup", handlePointerUp);
-    canvas.addEventListener("pointercancel", handlePointerUp);
-    canvas.addEventListener("pointerleave", handlePointerLeave);
-    canvas.addEventListener("click", handleClick);
-    canvas.addEventListener("dblclick", resetViewport);
-
-    return () => {
-      resizeObserver.disconnect();
-      canvas.removeEventListener("wheel", handleWheel);
-      canvas.removeEventListener("pointerdown", handlePointerDown);
-      canvas.removeEventListener("pointermove", handlePointerMove);
-      canvas.removeEventListener("pointerup", handlePointerUp);
-      canvas.removeEventListener("pointercancel", handlePointerUp);
-      canvas.removeEventListener("pointerleave", handlePointerLeave);
-      canvas.removeEventListener("click", handleClick);
-      canvas.removeEventListener("dblclick", resetViewport);
-    };
-  }, [expressions]);
-
-  return <canvas ref={canvasRef} className="graph-canvas" />;
-});
+    return <canvas ref={canvasRef} className="graph-canvas" />;
+  },
+);
 
 function draw(
   ctx: CanvasRenderingContext2D,
@@ -530,6 +506,13 @@ function draw(
         scope,
       );
 
+      continue;
+    }
+
+    const equation = parseEquationExpression(expression.raw);
+
+    if (equation) {
+      drawEquation(ctx, width, height, equation, expression.color, viewport, scope);
       continue;
     }
 
@@ -742,6 +725,23 @@ function parseInequalityExpression(rawExpression: string): ParsedInequality | nu
   };
 }
 
+function parseEquationExpression(rawExpression: string): ParsedEquation | null {
+  const trimmed = rawExpression.trim();
+  const match = trimmed.match(/^(x|y)\s*=\s*(.+)$/i);
+
+  if (!match) return null;
+
+  const [, left, right] = match;
+
+  if (left !== "x" && left !== "y") return null;
+  if (!right?.trim()) return null;
+
+  return {
+    left,
+    right: right.trim(),
+  };
+}
+
 function isTableExpression(rawExpression: string) {
   const firstLine = rawExpression
     .split("\n")
@@ -764,7 +764,8 @@ function isGraphLikeExpression(rawExpression: string) {
     rawExpression.trim().length > 0 &&
     !isVariableAssignment(rawExpression) &&
     !isTableExpression(rawExpression) &&
-    !parseInequalityExpression(rawExpression)
+    !parseInequalityExpression(rawExpression) &&
+    !parseEquationExpression(rawExpression)
   );
 }
 
@@ -897,8 +898,101 @@ function drawExpression(
     return;
   }
 
+  drawCompiledYExpression(ctx, width, height, compiled, graphExpression.color, viewport, scope);
+}
+
+function drawEquation(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  equation: ParsedEquation,
+  color: string,
+  viewport: Viewport,
+  scope: Record<string, number>,
+) {
+  if (equation.left === "x") {
+    drawXEquation(ctx, width, height, equation.right, color, viewport, scope);
+    return;
+  }
+
+  drawYEquation(ctx, width, height, equation.right, color, viewport, scope);
+}
+
+function drawYEquation(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  right: string,
+  color: string,
+  viewport: Viewport,
+  scope: Record<string, number>,
+) {
+  let compiled;
+
+  try {
+    compiled = math.compile(right);
+  } catch {
+    drawError(ctx, "Invalid equation");
+    return;
+  }
+
+  drawCompiledYExpression(ctx, width, height, compiled, color, viewport, scope);
+}
+
+function drawXEquation(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  right: string,
+  color: string,
+  viewport: Viewport,
+  scope: Record<string, number>,
+) {
+  const normalized = right.trim();
+
+  if (normalized.toLowerCase() === "y") {
+    drawYEquation(ctx, width, height, "x", color, viewport, scope);
+    return;
+  }
+
+  let value: unknown;
+
+  try {
+    value = math.evaluate(normalized, scope);
+  } catch {
+    drawError(ctx, "Invalid equation");
+    return;
+  }
+
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    drawError(ctx, "Invalid equation");
+    return;
+  }
+
+  const sx = graphToScreenX(value, width, viewport);
+
+  ctx.save();
   ctx.beginPath();
-  ctx.strokeStyle = graphExpression.color;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.moveTo(sx, 0);
+  ctx.lineTo(sx, height);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCompiledYExpression(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  compiled: { evaluate: (scope?: Record<string, number>) => unknown },
+  color: string,
+  viewport: Viewport,
+  scope: Record<string, number>,
+) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.strokeStyle = color;
   ctx.lineWidth = 2.5;
 
   let started = false;
@@ -936,6 +1030,7 @@ function drawExpression(
   }
 
   ctx.stroke();
+  ctx.restore();
 }
 
 function drawInequality(

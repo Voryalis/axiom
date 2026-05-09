@@ -246,6 +246,10 @@ function isInequalityExpression(rawExpression: string) {
   return /^(x|y)\s*(>=|<=|>|<)\s*(.+)$/i.test(rawExpression.trim());
 }
 
+function isEquationExpression(rawExpression: string) {
+  return /^(x|y)\s*=\s*(.+)$/i.test(rawExpression.trim());
+}
+
 function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
   const expression = normalizeMathExpression(raw);
   const assignment = parseVariableAssignment(raw);
@@ -254,12 +258,13 @@ function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
   if (!expression) return "";
 
   if (
-  isPointExpression(raw) ||
-  isTableExpression(raw) ||
-  isInequalityExpression(raw)
-) {
-  return "";
-}
+    isPointExpression(raw) ||
+    isTableExpression(raw) ||
+    isInequalityExpression(raw) ||
+    isEquationExpression(raw)
+  ) {
+    return "";
+  }
 
   try {
     if (assignment) {
@@ -540,38 +545,38 @@ function App() {
     graphCanvasRef.current?.resetView();
   }
 
-function zoomIn() {
-  graphCanvasRef.current?.zoomIn();
-}
-
-function zoomOut() {
-  graphCanvasRef.current?.zoomOut();
-}
-
-function stopContinuousZoom() {
-  if (zoomRepeatIntervalRef.current !== null) {
-    window.clearInterval(zoomRepeatIntervalRef.current);
-    zoomRepeatIntervalRef.current = null;
-  }
-}
-
-function startContinuousZoom(direction: "in" | "out") {
-  stopContinuousZoom();
-
-  if (direction === "in") {
-    zoomIn();
-  } else {
-    zoomOut();
+  function zoomIn() {
+    graphCanvasRef.current?.zoomIn();
   }
 
-  zoomRepeatIntervalRef.current = window.setInterval(() => {
+  function zoomOut() {
+    graphCanvasRef.current?.zoomOut();
+  }
+
+  function stopContinuousZoom() {
+    if (zoomRepeatIntervalRef.current !== null) {
+      window.clearInterval(zoomRepeatIntervalRef.current);
+      zoomRepeatIntervalRef.current = null;
+    }
+  }
+
+  function startContinuousZoom(direction: "in" | "out") {
+    stopContinuousZoom();
+
     if (direction === "in") {
       zoomIn();
     } else {
       zoomOut();
     }
-  }, 80);
-}
+
+    zoomRepeatIntervalRef.current = window.setInterval(() => {
+      if (direction === "in") {
+        zoomIn();
+      } else {
+        zoomOut();
+      }
+    }, 80);
+  }
 
   async function importJson(file: File | undefined) {
     if (!file) return;
@@ -607,7 +612,6 @@ function startContinuousZoom(direction: "in" | "out") {
   }
 
   useEffect(() => {
-    
     function handleKeyDown(event: KeyboardEvent) {
       const isModifierPressed = event.ctrlKey || event.metaKey;
       const key = event.key.toLowerCase();
@@ -645,25 +649,25 @@ function startContinuousZoom(direction: "in" | "out") {
   }, [expressions]);
 
   useEffect(() => {
-  function resetPageZoom() {
-    document.body.style.zoom = "1";
-    document.documentElement.style.zoom = "1";
-  }
+    function resetPageZoom() {
+      document.body.style.setProperty("zoom", "1");
+      document.documentElement.style.setProperty("zoom", "1");
+    }
 
-  resetPageZoom();
+    resetPageZoom();
 
-  const interval = window.setInterval(resetPageZoom, 100);
+    const interval = window.setInterval(resetPageZoom, 100);
 
-  return () => {
-    window.clearInterval(interval);
-  };
-}, []);
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
-  return () => {
-    stopContinuousZoom();
-  };
-}, []);
+    return () => {
+      stopContinuousZoom();
+    };
+  }, []);
 
   return (
     <main className="app">
@@ -871,51 +875,51 @@ function startContinuousZoom(direction: "in" | "out") {
         <div className="graph-stage">
           <GraphCanvas ref={graphCanvasRef} expressions={expressions} />
 
-<div className="graph-floating-controls">
-  <button
-    onPointerDown={(event) => {
-      event.preventDefault();
-      startContinuousZoom("in");
-    }}
-    onPointerUp={stopContinuousZoom}
-    onPointerLeave={stopContinuousZoom}
-    onPointerCancel={stopContinuousZoom}
-    onKeyDown={(event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        zoomIn();
-      }
-    }}
-    title="Zoom in"
-    aria-label="Zoom in"
-  >
-    +
-  </button>
+          <div className="graph-floating-controls">
+            <button
+              onPointerDown={(event) => {
+                event.preventDefault();
+                startContinuousZoom("in");
+              }}
+              onPointerUp={stopContinuousZoom}
+              onPointerLeave={stopContinuousZoom}
+              onPointerCancel={stopContinuousZoom}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  zoomIn();
+                }
+              }}
+              title="Zoom in"
+              aria-label="Zoom in"
+            >
+              +
+            </button>
 
-  <button
-    onPointerDown={(event) => {
-      event.preventDefault();
-      startContinuousZoom("out");
-    }}
-    onPointerUp={stopContinuousZoom}
-    onPointerLeave={stopContinuousZoom}
-    onPointerCancel={stopContinuousZoom}
-    onKeyDown={(event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        zoomOut();
-      }
-    }}
-    title="Zoom out"
-    aria-label="Zoom out"
-  >
-    −
-  </button>
+            <button
+              onPointerDown={(event) => {
+                event.preventDefault();
+                startContinuousZoom("out");
+              }}
+              onPointerUp={stopContinuousZoom}
+              onPointerLeave={stopContinuousZoom}
+              onPointerCancel={stopContinuousZoom}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  zoomOut();
+                }
+              }}
+              title="Zoom out"
+              aria-label="Zoom out"
+            >
+              −
+            </button>
 
-  <button onClick={resetView} title="Reset view" aria-label="Reset view">
-    ↺
-  </button>
-</div>
+            <button onClick={resetView} title="Reset view" aria-label="Reset view">
+              ↺
+            </button>
+          </div>
         </div>
       </section>
     </main>
