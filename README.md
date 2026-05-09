@@ -1,34 +1,35 @@
 # Axiom
 
-Axiom is a local-first desktop graphing calculator with a dark interface and offline graph storage.
+axiom is a local-first desktop graphing calculator with a dark interface and offline graph storage.
 
-## Current direction
+it is inspired by desmos, but it is meant to have its own identity.
 
-Axiom is being built as a Desmos-inspired graphing calculator, but with its own identity.
+## current direction
 
-Main goals:
+main goals:
 
 - desktop-first app
-- Linux first
-- Windows later
-- macOS after that
+- linux first
+- windows later
+- macos after that
 - real offline use
 - no account required
 - local graph saving
-- portable JSON graph files
+- portable json graph files
 - dark gray interface
 - polished graphing experience
+- functionality on par with or beyond desmos
 
-## Current features
+## current features
 
-### App foundation
+### app foundation
 
-- Tauri desktop app
-- React + TypeScript frontend
+- tauri desktop app
+- react + typescript frontend
 - dark interface
 - graph canvas renderer
 
-### Graph viewport
+### graph viewport
 
 - mouse/touchpad zoom
 - drag to pan
@@ -36,135 +37,141 @@ Main goals:
 - double-click to reset viewport
 - floating zoom in, zoom out, and reset view controls
 
-### Expressions
+### expressions
 
 - editable function plotting
 - multiple expressions
-- pressing Enter in an expression creates a new expression
+- pressing enter in an expression creates a new expression
 - deletable final expression
 - turn graph lines on and off
 - change each line color
 
-### Math engine
+### math engine
 
 - normal math evaluation for non-graph expressions
 - basic sliders for numeric variable expressions
 
-### Export and sharing
-- PNG export of the current graph canvas
-
-### Advanced Graphing 
-
-- basic inequality graphing for expressions like `y > x` and `y <= x^2`
-
-### Points
+### points
 
 - point plotting with expressions like `(1, 2)`
 - variable-based point plotting, like `(a, b)`
 - point coordinate labels on hover and click
 
-### Saving and library
+### tables
+
+- text-based table point plotting
+- connected text-based table point plotting with `table lines:`
+
+### advanced graphing
+
+- basic inequality graphing for expressions like `y > x` and `y <= x^2`
+- basic vertical inequality graphing for expressions like `x > 2` and `x <= a`
+
+### saving and library
 
 - clean startup graph
 - local graph library
 - saved graphs remain available in the local library
 - local current graph saving
-- import and export JSON graph files
+- import and export json graph files
 
-### Keyboard shortcuts
+### export and sharing
 
-- Ctrl+S to save
-- Ctrl+R to reset
+- png export of the current graph canvas
 
-### Interface
+### keyboard shortcuts
+
+- ctrl+s to save
+- ctrl+r to reset
+
+### interface
 
 - scrollable sidebar for many expressions and library items
 
-## Future ideas
+## future ideas
 
-### Graph controls
+### graph controls
 
 - collapsible sidebar / graph-only mode
+- better linux touchpad pinch zoom support
 
-### Math and expression input
+### math and expression input
 
-- normal calculator/math evaluation like Desmos
 - on-screen math keyboard
-- keyboard shortcuts
-- Ctrl+W deletes the currently focused expression
+- more keyboard shortcuts
+- ctrl+w deletes the currently focused expression
 
-### Sliders
+### sliders
 
-- sliders for variable expressions
 - slider accent colors should match their graph line colors
 - custom slider min, max, and step values
 - animated sliders
 
-### Tables
+### tables
 
-- real editable table UI for point data
+- real editable table ui for point data
 - add/remove table rows
 - copy/paste table data from spreadsheets
 - optional connected table points
-- table UI should have a toggle/button for connected lines vs points only
+- table ui should have a toggle/button for connected lines vs points only
 - text-based table syntax is temporary and should be replaced with a user-friendly table interface
 - table connected-lines mode should later support both straight segments and optional smooth curve interpolation
 
-Table expression
-[x] show points
-[ ] connect lines
+future table controls idea:
 
-### Points and intersections
+`txt`
+`table expression`
+`[x] show points`
+`[ ] connect lines`
 
-- Desmos-style point coordinate labels on hover/click
+### points and intersections
+
+- desmos-style point coordinate labels on hover/click
 - intersection points between graphs
 - show a dot where curves intersect
 - display the intersection coordinates
-- Desmos-like point hover / selection behavior
+- desmos-like point hover / selection behavior
 
-### Advanced graphing
+### advanced graphing
 
 - more complete inequality support
 - compound inequalities
 - inequalities with x on either side
 - implicit inequalities
 - implicit equations
+- equations with variables on either side, like x = y
+- inequalities with variables on either side, like x<=y
 
-### Export and sharing
 
-### Design and settings
+### design and settings 
 
 - themes
-- settings panel
+- settings panel 
 - toggleable light/dark theme in settings
-- restyled color picker that matches Axiom’s theme
-- replace topbar text buttons like Save, Reset, Import, and Export with clean icon/symbol buttons
+- restyled color picker that matches axiom's theme
+- replace topbar text buttons like save, reset, import, and export with clean icon/symbol buttons
 
-### Long-term goal
+## development
 
-- functionality on par with or beyond Desmos
-## Development
+install dependencies:
 
-Run:
+`npm install`
 
-npm install
+run the development app:
 
-Then:
+`npm run tauri dev`
 
-npm run tauri dev
+## build
 
-## Status
+for a production desktop build:
 
-Early development.
+`npm run tauri build`
 
-## Build
+## known issues
 
-For a production desktop build:
+- liux webkit/tauri pinch gesture may trigger native webview zoom; current workaround forces page zoom back to normal 
+- `y = x` works, but `x = y` does not yet
 
-```bash```
-```npm run tauri build```
+## status 
 
-## Known Issues
-
-- Linux WebKit/Tauri pinch gesture may trigger native webview zoom; current workaround forces page zoom back to normal
-
+early development
