@@ -852,6 +852,7 @@ function App() {
                               slider.min,
                               Math.min(slider.max, slider.value),
                             )}
+                            style={{ accentColor: expression.color }}
                             onChange={(event) =>
                               updateExpressionFromSlider(
                                 expression.id,

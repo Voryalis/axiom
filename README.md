@@ -50,7 +50,9 @@ main goals:
 
 - normal math evaluation for non-graph expressions
 - basic sliders for numeric variable expressions
-- custom slider min, max, and step values with syntax like `a = 3 [0, 10, 0.5]`
+- custom slider min, max, and step values with syntax like 
+`a = 3 [0, 10, 0.5]`
+- slider accent colors match their graph line colors
 
 ### points
 
@@ -107,7 +109,9 @@ main goals:
 
 ### sliders
 
-- slider accent colors should match their graph line colors
+- editable slider value directly in the slider control, similar to desmos
+- slider ui controls for min, max, and step values instead of only text syntax
+- optional settings/popup control for slider movement amount
 - animated sliders
 - editable slider value directly in the slider control, similar to desmos
 - slider ui controls for min, max, and step values instead of only text syntax
