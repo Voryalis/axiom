@@ -626,6 +626,25 @@ function parseVariableAssignment(rawExpression: string) {
   return { name, expression };
 }
 
+function parseSliderConfig(expression: string) {
+  const trimmed = expression.trim();
+  const match = trimmed.match(
+    /^(.*?)\s*\[\s*(-?(?:\d+(?:\.\d+)?|\.\d+))\s*,\s*(-?(?:\d+(?:\.\d+)?|\.\d+))(?:\s*,\s*(-?(?:\d+(?:\.\d+)?|\.\d+)))?\s*\]\s*$/,
+  );
+
+  if (!match) {
+    return {
+      expression: trimmed,
+    };
+  }
+
+  const [, rawExpression] = match;
+
+  return {
+    expression: rawExpression?.trim() || trimmed,
+  };
+}
+
 function buildEvaluationScope(expressions: GraphExpression[]) {
   const scope: Record<string, number> = {};
 
@@ -636,7 +655,8 @@ function buildEvaluationScope(expressions: GraphExpression[]) {
     if (assignment.name === "x" || assignment.name === "y") continue;
 
     try {
-      const value = math.evaluate(assignment.expression, scope);
+      const sliderConfig = parseSliderConfig(assignment.expression);
+      const value = math.evaluate(sliderConfig.expression, scope);
 
       if (typeof value === "number" && Number.isFinite(value)) {
         scope[assignment.name] = value;

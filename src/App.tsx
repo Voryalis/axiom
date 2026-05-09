@@ -167,19 +167,74 @@ function parseVariableAssignment(rawExpression: string) {
   return { name, expression };
 }
 
+function parseSliderConfig(expression: string) {
+  const trimmed = expression.trim();
+  const match = trimmed.match(
+    /^(.*?)\s*\[\s*(-?(?:\d+(?:\.\d+)?|\.\d+))\s*,\s*(-?(?:\d+(?:\.\d+)?|\.\d+))(?:\s*,\s*(-?(?:\d+(?:\.\d+)?|\.\d+)))?\s*\]\s*$/,
+  );
+
+  const defaultConfig = {
+    expression: trimmed,
+    min: -10,
+    max: 10,
+    step: 0.1,
+    hasCustomConfig: false,
+  };
+
+  if (!match) return defaultConfig;
+
+  const [, rawExpression, rawMin, rawMax, rawStep] = match;
+
+  if (!rawExpression?.trim() || !rawMin || !rawMax) {
+    return defaultConfig;
+  }
+
+  const min = Number(rawMin);
+  const max = Number(rawMax);
+  const step = rawStep ? Number(rawStep) : 0.1;
+
+  if (
+    !Number.isFinite(min) ||
+    !Number.isFinite(max) ||
+    !Number.isFinite(step) ||
+    min >= max ||
+    step <= 0
+  ) {
+    return defaultConfig;
+  }
+
+  return {
+    expression: rawExpression.trim(),
+    min,
+    max,
+    step,
+    hasCustomConfig: true,
+  };
+}
+
+function formatSliderConfigNumber(value: number) {
+  return Number(value.toFixed(6)).toString();
+}
+
 function parseNumericVariableAssignment(rawExpression: string) {
   const assignment = parseVariableAssignment(rawExpression);
 
   if (!assignment) return null;
 
+  const sliderConfig = parseSliderConfig(assignment.expression);
+
   try {
-    const value = math.evaluate(assignment.expression);
+    const value = math.evaluate(sliderConfig.expression);
 
     if (typeof value !== "number" || !Number.isFinite(value)) return null;
 
     return {
       name: assignment.name,
       value,
+      min: sliderConfig.min,
+      max: sliderConfig.max,
+      step: sliderConfig.step,
+      hasCustomConfig: sliderConfig.hasCustomConfig,
     };
   } catch {
     return null;
@@ -195,7 +250,8 @@ function buildEvaluationScope(expressions: GraphExpression[]) {
     if (!assignment) continue;
 
     try {
-      const value = math.evaluate(assignment.expression, scope);
+      const sliderConfig = parseSliderConfig(assignment.expression);
+      const value = math.evaluate(sliderConfig.expression, scope);
 
       if (typeof value === "number" && Number.isFinite(value)) {
         scope[assignment.name] = value;
@@ -287,7 +343,8 @@ function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
 
   try {
     if (assignment) {
-      const value = math.evaluate(assignment.expression, scope);
+      const sliderConfig = parseSliderConfig(assignment.expression);
+      const value = math.evaluate(sliderConfig.expression, scope);
       return formatEvaluatedValue(value);
     }
 
@@ -308,9 +365,18 @@ function updateVariableAssignment(raw: string, value: number) {
 
   if (!assignment) return raw;
 
+  const sliderConfig = parseSliderConfig(assignment.expression);
   const rounded = Number(value.toFixed(6)).toString();
 
-  return `${assignment.name} = ${rounded}`;
+  if (!sliderConfig.hasCustomConfig) {
+    return `${assignment.name} = ${rounded}`;
+  }
+
+  return `${assignment.name} = ${rounded} [${formatSliderConfigNumber(
+    sliderConfig.min,
+  )}, ${formatSliderConfigNumber(sliderConfig.max)}, ${formatSliderConfigNumber(
+    sliderConfig.step,
+  )}]`;
 }
 
 function App() {
@@ -774,13 +840,18 @@ function App() {
 
                       {slider ? (
                         <div className="slider-control">
-                          <span className="slider-label">−10</span>
+                          <span className="slider-label">
+                            {formatSliderConfigNumber(slider.min)}
+                          </span>
                           <input
                             type="range"
-                            min="-10"
-                            max="10"
-                            step="0.1"
-                            value={Math.max(-10, Math.min(10, slider.value))}
+                            min={slider.min}
+                            max={slider.max}
+                            step={slider.step}
+                            value={Math.max(
+                              slider.min,
+                              Math.min(slider.max, slider.value),
+                            )}
                             onChange={(event) =>
                               updateExpressionFromSlider(
                                 expression.id,
@@ -788,7 +859,9 @@ function App() {
                               )
                             }
                           />
-                          <span className="slider-label">10</span>
+                          <span className="slider-label">
+                            {formatSliderConfigNumber(slider.max)}
+                          </span>
                         </div>
                       ) : null}
                     </div>
