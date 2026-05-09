@@ -45,7 +45,7 @@ type ParsedInequality = {
 };
 
 type ParsedEquation = {
-  left: "x" | "y";
+  left: string;
   right: string;
 };
 
@@ -727,17 +727,26 @@ function parseInequalityExpression(rawExpression: string): ParsedInequality | nu
 
 function parseEquationExpression(rawExpression: string): ParsedEquation | null {
   const trimmed = rawExpression.trim();
-  const match = trimmed.match(/^(x|y)\s*=\s*(.+)$/i);
+  const match = trimmed.match(/^(.+?)\s*=\s*(.+)$/);
 
   if (!match) return null;
 
   const [, left, right] = match;
 
-  if (left !== "x" && left !== "y") return null;
-  if (!right?.trim()) return null;
+  if (!left?.trim() || !right?.trim()) return null;
+
+  const normalizedLeft = left.trim();
+
+  if (
+    /^[a-zA-Z]\w*$/.test(normalizedLeft) &&
+    normalizedLeft !== "x" &&
+    normalizedLeft !== "y"
+  ) {
+    return null;
+  }
 
   return {
-    left,
+    left: normalizedLeft,
     right: right.trim(),
   };
 }
@@ -910,12 +919,25 @@ function drawEquation(
   viewport: Viewport,
   scope: Record<string, number>,
 ) {
-  if (equation.left === "x") {
-    drawXEquation(ctx, width, height, equation.right, color, viewport, scope);
+  const left = equation.left.trim();
+  const right = equation.right.trim();
+
+  if (left === "y" && !usesVariable(right, "y")) {
+    drawYEquation(ctx, width, height, right, color, viewport, scope);
     return;
   }
 
-  drawYEquation(ctx, width, height, equation.right, color, viewport, scope);
+  if (left === "x" && right === "y") {
+    drawYEquation(ctx, width, height, "x", color, viewport, scope);
+    return;
+  }
+
+  if (left === "x" && !usesVariable(right, "x") && !usesVariable(right, "y")) {
+    drawXEquation(ctx, width, height, right, color, viewport, scope);
+    return;
+  }
+
+  drawImplicitEquation(ctx, width, height, left, right, color, viewport, scope);
 }
 
 function drawYEquation(
@@ -978,6 +1000,97 @@ function drawXEquation(
   ctx.moveTo(sx, 0);
   ctx.lineTo(sx, height);
   ctx.stroke();
+  ctx.restore();
+}
+
+function drawImplicitEquation(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  left: string,
+  right: string,
+  color: string,
+  viewport: Viewport,
+  scope: Record<string, number>,
+) {
+  let compiled;
+
+  try {
+    compiled = math.compile(`(${left}) - (${right})`);
+  } catch {
+    drawError(ctx, "Invalid equation");
+    return;
+  }
+
+  const evaluate = (screenX: number, screenY: number) => {
+    const x = screenToGraphX(screenX, width, viewport);
+    const y = screenToGraphY(screenY, height, viewport);
+
+    try {
+      const value = compiled.evaluate({ ...scope, x, y });
+
+      if (typeof value !== "number" || !Number.isFinite(value)) {
+        return null;
+      }
+
+      return value;
+    } catch {
+      return null;
+    }
+  };
+
+  const step = 6;
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+
+  for (let screenX = 0; screenX < width; screenX += step) {
+    for (let screenY = 0; screenY < height; screenY += step) {
+      const x0 = screenX;
+      const x1 = Math.min(screenX + step, width);
+      const y0 = screenY;
+      const y1 = Math.min(screenY + step, height);
+
+      const topLeft = evaluate(x0, y0);
+      const topRight = evaluate(x1, y0);
+      const bottomRight = evaluate(x1, y1);
+      const bottomLeft = evaluate(x0, y1);
+
+      if (
+        topLeft === null ||
+        topRight === null ||
+        bottomRight === null ||
+        bottomLeft === null
+      ) {
+        continue;
+      }
+
+      const intersections = [
+        interpolateZeroCrossing(x0, y0, topLeft, x1, y0, topRight),
+        interpolateZeroCrossing(x1, y0, topRight, x1, y1, bottomRight),
+        interpolateZeroCrossing(x0, y1, bottomLeft, x1, y1, bottomRight),
+        interpolateZeroCrossing(x0, y0, topLeft, x0, y1, bottomLeft),
+      ].filter((point): point is GraphPoint => point !== null);
+
+      if (intersections.length < 2) continue;
+
+      ctx.beginPath();
+      ctx.moveTo(intersections[0].x, intersections[0].y);
+      ctx.lineTo(intersections[1].x, intersections[1].y);
+      ctx.stroke();
+
+      if (intersections.length >= 4) {
+        ctx.beginPath();
+        ctx.moveTo(intersections[2].x, intersections[2].y);
+        ctx.lineTo(intersections[3].x, intersections[3].y);
+        ctx.stroke();
+      }
+    }
+  }
+
   ctx.restore();
 }
 
@@ -1402,6 +1515,38 @@ function findMatchingRenderedPoint(
     points.find((candidate) => candidate.expressionId === point.expressionId) ??
     null
   );
+}
+
+function usesVariable(expression: string, variable: "x" | "y") {
+  return new RegExp(`\\b${variable}\\b`).test(expression);
+}
+
+function interpolateZeroCrossing(
+  x1: number,
+  y1: number,
+  value1: number,
+  x2: number,
+  y2: number,
+  value2: number,
+): GraphPoint | null {
+  if (value1 === 0) {
+    return { x: x1, y: y1 };
+  }
+
+  if (value2 === 0) {
+    return { x: x2, y: y2 };
+  }
+
+  if ((value1 > 0 && value2 > 0) || (value1 < 0 && value2 < 0)) {
+    return null;
+  }
+
+  const amount = Math.abs(value1) / (Math.abs(value1) + Math.abs(value2));
+
+  return {
+    x: x1 + (x2 - x1) * amount,
+    y: y1 + (y2 - y1) * amount,
+  };
 }
 
 function formatNumber(value: number) {

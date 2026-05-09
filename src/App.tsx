@@ -247,7 +247,26 @@ function isInequalityExpression(rawExpression: string) {
 }
 
 function isEquationExpression(rawExpression: string) {
-  return /^(x|y)\s*=\s*(.+)$/i.test(rawExpression.trim());
+  const trimmed = rawExpression.trim();
+  const match = trimmed.match(/^(.+?)\s*=\s*(.+)$/);
+
+  if (!match) return false;
+
+  const [, left, right] = match;
+
+  if (!left?.trim() || !right?.trim()) return false;
+
+  const normalizedLeft = left.trim();
+
+  if (
+    /^[a-zA-Z]\w*$/.test(normalizedLeft) &&
+    normalizedLeft !== "x" &&
+    normalizedLeft !== "y"
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {

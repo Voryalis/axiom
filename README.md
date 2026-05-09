@@ -66,7 +66,9 @@ main goals:
 
 - basic inequality graphing for expressions like `y > x` and `y <= x^2`
 - basic vertical inequality graphing for expressions like `x > 2` and `x <= a`
-
+- basic equation support, like `y = x`, `x = 2`, `x = a`, and `x = y`
+- basic implicit equation graphing, like `x^2 + y^2 = 25`
+- sideways equation graphing, like `x = y^2`
 ### saving and library
 
 - clean startup graph
@@ -135,14 +137,15 @@ future table controls idea:
 
 ### advanced graphing
 
+- more complete equation support
 - more complete inequality support
 - compound inequalities
 - inequalities with x on either side
 - implicit inequalities
-- implicit equations
-- equations with variables on either side, like x = y
-- inequalities with variables on either side, like x<=y
-
+- smoother implicit equation rendering
+- equations with variables on either side, like `x = y`
+- inequalities with variables on either side, like `x <= y`
+- fix any valid desmos-style syntax that does not graph correctly
 
 ### design and settings 
 
@@ -174,9 +177,7 @@ for a production desktop build:
 
 ## known issues
 
-- liux webkit/tauri pinch gesture may trigger native webview zoom; current workaround forces page zoom back to normal 
-- `y = x` works, but `x = y` does not yet
-
+- linux webkit/tauri pinch gesture may trigger native webview zoom; current workaround forces page zoom back to normal
 ## status 
 
 early development
