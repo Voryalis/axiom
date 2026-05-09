@@ -171,6 +171,12 @@ future table controls idea:
 - setting for coordinate label format: decimal by default, optional symbolic constants like `π` when detected
 - settings should open as a desmos-like popup/overlay so the graph stays visible while settings are changed
 
+### performance
+
+- reduce bundle size / split heavy math engine code
+- investigate mathjs bundle size
+- maybe replace full mathjs import with smaller scoped imports if needed
+
 ## development
 
 install dependencies:
