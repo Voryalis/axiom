@@ -53,6 +53,10 @@ Main goals:
 ### Export and sharing
 - PNG export of the current graph canvas
 
+### Advanced Graphing 
+
+- basic inequality graphing for expressions like `y > x` and `y <= x^2`
+
 ### Points
 
 - point plotting with expressions like `(1, 2)`
@@ -120,7 +124,10 @@ Table expression
 
 ### Advanced graphing
 
-- inequalities
+- more complete inequality support
+- compound inequalities
+- inequalities with x on either side
+- implicit inequalities
 - implicit equations
 
 ### Export and sharing
