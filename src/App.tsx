@@ -599,6 +599,7 @@ function startContinuousZoom(direction: "in" | "out") {
   }
 
   useEffect(() => {
+    
     function handleKeyDown(event: KeyboardEvent) {
       const isModifierPressed = event.ctrlKey || event.metaKey;
       const key = event.key.toLowerCase();
@@ -634,6 +635,21 @@ function startContinuousZoom(direction: "in" | "out") {
       resizeExpressionInput(expressionInputRefs.current[expression.id] ?? null);
     }
   }, [expressions]);
+
+  useEffect(() => {
+  function resetPageZoom() {
+    document.body.style.zoom = "1";
+    document.documentElement.style.zoom = "1";
+  }
+
+  resetPageZoom();
+
+  const interval = window.setInterval(resetPageZoom, 100);
+
+  return () => {
+    window.clearInterval(interval);
+  };
+}, []);
 
   useEffect(() => {
   return () => {

@@ -154,5 +154,10 @@ Early development.
 
 For a production desktop build:
 
-```bash
-npm run tauri build
+```bash```
+```npm run tauri build```
+
+## Known Issues
+
+- Linux WebKit/Tauri pinch gesture may trigger native webview zoom; current workaround forces page zoom back to normal
+
