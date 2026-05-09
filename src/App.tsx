@@ -242,6 +242,10 @@ function isTableExpression(rawExpression: string) {
   );
 }
 
+function isInequalityExpression(rawExpression: string) {
+  return /^y\s*(>=|<=|>|<)\s*(.+)$/i.test(rawExpression.trim());
+}
+
 function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
   const expression = normalizeMathExpression(raw);
   const assignment = parseVariableAssignment(raw);
@@ -249,9 +253,13 @@ function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
 
   if (!expression) return "";
 
-  if (isPointExpression(raw) || isTableExpression(raw)) {
-    return "";
-  }
+  if (
+  isPointExpression(raw) ||
+  isTableExpression(raw) ||
+  isInequalityExpression(raw)
+) {
+  return "";
+}
 
   try {
     if (assignment) {

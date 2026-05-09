@@ -38,6 +38,11 @@ type ParsedTable = {
   connect: boolean;
 };
 
+type ParsedInequality = {
+  operator: ">" | ">=" | "<" | "<=";
+  expression: string;
+};
+
 type RenderedPoint = {
   expressionId: string;
   point: GraphPoint;
@@ -511,6 +516,22 @@ function draw(
       continue;
     }
 
+    const inequality = parseInequalityExpression(expression.raw);
+
+    if (inequality) {
+      drawInequality(
+        ctx,
+        width,
+        height,
+        inequality,
+        expression.color,
+        viewport,
+        scope,
+      );
+
+      continue;
+    }
+
     const point = parsePointExpression(expression.raw, scope);
 
     if (point) {
@@ -692,6 +713,31 @@ function parseTableExpression(
   };
 }
 
+function parseInequalityExpression(rawExpression: string): ParsedInequality | null {
+  const trimmed = rawExpression.trim();
+  const match = trimmed.match(/^y\s*(>=|<=|>|<)\s*(.+)$/i);
+
+  if (!match) return null;
+
+  const [, operator, expression] = match;
+
+  if (
+    operator !== ">" &&
+    operator !== ">=" &&
+    operator !== "<" &&
+    operator !== "<="
+  ) {
+    return null;
+  }
+
+  if (!expression?.trim()) return null;
+
+  return {
+    operator,
+    expression: expression.trim(),
+  };
+}
+
 function isTableExpression(rawExpression: string) {
   const firstLine = rawExpression
     .split("\n")
@@ -713,7 +759,8 @@ function isGraphLikeExpression(rawExpression: string) {
   return (
     rawExpression.trim().length > 0 &&
     !isVariableAssignment(rawExpression) &&
-    !isTableExpression(rawExpression)
+    !isTableExpression(rawExpression) &&
+    !parseInequalityExpression(rawExpression)
   );
 }
 
@@ -885,6 +932,114 @@ function drawExpression(
   }
 
   ctx.stroke();
+}
+
+function drawInequality(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  inequality: ParsedInequality,
+  color: string,
+  viewport: Viewport,
+  scope: Record<string, number>,
+) {
+  let compiled;
+
+  try {
+    compiled = math.compile(inequality.expression);
+  } catch {
+    drawError(ctx, "Invalid inequality");
+    return;
+  }
+
+  ctx.save();
+
+  ctx.fillStyle = hexToRgba(color, 0.14);
+
+  for (let px = 0; px <= width; px++) {
+    const x = screenToGraphX(px, width, viewport);
+
+    let y: unknown;
+
+    try {
+      y = compiled.evaluate({ ...scope, x });
+    } catch {
+      continue;
+    }
+
+    if (typeof y !== "number" || !Number.isFinite(y)) {
+      continue;
+    }
+
+    const sy = graphToScreenY(y, height, viewport);
+
+    if (inequality.operator === ">" || inequality.operator === ">=") {
+      ctx.fillRect(px, 0, 1, Math.max(0, sy));
+    } else {
+      ctx.fillRect(px, Math.min(height, sy), 1, Math.max(0, height - sy));
+    }
+  }
+
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+
+  if (inequality.operator === ">" || inequality.operator === "<") {
+    ctx.setLineDash([8, 6]);
+  } else {
+    ctx.setLineDash([]);
+  }
+
+  let started = false;
+
+  for (let px = 0; px <= width; px++) {
+    const x = screenToGraphX(px, width, viewport);
+
+    let y: unknown;
+
+    try {
+      y = compiled.evaluate({ ...scope, x });
+    } catch {
+      started = false;
+      continue;
+    }
+
+    if (typeof y !== "number" || !Number.isFinite(y)) {
+      started = false;
+      continue;
+    }
+
+    const sy = graphToScreenY(y, height, viewport);
+
+    if (sy < -height || sy > height * 2) {
+      started = false;
+      continue;
+    }
+
+    if (!started) {
+      ctx.moveTo(px, sy);
+      started = true;
+    } else {
+      ctx.lineTo(px, sy);
+    }
+  }
+
+  ctx.stroke();
+  ctx.restore();
+}
+
+function hexToRgba(hex: string, alpha: number) {
+  const normalized = hex.replace("#", "");
+
+  if (normalized.length !== 6) {
+    return `rgba(138, 180, 248, ${alpha})`;
+  }
+
+  const red = Number.parseInt(normalized.slice(0, 2), 16);
+  const green = Number.parseInt(normalized.slice(2, 4), 16);
+  const blue = Number.parseInt(normalized.slice(4, 6), 16);
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
 
 function drawConnectedTableLines(
