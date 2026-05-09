@@ -94,6 +94,7 @@ main goals:
 
 - collapsible sidebar / graph-only mode
 - better linux touchpad pinch zoom support
+- add desmos-like shift-drag behavior for stretching/scaling a selected line
 
 ### math and expression input
 
@@ -150,6 +151,10 @@ future table controls idea:
 - toggleable light/dark theme in settings
 - restyled color picker that matches axiom's theme
 - replace topbar text buttons like save, reset, import, and export with clean icon/symbol buttons
+- redesign the interface so it feels hand-made and polished.
+- move the general ui style closer to github’s clean, structured design language
+- keep graph line colors independent from the github-style interface palette
+- keep expanding toward desmos-parity and eventually beyond-desmos features
 
 ## development
 
@@ -175,3 +180,6 @@ for a production desktop build:
 ## status 
 
 early development
+
+
+
