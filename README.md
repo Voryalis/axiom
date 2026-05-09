@@ -85,6 +85,7 @@ main goals:
 
 - ctrl+s to save
 - ctrl+r to reset
+- ctrl+w to delete the currently focused expression
 
 ### interface
 
@@ -102,13 +103,22 @@ main goals:
 
 - on-screen math keyboard
 - more keyboard shortcuts
-- ctrl+w deletes the currently focused expression
 
 ### sliders
 
 - slider accent colors should match their graph line colors
 - custom slider min, max, and step values
 - animated sliders
+
+### points and intersections
+
+- desmos-style point coordinate labels on hover/click
+- basic intersection detection between visible explicit curves
+- show dots where supported curves intersect
+- click or hover supported intersection dots to show coordinates
+- intersection points between graphs
+- display the intersection coordinates
+- desmos-like point hover / selection behavior
 
 ### tables
 
@@ -127,13 +137,6 @@ future table controls idea:
 `[x] show points`
 `[ ] connect lines`
 
-### points and intersections
-
-- desmos-style point coordinate labels on hover/click
-- intersection points between graphs
-- show a dot where curves intersect
-- display the intersection coordinates
-- desmos-like point hover / selection behavior
 
 ### advanced graphing
 
@@ -158,6 +161,8 @@ future table controls idea:
 - move the general ui style closer to github’s clean, structured design language
 - keep graph line colors independent from the github-style interface palette
 - keep expanding toward desmos-parity and eventually beyond-desmos features
+- setting for coordinate label format: decimal by default, optional symbolic constants like `π` when detected
+- settings should open as a desmos-like popup/overlay so the graph stays visible while settings are changed
 
 ## development
 
