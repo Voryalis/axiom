@@ -57,6 +57,19 @@ type RenderedPoint = {
   color: string;
 };
 
+type RenderedCurvePoint = {
+  x: number;
+  y: number;
+  screenX: number;
+  screenY: number;
+};
+
+type RenderedCurve = {
+  expressionId: string;
+  color: string;
+  points: RenderedCurvePoint[];
+};
+
 const INITIAL_VIEWPORT: Viewport = {
   xMin: -10,
   xMax: 10,
@@ -448,6 +461,7 @@ function draw(
   viewport: Viewport,
 ) {
   const renderedPoints: RenderedPoint[] = [];
+  const renderedCurves: RenderedCurve[] = [];
 
   ctx.clearRect(0, 0, width, height);
 
@@ -512,7 +526,21 @@ function draw(
     const equation = parseEquationExpression(expression.raw);
 
     if (equation) {
-      drawEquation(ctx, width, height, equation, expression.color, viewport, scope);
+      const renderedCurve = drawEquation(
+        ctx,
+        width,
+        height,
+        equation,
+        expression.id,
+        expression.color,
+        viewport,
+        scope,
+      );
+
+      if (renderedCurve) {
+        renderedCurves.push(renderedCurve);
+      }
+
       continue;
     }
 
@@ -536,8 +564,29 @@ function draw(
       continue;
     }
 
-    drawExpression(ctx, width, height, expression, viewport, scope);
+    const renderedCurve = drawExpression(
+      ctx,
+      width,
+      height,
+      expression,
+      viewport,
+      scope,
+    );
+
+    if (renderedCurve) {
+      renderedCurves.push(renderedCurve);
+    }
   }
+
+  const intersections = findCurveIntersections(renderedCurves);
+
+  intersections.forEach((intersection) => {
+    const renderedPoint = drawIntersectionPoint(ctx, intersection);
+
+    if (renderedPoint) {
+      renderedPoints.push(renderedPoint);
+    }
+  });
 
   return renderedPoints;
 }
@@ -891,12 +940,12 @@ function drawExpression(
   graphExpression: GraphExpression,
   viewport: Viewport,
   scope: Record<string, number>,
-) {
-  if (!isGraphLikeExpression(graphExpression.raw)) return;
+): RenderedCurve | null {
+  if (!isGraphLikeExpression(graphExpression.raw)) return null;
 
   const expression = normalizeExpression(graphExpression.raw);
 
-  if (!expression) return;
+  if (!expression) return null;
 
   let compiled;
 
@@ -904,10 +953,24 @@ function drawExpression(
     compiled = math.compile(expression);
   } catch {
     drawError(ctx, "Invalid expression");
-    return;
+    return null;
   }
 
-  drawCompiledYExpression(ctx, width, height, compiled, graphExpression.color, viewport, scope);
+  const points = drawCompiledYExpression(
+    ctx,
+    width,
+    height,
+    compiled,
+    graphExpression.color,
+    viewport,
+    scope,
+  );
+
+  return {
+    expressionId: graphExpression.id,
+    color: graphExpression.color,
+    points,
+  };
 }
 
 function drawEquation(
@@ -915,29 +978,55 @@ function drawEquation(
   width: number,
   height: number,
   equation: ParsedEquation,
+  expressionId: string,
   color: string,
   viewport: Viewport,
   scope: Record<string, number>,
-) {
+): RenderedCurve | null {
   const left = equation.left.trim();
   const right = equation.right.trim();
 
   if (left === "y" && !usesVariable(right, "y")) {
-    drawYEquation(ctx, width, height, right, color, viewport, scope);
-    return;
+    return drawYEquation(
+      ctx,
+      width,
+      height,
+      right,
+      expressionId,
+      color,
+      viewport,
+      scope,
+    );
   }
 
   if (left === "x" && right === "y") {
-    drawYEquation(ctx, width, height, "x", color, viewport, scope);
-    return;
+    return drawYEquation(
+      ctx,
+      width,
+      height,
+      "x",
+      expressionId,
+      color,
+      viewport,
+      scope,
+    );
   }
 
   if (left === "x" && !usesVariable(right, "x") && !usesVariable(right, "y")) {
-    drawXEquation(ctx, width, height, right, color, viewport, scope);
-    return;
+    return drawXEquation(
+      ctx,
+      width,
+      height,
+      right,
+      expressionId,
+      color,
+      viewport,
+      scope,
+    );
   }
 
   drawImplicitEquation(ctx, width, height, left, right, color, viewport, scope);
+  return null;
 }
 
 function drawYEquation(
@@ -945,20 +1034,35 @@ function drawYEquation(
   width: number,
   height: number,
   right: string,
+  expressionId: string,
   color: string,
   viewport: Viewport,
   scope: Record<string, number>,
-) {
+): RenderedCurve | null {
   let compiled;
 
   try {
     compiled = math.compile(right);
   } catch {
     drawError(ctx, "Invalid equation");
-    return;
+    return null;
   }
 
-  drawCompiledYExpression(ctx, width, height, compiled, color, viewport, scope);
+  const points = drawCompiledYExpression(
+    ctx,
+    width,
+    height,
+    compiled,
+    color,
+    viewport,
+    scope,
+  );
+
+  return {
+    expressionId,
+    color,
+    points,
+  };
 }
 
 function drawXEquation(
@@ -966,15 +1070,24 @@ function drawXEquation(
   width: number,
   height: number,
   right: string,
+  expressionId: string,
   color: string,
   viewport: Viewport,
   scope: Record<string, number>,
-) {
+): RenderedCurve | null {
   const normalized = right.trim();
 
   if (normalized.toLowerCase() === "y") {
-    drawYEquation(ctx, width, height, "x", color, viewport, scope);
-    return;
+    return drawYEquation(
+      ctx,
+      width,
+      height,
+      "x",
+      expressionId,
+      color,
+      viewport,
+      scope,
+    );
   }
 
   let value: unknown;
@@ -983,12 +1096,12 @@ function drawXEquation(
     value = math.evaluate(normalized, scope);
   } catch {
     drawError(ctx, "Invalid equation");
-    return;
+    return null;
   }
 
   if (typeof value !== "number" || !Number.isFinite(value)) {
     drawError(ctx, "Invalid equation");
-    return;
+    return null;
   }
 
   const sx = graphToScreenX(value, width, viewport);
@@ -1001,6 +1114,25 @@ function drawXEquation(
   ctx.lineTo(sx, height);
   ctx.stroke();
   ctx.restore();
+
+  return {
+    expressionId,
+    color,
+    points: [
+      {
+        x: value,
+        y: viewport.yMax,
+        screenX: sx,
+        screenY: 0,
+      },
+      {
+        x: value,
+        y: viewport.yMin,
+        screenX: sx,
+        screenY: height,
+      },
+    ],
+  };
 }
 
 function drawImplicitEquation(
@@ -1102,7 +1234,9 @@ function drawCompiledYExpression(
   color: string,
   viewport: Viewport,
   scope: Record<string, number>,
-) {
+): RenderedCurvePoint[] {
+  const points: RenderedCurvePoint[] = [];
+
   ctx.save();
   ctx.beginPath();
   ctx.strokeStyle = color;
@@ -1134,6 +1268,13 @@ function drawCompiledYExpression(
       continue;
     }
 
+    points.push({
+      x,
+      y,
+      screenX: px,
+      screenY: sy,
+    });
+
     if (!started) {
       ctx.moveTo(px, sy);
       started = true;
@@ -1144,6 +1285,8 @@ function drawCompiledYExpression(
 
   ctx.stroke();
   ctx.restore();
+
+  return points;
 }
 
 function drawInequality(
@@ -1517,6 +1660,135 @@ function findMatchingRenderedPoint(
   );
 }
 
+function drawIntersectionPoint(
+  ctx: CanvasRenderingContext2D,
+  intersection: RenderedPoint,
+): RenderedPoint | null {
+  ctx.save();
+
+  ctx.beginPath();
+  ctx.fillStyle = "#f1f1f1";
+  ctx.strokeStyle = intersection.color;
+  ctx.lineWidth = 2;
+  ctx.arc(intersection.screenX, intersection.screenY, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.restore();
+
+  return intersection;
+}
+
+function findCurveIntersections(curves: RenderedCurve[]) {
+  const intersections: RenderedPoint[] = [];
+
+  for (let firstIndex = 0; firstIndex < curves.length; firstIndex++) {
+    for (let secondIndex = firstIndex + 1; secondIndex < curves.length; secondIndex++) {
+      const firstCurve = curves[firstIndex];
+      const secondCurve = curves[secondIndex];
+
+      if (!firstCurve || !secondCurve) continue;
+      if (firstCurve.points.length < 2 || secondCurve.points.length < 2) continue;
+
+      for (let i = 0; i < firstCurve.points.length - 1; i++) {
+        const a1 = firstCurve.points[i];
+        const a2 = firstCurve.points[i + 1];
+
+        if (!a1 || !a2) continue;
+
+        for (let j = 0; j < secondCurve.points.length - 1; j++) {
+          const b1 = secondCurve.points[j];
+          const b2 = secondCurve.points[j + 1];
+
+          if (!b1 || !b2) continue;
+
+          const intersection = findSegmentIntersection(a1, a2, b1, b2);
+
+          if (!intersection) continue;
+          if (isDuplicateIntersection(intersection, intersections)) continue;
+
+          intersections.push({
+            expressionId: `intersection-${intersections.length}`,
+            point: {
+              x: intersection.x,
+              y: intersection.y,
+            },
+            screenX: intersection.screenX,
+            screenY: intersection.screenY,
+            color: mixIntersectionColor(firstCurve.color, secondCurve.color),
+          });
+
+          if (intersections.length >= 80) {
+            return intersections;
+          }
+        }
+      }
+    }
+  }
+
+  return intersections;
+}
+
+function findSegmentIntersection(
+  a1: RenderedCurvePoint,
+  a2: RenderedCurvePoint,
+  b1: RenderedCurvePoint,
+  b2: RenderedCurvePoint,
+) {
+  const x1 = a1.screenX;
+  const y1 = a1.screenY;
+  const x2 = a2.screenX;
+  const y2 = a2.screenY;
+
+  const x3 = b1.screenX;
+  const y3 = b1.screenY;
+  const x4 = b2.screenX;
+  const y4 = b2.screenY;
+
+  const denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+
+  if (Math.abs(denominator) < 0.0001) {
+    return null;
+  }
+
+  const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator;
+  const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denominator;
+
+  if (t < 0 || t > 1 || u < 0 || u > 1) {
+    return null;
+  }
+
+  return {
+    x: a1.x + (a2.x - a1.x) * t,
+    y: a1.y + (a2.y - a1.y) * t,
+    screenX: x1 + (x2 - x1) * t,
+    screenY: y1 + (y2 - y1) * t,
+  };
+}
+
+function isDuplicateIntersection(
+  intersection: {
+    screenX: number;
+    screenY: number;
+  },
+  intersections: RenderedPoint[],
+) {
+  return intersections.some((candidate) => {
+    return (
+      Math.hypot(
+        candidate.screenX - intersection.screenX,
+        candidate.screenY - intersection.screenY,
+      ) < 10
+    );
+  });
+}
+
+function mixIntersectionColor(firstColor: string, secondColor: string) {
+  if (firstColor === secondColor) return firstColor;
+
+  return "#f1f1f1";
+}
+
 function usesVariable(expression: string, variable: "x" | "y") {
   return new RegExp(`\\b${variable}\\b`).test(expression);
 }
@@ -1550,8 +1822,18 @@ function interpolateZeroCrossing(
 }
 
 function formatNumber(value: number) {
-  if (value === 0) {
+  if (!Number.isFinite(value)) {
+    return "undefined";
+  }
+
+  if (Math.abs(value) < 1e-8) {
     return "0";
+  }
+
+  const nearestInteger = Math.round(value);
+
+  if (Math.abs(value - nearestInteger) < 0.001) {
+    return nearestInteger.toString();
   }
 
   if (Math.abs(value) >= 1000 || Math.abs(value) < 0.01) {
