@@ -933,20 +933,42 @@ function drawLabels(
 ) {
   const step = getGridStep(viewport.xMax - viewport.xMin);
 
-  ctx.fillStyle = "#8b909b";
+  ctx.save();
   ctx.font = "12px system-ui, sans-serif";
+  ctx.textBaseline = "middle";
 
   const zeroY = graphToScreenY(0, height, viewport);
   const zeroX = graphToScreenX(0, width, viewport);
+
+  const xLabelY = Math.min(Math.max(zeroY + 15, 16), height - 14);
+  const yLabelX = Math.min(Math.max(zeroX + 8, 8), width - 44);
 
   const firstX = Math.ceil(viewport.xMin / step) * step;
   for (let x = firstX; x <= viewport.xMax; x += step) {
     if (Math.abs(x) < step / 1000) continue;
 
     const sx = graphToScreenX(x, width, viewport);
-    const labelY = Math.min(Math.max(zeroY + 16, 18), height - 8);
+    const label = formatNumber(x);
+    const isNegative = label.startsWith("-");
+    const numberPart = isNegative ? label.slice(1) : label;
 
-    ctx.fillText(formatNumber(x), sx + 4, labelY);
+    const labelWidth = Math.ceil(ctx.measureText(label).width) + 8;
+    const labelHeight = 16;
+    const numberWidth = ctx.measureText(numberPart).width;
+    const minusWidth = isNegative ? ctx.measureText("-").width : 0;
+
+    const textX = isNegative
+      ? Math.round(sx - numberWidth / 2 - minusWidth)
+      : Math.round(sx - numberWidth / 2);
+
+    const backingX = Math.round(textX - 4);
+    const backingY = Math.round(xLabelY - labelHeight / 2);
+
+    drawLabelBacking(ctx, backingX, backingY, labelWidth, labelHeight);
+
+    ctx.fillStyle = "#8b949e";
+    ctx.textAlign = "left";
+    ctx.fillText(label, textX, xLabelY);
   }
 
   const firstY = Math.ceil(viewport.yMin / step) * step;
@@ -954,10 +976,34 @@ function drawLabels(
     if (Math.abs(y) < step / 1000) continue;
 
     const sy = graphToScreenY(y, height, viewport);
-    const labelX = Math.min(Math.max(zeroX + 6, 6), width - 42);
+    const label = formatNumber(y);
+    const labelWidth = Math.ceil(ctx.measureText(label).width) + 8;
+    const labelHeight = 16;
 
-    ctx.fillText(formatNumber(y), labelX, sy - 4);
+    const backingX = Math.round(yLabelX - 4);
+    const backingY = Math.round(sy - labelHeight / 2);
+
+    drawLabelBacking(ctx, backingX, backingY, labelWidth, labelHeight);
+
+    ctx.fillStyle = "#8b949e";
+    ctx.textAlign = "left";
+    ctx.fillText(label, yLabelX, sy);
   }
+
+  ctx.restore();
+}
+
+function drawLabelBacking(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  ctx.save();
+  ctx.fillStyle = "rgba(29, 30, 33, 0.86)";
+  ctx.fillRect(x, y, width, height);
+  ctx.restore();
 }
 
 function drawExpression(
