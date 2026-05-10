@@ -1170,11 +1170,9 @@ function App() {
               >
                 <button onClick={addExpressionFromMenu}>
                   <span>Expression</span>
-                  <small>Create a new math line</small>
                 </button>
                 <button onClick={addTableExpression}>
                   <span>Table</span>
-                  <small>Create editable x/y points</small>
                 </button>
               </div>
             ) : null}
@@ -1202,46 +1200,54 @@ function App() {
                   <div
                     className={`expression-card ${
                       expression.visible ? "" : "expression-card-hidden"
-                    }`}
+                    } ${table ? "expression-card-table" : ""}`}
                     key={expression.id}
                   >
-                    <button
-                      className="visibility-button"
-                      onClick={() => toggleExpression(expression.id)}
-                      title={
-                        expression.visible ? "Hide expression" : "Show expression"
-                      }
-                      style={{ borderColor: expression.color }}
-                    >
-                      <span
-                        className="visibility-dot"
-                        style={{
-                          background: expression.visible
-                            ? expression.color
-                            : "transparent",
-                        }}
-                      />
-                    </button>
+                    <div className="expression-left-tools">
+                      <button
+                        className="visibility-button"
+                        onClick={() => toggleExpression(expression.id)}
+                        title={
+                          expression.visible ? "Hide expression" : "Show expression"
+                        }
+                        style={{ borderColor: expression.color }}
+                      >
+                        <span
+                          className="visibility-dot"
+                          style={{
+                            background: expression.visible
+                              ? expression.color
+                              : "transparent",
+                          }}
+                        />
+                      </button>
+
+                      {table ? (
+                        <button
+                          className={`table-toggle table-toggle-icon ${
+                            table.connect ? "table-toggle-active" : ""
+                          }`}
+                          onClick={() => toggleTableLines(expression.id)}
+                          title="Connect table points"
+                          aria-label="Connect table points"
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 18 9 8l6 8 5-10" />
+                            <circle cx="4" cy="18" r="2" />
+                            <circle cx="9" cy="8" r="2" />
+                            <circle cx="15" cy="16" r="2" />
+                            <circle cx="20" cy="6" r="2" />
+                          </svg>
+                        </button>
+                      ) : null}
+                    </div>
 
                     <div className="expression-input-stack">
                       {table ? (
                         <div className="table-editor">
-                          <div className="table-editor-toolbar">
-                            <span>table</span>
-                            <button
-                              className={`table-toggle ${
-                                table.connect ? "table-toggle-active" : ""
-                              }`}
-                              onClick={() => toggleTableLines(expression.id)}
-                            >
-                              connect lines
-                            </button>
-                          </div>
-
                           <div className="table-grid">
                             <div className="table-heading">x</div>
                             <div className="table-heading">y</div>
-                            <div className="table-heading" />
 
                             {table.rows.map((row, rowIndex) => (
                               <div className="table-row" key={rowIndex}>
@@ -1305,25 +1311,9 @@ function App() {
                                   placeholder="y"
                                   spellCheck={false}
                                 />
-                                <button
-                                  className="table-remove-row"
-                                  onClick={() =>
-                                    removeTableRow(expression.id, rowIndex)
-                                  }
-                                  title="Remove row"
-                                >
-                                  ×
-                                </button>
                               </div>
                             ))}
                           </div>
-
-                          <button
-                            className="table-add-row"
-                            onClick={() => addTableRow(expression.id)}
-                          >
-                            add row
-                          </button>
                         </div>
                       ) : (
                         <>

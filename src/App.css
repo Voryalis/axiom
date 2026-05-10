@@ -1649,3 +1649,340 @@ body {
   width: 20px !important;
   height: 20px !important;
 }
+
+
+.table-editor {
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.table-editor-toolbar {
+  margin-bottom: 4px;
+}
+
+.table-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 24px;
+}
+
+.table-row input {
+  background: #010409 !important;
+}
+
+.table-add-row {
+  margin-top: 2px;
+}
+
+.create-menu button {
+  min-height: 38px;
+  align-content: center;
+}
+
+.create-menu small {
+  display: none;
+}
+
+
+.table-editor {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.table-editor-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 28px;
+}
+
+.table-toggle {
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: #161b22;
+  color: #c9d1d9;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+}
+
+.table-toggle:hover,
+.table-toggle-active {
+  border-color: #3d444d;
+  background: #21262d;
+  color: #f0f6fc;
+}
+
+.table-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 24px;
+  column-gap: 10px;
+  row-gap: 0;
+  align-items: center;
+}
+
+.table-heading {
+  color: #8b949e;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  padding: 0 0 6px;
+  border-bottom: 1px solid #30363d;
+}
+
+.table-row input {
+  height: 34px;
+  border: 0 !important;
+  border-bottom: 1px solid #21262d !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #f0f6fc;
+  font-size: 14px;
+  padding: 0 6px !important;
+  text-align: center;
+  box-shadow: none !important;
+}
+
+.table-row input:focus {
+  border-color: #58a6ff !important;
+  box-shadow: none !important;
+}
+
+.table-row input::placeholder {
+  color: #6e7681;
+}
+
+.table-remove-row {
+  display: grid;
+  width: 24px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #8b949e;
+  font-size: 16px;
+  padding: 0;
+}
+
+.table-remove-row:hover {
+  background: transparent;
+  color: #f0f6fc;
+}
+
+.table-add-row {
+  justify-self: start;
+  margin-top: 8px;
+}
+
+
+.table-grid {
+  grid-template-columns: 64px 64px 22px !important;
+  justify-content: start;
+  column-gap: 8px !important;
+  row-gap: 0 !important;
+  padding-left: 0;
+}
+
+.table-heading {
+  height: 24px;
+  padding: 0 !important;
+  border-bottom: 1px solid #30363d !important;
+  color: #8b949e !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 24px;
+}
+
+.table-row input {
+  height: 28px !important;
+  border-bottom: 1px solid #21262d !important;
+  color: #f0f6fc !important;
+  font-size: 13px !important;
+  line-height: 28px;
+}
+
+.table-remove-row {
+  height: 28px !important;
+  color: #8b949e !important;
+}
+
+.table-editor-topbar {
+  min-height: 26px !important;
+  margin-bottom: 2px;
+}
+
+.table-toggle {
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+}
+
+.table-add-row {
+  margin-top: 7px !important;
+  font-size: 12px !important;
+  padding: 5px 8px !important;
+}
+
+
+.table-editor {
+  width: 100%;
+}
+
+.table-editor-topbar {
+  justify-content: flex-end;
+  min-height: 30px;
+  margin-bottom: 4px;
+}
+
+.table-toggle-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  padding: 0 !important;
+}
+
+.table-toggle-icon svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.table-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  column-gap: 0 !important;
+  row-gap: 0 !important;
+  width: 100%;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #010409;
+}
+
+.table-heading {
+  height: 30px !important;
+  border-right: 1px solid #30363d;
+  border-bottom: 1px solid #30363d !important;
+  background: #0d1117;
+  line-height: 30px !important;
+}
+
+.table-heading:nth-child(2) {
+  border-right: 0;
+}
+
+.table-row {
+  display: contents;
+}
+
+.table-row input {
+  height: 32px !important;
+  border: 0 !important;
+  border-right: 1px solid #21262d !important;
+  border-bottom: 1px solid #21262d !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.table-row input:nth-child(2) {
+  border-right: 0 !important;
+}
+
+.table-row input:focus {
+  background: #0d1117 !important;
+  box-shadow: inset 0 0 0 1px #58a6ff !important;
+}
+
+.table-remove-row,
+.table-add-row {
+  display: none !important;
+}
+
+
+.expression-card-table {
+  align-items: flex-start !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 6px 0 !important;
+}
+
+.expression-card-table:hover {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+.expression-card-table .visibility-button {
+  margin-top: 42px;
+}
+
+.expression-card-table .color-picker-label {
+  margin-top: 42px;
+}
+
+.expression-card-table > .remove-button {
+  margin-top: 39px;
+}
+
+.expression-card-table .expression-input-stack {
+  max-width: 190px;
+}
+
+.expression-card-table .table-grid {
+  width: 180px;
+}
+
+.expression-card-table .table-editor-topbar {
+  width: 180px;
+}
+
+
+.expression-left-tools {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.expression-card-table .expression-left-tools {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.expression-card-table .visibility-button {
+  margin-top: 0 !important;
+}
+
+.expression-card-table .table-toggle-icon {
+  width: 24px !important;
+  height: 24px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #8b949e !important;
+  box-shadow: none !important;
+}
+
+.expression-card-table .table-toggle-icon:hover,
+.expression-card-table .table-toggle-active {
+  border: 0 !important;
+  background: transparent !important;
+  color: #f0f6fc !important;
+}
+
+.expression-card-table .table-toggle-icon svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.expression-card-table .expression-input-stack {
+  max-width: 190px;
+}
