@@ -871,13 +871,15 @@ function screenToGraphY(screenY: number, height: number, viewport: Viewport) {
 }
 
 function getGridStep(range: number) {
-  const roughStep = range / 20;
+  const roughStep = range / 12;
   const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
   const normalized = roughStep / magnitude;
 
-  if (normalized < 2) return magnitude;
-  if (normalized < 5) return 2 * magnitude;
-  return 5 * magnitude;
+  if (normalized <= 1) return magnitude;
+  if (normalized <= 2) return 2 * magnitude;
+  if (normalized <= 5) return 5 * magnitude;
+
+  return 10 * magnitude;
 }
 
 function drawBackground(ctx: CanvasRenderingContext2D, width: number, height: number) {
