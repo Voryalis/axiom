@@ -81,6 +81,23 @@ const INITIAL_VIEWPORT: Viewport = {
 const ZOOM_SENSITIVITY = 0.0015;
 const POINT_HIT_RADIUS = 10;
 
+function enforceSquareUnits(
+  viewport: Viewport,
+  width: number,
+  height: number,
+): Viewport {
+  const xRange = viewport.xMax - viewport.xMin;
+  const yRange = xRange * (height / width);
+  const yCenter = (viewport.yMin + viewport.yMax) / 2;
+
+  return {
+    xMin: viewport.xMin,
+    xMax: viewport.xMax,
+    yMin: yCenter - yRange / 2,
+    yMax: yCenter + yRange / 2,
+  };
+}
+
 const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
   function GraphCanvas({ expressions, showAxisLabels }, ref) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -100,6 +117,12 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
 
       const rect = parent.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
+
+      viewportRef.current = enforceSquareUnits(
+        viewportRef.current,
+        rect.width,
+        rect.height,
+      );
 
       canvas.width = Math.floor(rect.width * dpr);
       canvas.height = Math.floor(rect.height * dpr);
@@ -129,12 +152,20 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       const halfWidth = ((viewport.xMax - viewport.xMin) * factor) / 2;
       const halfHeight = ((viewport.yMax - viewport.yMin) * factor) / 2;
 
-      viewportRef.current = {
+      const canvas = canvasRef.current;
+      const parent = canvas?.parentElement;
+      const rect = parent?.getBoundingClientRect();
+
+      const nextViewport = {
         xMin: centerX - halfWidth,
         xMax: centerX + halfWidth,
         yMin: centerY - halfHeight,
         yMax: centerY + halfHeight,
       };
+
+      viewportRef.current = rect
+        ? enforceSquareUnits(nextViewport, rect.width, rect.height)
+        : nextViewport;
 
       hoveredPointRef.current = null;
       pinnedPointRef.current = null;
@@ -231,23 +262,6 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
 
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-
-      const enforceSquareUnits = (
-        viewport: Viewport,
-        width: number,
-        height: number,
-      ): Viewport => {
-        const xRange = viewport.xMax - viewport.xMin;
-        const yRange = xRange * (height / width);
-        const yCenter = (viewport.yMin + viewport.yMax) / 2;
-
-        return {
-          xMin: viewport.xMin,
-          xMax: viewport.xMax,
-          yMin: yCenter - yRange / 2,
-          yMax: yCenter + yRange / 2,
-        };
-      };
 
       const render = () => {
         const rect = parent.getBoundingClientRect();
