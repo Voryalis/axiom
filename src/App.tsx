@@ -1135,14 +1135,14 @@ function App() {
             <div className="settings-header">
               <div>
                 <div className="settings-title-row">
-                  <h2 id="settings-title">settings</h2>
+                  <h2 id="settings-title">Settings</h2>
                   {settingsSaveStatus ? (
                     <span className="settings-save-badge">
                       {settingsSaveStatus}
                     </span>
                   ) : null}
                 </div>
-                <p>early controls for future graph behavior</p>
+                <p>Early controls for graph behavior.</p>
               </div>
 
               <button
@@ -1158,12 +1158,12 @@ function App() {
             </div>
 
             <section className="settings-section">
-              <h3>appearance</h3>
+              <h3>Appearance</h3>
 
               <div className="settings-row">
                 <div>
-                  <span>theme</span>
-                  <small>dark only for now</small>
+                  <span>Theme</span>
+                  <small>Dark only for now.</small>
                 </div>
                 <button
                   className="setting-switch setting-switch-active"
@@ -1177,12 +1177,12 @@ function App() {
             </section>
 
             <section className="settings-section">
-              <h3>graph labels</h3>
+              <h3>Graph labels</h3>
 
               <div className="settings-row">
                 <div>
-                  <span>show axis labels</span>
-                  <small>show or hide the numbers on the graph axes</small>
+                  <span>Show axis labels</span>
+                  <small>Show or hide the numbers on the graph axes.</small>
                 </div>
                 <button
                   className={`setting-switch ${
@@ -1198,12 +1198,12 @@ function App() {
             </section>
 
             <section className="settings-section">
-              <h3>sliders</h3>
+              <h3>Sliders</h3>
 
               <div className="settings-row">
                 <div>
-                  <span>custom step controls</span>
-                  <small>currently handled through text syntax</small>
+                  <span>Custom step controls</span>
+                  <small>Currently handled through text syntax.</small>
                 </div>
                 <button
                   className="setting-switch"
