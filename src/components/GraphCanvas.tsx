@@ -471,6 +471,7 @@ function draw(
 
   drawBackground(ctx, width, height);
   drawGrid(ctx, width, height, viewport);
+  drawAxes(ctx, width, height, viewport);
 
   if (showAxisLabels) {
     drawLabels(ctx, width, height, viewport);
@@ -896,17 +897,18 @@ function drawGrid(
   const majorStep = getGridStep(viewport.xMax - viewport.xMin);
   const minorStep = majorStep / 5;
 
+  ctx.save();
   ctx.lineWidth = 1;
 
   const firstMinorX = Math.ceil(viewport.xMin / minorStep) * minorStep;
   for (let x = firstMinorX; x <= viewport.xMax; x += minorStep) {
+    if (Math.abs(x) < minorStep / 1000) continue;
+
     const sx = graphToScreenX(x, width, viewport);
-    const isAxis = Math.abs(x) < minorStep / 1000;
     const isMajor = Math.abs(x / majorStep - Math.round(x / majorStep)) < 0.001;
 
     ctx.beginPath();
-    ctx.strokeStyle = isAxis ? "#6b707c" : isMajor ? "#3b3f48" : "#272a30";
-    ctx.lineWidth = isAxis ? 1.4 : 1;
+    ctx.strokeStyle = isMajor ? "#3b3f48" : "#272a30";
     ctx.moveTo(sx, 0);
     ctx.lineTo(sx, height);
     ctx.stroke();
@@ -914,17 +916,49 @@ function drawGrid(
 
   const firstMinorY = Math.ceil(viewport.yMin / minorStep) * minorStep;
   for (let y = firstMinorY; y <= viewport.yMax; y += minorStep) {
+    if (Math.abs(y) < minorStep / 1000) continue;
+
     const sy = graphToScreenY(y, height, viewport);
-    const isAxis = Math.abs(y) < minorStep / 1000;
     const isMajor = Math.abs(y / majorStep - Math.round(y / majorStep)) < 0.001;
 
     ctx.beginPath();
-    ctx.strokeStyle = isAxis ? "#6b707c" : isMajor ? "#3b3f48" : "#272a30";
-    ctx.lineWidth = isAxis ? 1.4 : 1;
+    ctx.strokeStyle = isMajor ? "#3b3f48" : "#272a30";
     ctx.moveTo(0, sy);
     ctx.lineTo(width, sy);
     ctx.stroke();
   }
+
+  ctx.restore();
+}
+
+function drawAxes(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  viewport: Viewport,
+) {
+  const zeroX = graphToScreenX(0, width, viewport);
+  const zeroY = graphToScreenY(0, height, viewport);
+
+  ctx.save();
+  ctx.strokeStyle = "#6b707c";
+  ctx.lineWidth = 1.4;
+
+  if (zeroX >= 0 && zeroX <= width) {
+    ctx.beginPath();
+    ctx.moveTo(zeroX, 0);
+    ctx.lineTo(zeroX, height);
+    ctx.stroke();
+  }
+
+  if (zeroY >= 0 && zeroY <= height) {
+    ctx.beginPath();
+    ctx.moveTo(0, zeroY);
+    ctx.lineTo(width, zeroY);
+    ctx.stroke();
+  }
+
+  ctx.restore();
 }
 
 function drawLabels(
