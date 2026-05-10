@@ -9,6 +9,7 @@ import "./App.css";
 const math = create(all, {});
 
 const GRAPH_LIBRARY_KEY = "axiom.graphLibrary";
+const APP_SETTINGS_KEY = "axiom.appSettings";
 
 type SavedGraph = {
   id: string;
@@ -16,6 +17,10 @@ type SavedGraph = {
   title: string;
   expressions: GraphExpression[];
   updatedAt: string;
+};
+
+type AppSettings = {
+  showAxisLabels: boolean;
 };
 
 const COLORS = ["#8ab4f8", "#a8d08d", "#f6c177", "#c4a7e7", "#f28b82"];
@@ -138,6 +143,35 @@ function loadGraphLibrary(): SavedGraph[] {
 
 function saveGraphLibrary(graphs: SavedGraph[]) {
   localStorage.setItem(GRAPH_LIBRARY_KEY, JSON.stringify(graphs, null, 2));
+}
+
+function loadAppSettings(): AppSettings {
+  try {
+    const raw = localStorage.getItem(APP_SETTINGS_KEY);
+
+    if (!raw) {
+      return {
+        showAxisLabels: true,
+      };
+    }
+
+    const parsed = JSON.parse(raw);
+
+    return {
+      showAxisLabels:
+        typeof parsed.showAxisLabels === "boolean"
+          ? parsed.showAxisLabels
+          : true,
+    };
+  } catch {
+    return {
+      showAxisLabels: true,
+    };
+  }
+}
+
+function saveAppSettings(settings: AppSettings) {
+  localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(settings, null, 2));
 }
 
 function normalizeMathExpression(raw: string) {
@@ -403,7 +437,9 @@ function App() {
   );
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showAxisLabels, setShowAxisLabels] = useState(true);
+  const [showAxisLabels, setShowAxisLabels] = useState(
+    () => loadAppSettings().showAxisLabels,
+  );
 
   function resizeExpressionInput(element: HTMLTextAreaElement | null) {
     if (!element) return;
@@ -750,6 +786,12 @@ function App() {
       }
     });
   }, [expressions, isSidebarCollapsed]);
+
+  useEffect(() => {
+    saveAppSettings({
+      showAxisLabels,
+    });
+  }, [showAxisLabels]);
 
   useEffect(() => {
     function resetPageZoom() {
