@@ -36,6 +36,8 @@ main goals:
 - square graph units
 - double-click to reset viewport
 - floating zoom in, zoom out, and reset view controls
+- improved graph grid spacing
+- axes render consistently above the grid
 - collapsible sidebar / graph-only mode
 
 ### expressions
@@ -97,22 +99,52 @@ main goals:
 - ctrl+s to save
 - ctrl+r to reset
 - ctrl+w to delete the currently focused expression
+- escape closes the settings popup
+
+### settings
+
+- settings popup opens as an overlay while the graph remains visible
+- show/hide axis labels setting
+- settings are saved locally and persist between app restarts
+- settings saved status appears next to the settings title
+- settings popup uses a darker github-like style
 
 ### interface
 
 - scrollable sidebar for many expressions and library items
 - cleaner github-dark inspired sidebar styling
-- subtle glyph-style sidebar collapse and reopen control
+- subtle svg sidebar collapse and reopen controls
 - cleaner expression row layout
 - cleaner color picker square styling
-- cleaner plus and new buttons
+- cleaner plus button
+- svg icons for graph actions
+- confusing `new` button removed from the library section for now
 
 ## future ideas
+
+### desmos-parity priorities
+
+- real table ui
+- table row and column editing
+- table point style controls, including points, connected lines, and both
+- better implicit equation support
+- implicit equation intersections
+- lists like `[1, 2, 3]` and ranges like `[1...10]`
+- parametric curves like `(cos(t), sin(t))`
+- graph settings for axes, grid, labels, and label format
+- editable slider value directly in the slider control
+- editable slider min, max, and step controls from the slider ui
+- expression actions like duplicate, hide, delete, color, and style
+- reset view button should appear only after the graph has been moved or zoomed
+- desmos-like shift-drag behavior for stretching/scaling an axis or selected line
+- smoother adaptive grid and label density while zooming
 
 ### graph controls
 
 - better linux touchpad pinch zoom support
 - add desmos-like shift-drag behavior for stretching/scaling a selected line
+- reset view button should appear only after graph movement or zoom
+- axis/grid/label rendering should continue moving toward desmos-like behavior
 
 ### math and expression input
 
@@ -120,6 +152,8 @@ main goals:
 - more keyboard shortcuts
 - better calculator/math evaluation
 - support more complete desmos-like expression behavior
+- support lists
+- support parametric curves
 
 ### sliders
 
@@ -151,7 +185,6 @@ future table controls idea:
 table expression
 [x] show points
 [ ] connect lines
-```
 
 ### advanced graphing
 
@@ -169,15 +202,26 @@ table expression
 
 - themes
 - settings panel
-- toggleable light/dark theme in settings
-- settings should open as a desmos-like popup/overlay so the graph stays visible while settings are changed
+- toggleable light/dark theme in settings after the dark design is more stable
+- settings should stay as a desmos-like popup/overlay so the graph remains visible while settings are changed
 - restyled color picker that matches axiom's theme
-- replace topbar text buttons like save, reset, import, and export with clean icon/symbol buttons
 - redesign the interface so it feels hand-made and polished
-- move the general ui style closer to github’s clean, structured design language
+- move the entire ui closer to github’s clean, structured dark design language
+- make the entire ui match the darker github-like settings popup style
 - keep graph line colors independent from the github-style interface palette
-- make plus, new, and other utility buttons consistently match the github-dark aesthetic
+- make plus, utility buttons, topbar actions, and section controls consistently match the github-dark aesthetic
+- add custom svg icons for major ui categories and sections
+- use cleaner capitalization in settings and future ui sections
+- use custom fonts consistently across the ui after choosing them
+- add tasteful animations/interactions later across buttons, toggles, popups, sidebar transitions, graph interactions, and status changes
 - keep expanding toward desmos-parity and eventually beyond-desmos features
+
+### future file/workspace behavior
+
+- keep the `new graph` action removed for now because save + reset covers the early workflow
+- bring back `new graph` later as a proper file/workspace action
+- later support `file → new graph` or a clear topbar/menu action
+- later add unsaved-change handling before starting a new graph
 
 ### performance
 
