@@ -510,6 +510,7 @@ function App() {
   );
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [showAxisLabels, setShowAxisLabels] = useState(
     () => loadAppSettings().showAxisLabels,
   );
@@ -671,7 +672,17 @@ function App() {
     setExpressions((current) => [...current, expression]);
     setNextColorIndex((current) => current + 1);
     setFocusedExpressionId(expression.id);
+    setIsCreateMenuOpen(false);
     markUnsaved();
+  }
+
+  function addExpressionFromKeyboard() {
+    if (focusedExpressionId) {
+      addExpressionAfter(focusedExpressionId);
+      return;
+    }
+
+    addExpression();
   }
 
   function addExpressionAfter(id: string) {
@@ -917,6 +928,22 @@ function App() {
           removeExpression(focusedExpressionId);
         }
       }
+
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        !isSettingsOpen
+      ) {
+        event.preventDefault();
+        addExpressionFromKeyboard();
+      }
+
+      if (event.key === "Escape" && isCreateMenuOpen) {
+        setIsCreateMenuOpen(false);
+      }
     }
 
     window.addEventListener("keydown", handleKeyDown);
@@ -924,7 +951,15 @@ function App() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [activeGraphId, title, expressions, nextColorIndex, focusedExpressionId]);
+  }, [
+    activeGraphId,
+    title,
+    expressions,
+    nextColorIndex,
+    focusedExpressionId,
+    isSettingsOpen,
+    isCreateMenuOpen,
+  ]);
 
   useEffect(() => {
     if (isSidebarCollapsed) return;
@@ -956,6 +991,20 @@ function App() {
       window.clearTimeout(timeout);
     };
   }, [showAxisLabels]);
+
+  useEffect(() => {
+    if (!isCreateMenuOpen) return;
+
+    function closeCreateMenu() {
+      setIsCreateMenuOpen(false);
+    }
+
+    window.addEventListener("pointerdown", closeCreateMenu);
+
+    return () => {
+      window.removeEventListener("pointerdown", closeCreateMenu);
+    };
+  }, [isCreateMenuOpen]);
 
   useEffect(() => {
     if (!isSettingsOpen) return;
@@ -1018,22 +1067,32 @@ function App() {
         </button>
 
         <section className="panel">
-          <div className="panel-header">
-            <h2>Expressions</h2>
-            <div className="panel-actions">
-              <button
-                className="add-table-button"
-                onClick={addTableExpression}
-                title="Add table"
+          <div className="expression-create-toolbar">
+            <button
+              className="add-expression-button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setIsCreateMenuOpen((current) => !current);
+              }}
+              title="Add item"
+              aria-label="Add item"
+            >
+              <svg className="icon-fill" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M7.75 2a.75.75 0 0 1 .75.75V7h4.25a.75.75 0 0 1 0 1.5H8.5v4.25a.75.75 0 0 1-1.5 0V8.5H2.75a.75.75 0 0 1 0-1.5H7V2.75A.75.75 0 0 1 7.75 2Z" />
+              </svg>
+            </button>
+
+            {isCreateMenuOpen ? (
+              <div
+                className="create-menu"
+                onPointerDown={(event) => event.stopPropagation()}
               >
-                table
-              </button>
-              <button className="add-expression-button" onClick={addExpression}>
-                <svg className="icon-fill" viewBox="0 0 16 16" aria-hidden="true">
-                  <path d="M7.75 2a.75.75 0 0 1 .75.75V7h4.25a.75.75 0 0 1 0 1.5H8.5v4.25a.75.75 0 0 1-1.5 0V8.5H2.75a.75.75 0 0 1 0-1.5H7V2.75A.75.75 0 0 1 7.75 2Z" />
-                </svg>
-              </button>
-            </div>
+                <button onClick={addTableExpression}>
+                  <span>Table</span>
+                  <small>Create editable x/y points</small>
+                </button>
+              </div>
+            ) : null}
           </div>
 
           {expressions.length === 0 ? (
@@ -1167,6 +1226,7 @@ function App() {
                             onKeyDown={(event) => {
                               if (event.key === "Enter" && !event.shiftKey) {
                                 event.preventDefault();
+                                event.stopPropagation();
                                 addExpressionAfter(expression.id);
                               }
                             }}
