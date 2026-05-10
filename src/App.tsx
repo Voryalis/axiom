@@ -642,13 +642,21 @@ function App() {
     rowIndex: number,
     rowCount: number,
   ) {
-    if (event.key !== "Enter" || event.shiftKey) return;
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      event.stopPropagation();
 
-    event.preventDefault();
-    event.stopPropagation();
+      if (rowIndex === rowCount - 1) {
+        addTableRow(id);
+      }
 
-    if (rowIndex === rowCount - 1) {
-      addTableRow(id);
+      return;
+    }
+
+    if (event.key === "Backspace" && event.currentTarget.value.length === 0) {
+      event.preventDefault();
+      event.stopPropagation();
+      removeTableRow(id, rowIndex);
     }
   }
 
@@ -742,6 +750,27 @@ function App() {
     });
 
     markUnsaved();
+  }
+
+  function handleExpressionKeyDown(
+    event: React.KeyboardEvent<HTMLTextAreaElement>,
+    id: string,
+  ) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      addExpressionAfter(id);
+      return;
+    }
+
+    if (
+      event.key === "Backspace" &&
+      event.currentTarget.value.length === 0
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      removeExpression(id);
+    }
   }
 
   function createGraphSnapshot(): SavedGraph {
@@ -1254,13 +1283,9 @@ function App() {
                                 event.currentTarget as HTMLTextAreaElement,
                               )
                             }
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter" && !event.shiftKey) {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                addExpressionAfter(expression.id);
-                              }
-                            }}
+                            onKeyDown={(event) =>
+                              handleExpressionKeyDown(event, expression.id)
+                            }
                             placeholder="Type an expression..."
                             spellCheck={false}
                           />
