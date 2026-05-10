@@ -181,10 +181,10 @@ main goals:
 
 future table controls idea:
 
-```txt
-table expression
-[x] show points
-[ ] connect lines
+`txt`
+`table expression`
+`[x] show points`
+`[ ] connect lines`
 
 ### advanced graphing
 
