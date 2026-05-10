@@ -636,6 +636,22 @@ function App() {
     }));
   }
 
+  function handleTableCellKeyDown(
+    event: React.KeyboardEvent<HTMLInputElement>,
+    id: string,
+    rowIndex: number,
+    rowCount: number,
+  ) {
+    if (event.key !== "Enter" || event.shiftKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (rowIndex === rowCount - 1) {
+      addTableRow(id);
+    }
+  }
+
   function toggleTableLines(id: string) {
     updateTableExpression(id, (table) => ({
       ...table,
@@ -1163,6 +1179,14 @@ function App() {
                                       event.target.value,
                                     )
                                   }
+                                  onKeyDown={(event) =>
+                                    handleTableCellKeyDown(
+                                      event,
+                                      expression.id,
+                                      rowIndex,
+                                      table.rows.length,
+                                    )
+                                  }
                                   placeholder="x"
                                   spellCheck={false}
                                 />
@@ -1177,6 +1201,14 @@ function App() {
                                       rowIndex,
                                       "y",
                                       event.target.value,
+                                    )
+                                  }
+                                  onKeyDown={(event) =>
+                                    handleTableCellKeyDown(
+                                      event,
+                                      expression.id,
+                                      rowIndex,
+                                      table.rows.length,
                                     )
                                   }
                                   placeholder="y"
