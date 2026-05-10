@@ -493,6 +493,7 @@ function App() {
   const expressionInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>(
     {},
   );
+  const tableInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const startingExpressions = useMemo(() => createDefaultExpressions(), []);
 
@@ -540,6 +541,18 @@ function App() {
       if (!element) return;
 
       resizeExpressionInput(element);
+      element.focus();
+
+      const length = element.value.length;
+      element.setSelectionRange(length, length);
+    });
+  }
+
+  function focusTableCell(id: string, rowIndex: number, axis: "x" | "y") {
+    requestAnimationFrame(() => {
+      const element = tableInputRefs.current[`${id}-${rowIndex}-${axis}`];
+      if (!element) return;
+
       element.focus();
 
       const length = element.value.length;
@@ -619,21 +632,50 @@ function App() {
     }));
   }
 
-  function addTableRow(id: string) {
-    updateTableExpression(id, (table) => ({
-      ...table,
-      rows: [...table.rows, { x: "", y: "" }],
+  function addTableRow(id: string, focusAxis?: "x" | "y") {
+    const table = expressions
+      .map((expression) =>
+        expression.id === id ? parseEditableTable(expression.raw) : null,
+      )
+      .find((candidate) => candidate !== null);
+
+    const nextRowIndex = table?.rows.length ?? 0;
+
+    updateTableExpression(id, (currentTable) => ({
+      ...currentTable,
+      rows: [...currentTable.rows, { x: "", y: "" }],
     }));
+
+    if (focusAxis) {
+      focusTableCell(id, nextRowIndex, focusAxis);
+    }
   }
 
-  function removeTableRow(id: string, rowIndex: number) {
-    updateTableExpression(id, (table) => ({
-      ...table,
+  function removeTableRow(
+    id: string,
+    rowIndex: number,
+    focusAxis?: "x" | "y",
+  ) {
+    const table = expressions
+      .map((expression) =>
+        expression.id === id ? parseEditableTable(expression.raw) : null,
+      )
+      .find((candidate) => candidate !== null);
+
+    const nextRowIndex = Math.max(0, rowIndex - 1);
+    const shouldRefocus = Boolean(focusAxis && table && table.rows.length > 1);
+
+    updateTableExpression(id, (currentTable) => ({
+      ...currentTable,
       rows:
-        table.rows.length <= 1
+        currentTable.rows.length <= 1
           ? [{ x: "", y: "" }]
-          : table.rows.filter((_, index) => index !== rowIndex),
+          : currentTable.rows.filter((_, index) => index !== rowIndex),
     }));
+
+    if (shouldRefocus && focusAxis) {
+      focusTableCell(id, nextRowIndex, focusAxis);
+    }
   }
 
   function handleTableCellKeyDown(
@@ -641,13 +683,14 @@ function App() {
     id: string,
     rowIndex: number,
     rowCount: number,
+    axis: "x" | "y",
   ) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       event.stopPropagation();
 
       if (rowIndex === rowCount - 1) {
-        addTableRow(id);
+        addTableRow(id, axis);
       }
 
       return;
@@ -656,7 +699,7 @@ function App() {
     if (event.key === "Backspace" && event.currentTarget.value.length === 0) {
       event.preventDefault();
       event.stopPropagation();
-      removeTableRow(id, rowIndex);
+      removeTableRow(id, rowIndex, axis);
     }
   }
 
@@ -685,6 +728,11 @@ function App() {
     setNextColorIndex((current) => current + 1);
     focusExpression(expression.id);
     markUnsaved();
+  }
+
+  function addExpressionFromMenu() {
+    setIsCreateMenuOpen(false);
+    addExpression();
   }
 
   function addTableExpression() {
@@ -1120,6 +1168,10 @@ function App() {
                 className="create-menu"
                 onPointerDown={(event) => event.stopPropagation()}
               >
+                <button onClick={addExpressionFromMenu}>
+                  <span>Expression</span>
+                  <small>Create a new math line</small>
+                </button>
                 <button onClick={addTableExpression}>
                   <span>Table</span>
                   <small>Create editable x/y points</small>
@@ -1139,9 +1191,7 @@ function App() {
             </button>
           </div>
 
-          {expressions.length === 0 ? (
-            <p className="empty-library">No expressions. Click + to add one.</p>
-          ) : (
+          {expressions.length === 0 ? null : (
             <div className="expression-list">
               {expressions.map((expression) => {
                 const result = evaluateMathExpression(expression.raw, expressions);
@@ -1196,6 +1246,11 @@ function App() {
                             {table.rows.map((row, rowIndex) => (
                               <div className="table-row" key={rowIndex}>
                                 <input
+                                  ref={(element) => {
+                                    tableInputRefs.current[
+                                      `${expression.id}-${rowIndex}-x`
+                                    ] = element;
+                                  }}
                                   value={row.x}
                                   onFocus={() =>
                                     setFocusedExpressionId(expression.id)
@@ -1214,12 +1269,18 @@ function App() {
                                       expression.id,
                                       rowIndex,
                                       table.rows.length,
+                                      "x",
                                     )
                                   }
                                   placeholder="x"
                                   spellCheck={false}
                                 />
                                 <input
+                                  ref={(element) => {
+                                    tableInputRefs.current[
+                                      `${expression.id}-${rowIndex}-y`
+                                    ] = element;
+                                  }}
                                   value={row.y}
                                   onFocus={() =>
                                     setFocusedExpressionId(expression.id)
@@ -1238,6 +1299,7 @@ function App() {
                                       expression.id,
                                       rowIndex,
                                       table.rows.length,
+                                      "y",
                                     )
                                   }
                                   placeholder="y"
@@ -1353,7 +1415,6 @@ function App() {
             </div>
           )}
 
-          <p className="hint">Try: y = x^2, x^2 + y^2 = 25, or add a table.</p>
         </section>
 
         <section className="panel library-panel">
