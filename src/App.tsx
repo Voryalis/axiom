@@ -403,6 +403,7 @@ function App() {
   );
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showAxisLabels, setShowAxisLabels] = useState(true);
 
   function resizeExpressionInput(element: HTMLTextAreaElement | null) {
     if (!element) return;
@@ -1098,14 +1099,16 @@ function App() {
 
               <div className="settings-row">
                 <div>
-                  <span>decimal coordinates</span>
-                  <small>symbolic π labels can come later</small>
+                  <span>show axis labels</span>
+                  <small>show or hide the numbers on the graph axes</small>
                 </div>
                 <button
-                  className="setting-switch setting-switch-active"
+                  className={`setting-switch ${
+                    showAxisLabels ? "setting-switch-active" : ""
+                  }`}
                   type="button"
-                  aria-pressed="true"
-                  disabled
+                  aria-pressed={showAxisLabels}
+                  onClick={() => setShowAxisLabels((current) => !current)}
                 >
                   <span />
                 </button>
@@ -1134,7 +1137,11 @@ function App() {
         ) : null}
 
         <div className="graph-stage">
-          <GraphCanvas ref={graphCanvasRef} expressions={expressions} />
+          <GraphCanvas
+            ref={graphCanvasRef}
+            expressions={expressions}
+            showAxisLabels={showAxisLabels}
+          />
 
           <div className="graph-floating-controls">
             <button

@@ -681,8 +681,9 @@ input {
   border: 1px solid #30363d;
   border-radius: 999px;
   background: #161b22;
-  opacity: 0.8;
+  opacity: 0.95;
   padding: 0;
+  cursor: pointer;
 }
 
 .setting-switch span {
@@ -719,4 +720,21 @@ input {
 .settings-close-button svg.icon-fill {
   fill: currentColor;
   stroke: none;
+}
+
+
+.setting-switch:not(:disabled):hover {
+  border-color: #8b949e;
+}
+
+.setting-switch:not(:disabled):hover span {
+  background: #c9d1d9;
+}
+
+.setting-switch-active:not(:disabled):hover {
+  border-color: #58a6ff;
+}
+
+.setting-switch-active:not(:disabled):hover span {
+  background: #79c0ff;
 }

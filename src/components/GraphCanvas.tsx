@@ -19,6 +19,7 @@ export type GraphExpression = {
 
 type GraphCanvasProps = {
   expressions: GraphExpression[];
+  showAxisLabels: boolean;
 };
 
 export type GraphCanvasHandle = {
@@ -81,7 +82,7 @@ const ZOOM_SENSITIVITY = 0.0015;
 const POINT_HIT_RADIUS = 10;
 
 const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
-  function GraphCanvas({ expressions }, ref) {
+  function GraphCanvas({ expressions, showAxisLabels }, ref) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const viewportRef = useRef<Viewport>({ ...INITIAL_VIEWPORT });
     const isDraggingRef = useRef(false);
@@ -113,6 +114,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         rect.height,
         expressions,
         viewportRef.current,
+        showAxisLabels,
       );
 
       renderedPointsRef.current = renderedPoints;
@@ -270,6 +272,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           rect.height,
           expressions,
           viewportRef.current,
+          showAxisLabels,
         );
 
         renderedPointsRef.current = renderedPoints;
@@ -447,7 +450,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         canvas.removeEventListener("click", handleClick);
         canvas.removeEventListener("dblclick", resetViewport);
       };
-    }, [expressions]);
+    }, [expressions, showAxisLabels]);
 
     return <canvas ref={canvasRef} className="graph-canvas" />;
   },
@@ -459,6 +462,7 @@ function draw(
   height: number,
   expressions: GraphExpression[],
   viewport: Viewport,
+  showAxisLabels: boolean,
 ) {
   const renderedPoints: RenderedPoint[] = [];
   const renderedCurves: RenderedCurve[] = [];
@@ -467,7 +471,10 @@ function draw(
 
   drawBackground(ctx, width, height);
   drawGrid(ctx, width, height, viewport);
-  drawLabels(ctx, width, height, viewport);
+
+  if (showAxisLabels) {
+    drawLabels(ctx, width, height, viewport);
+  }
 
   const scope = buildEvaluationScope(expressions);
 
