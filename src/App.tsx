@@ -23,6 +23,16 @@ type AppSettings = {
   showAxisLabels: boolean;
 };
 
+type EditableTableRow = {
+  x: string;
+  y: string;
+};
+
+type EditableTable = {
+  connect: boolean;
+  rows: EditableTableRow[];
+};
+
 const COLORS = ["#8ab4f8", "#a8d08d", "#f6c177", "#c4a7e7", "#f28b82"];
 
 function hslToHex(hue: number, saturation: number, lightness: number) {
@@ -413,6 +423,68 @@ function updateVariableAssignment(raw: string, value: number) {
   )}]`;
 }
 
+function parseEditableTable(rawExpression: string): EditableTable | null {
+  const lines = rawExpression
+    .split("\n")
+    .map((line) => line.trim());
+
+  const firstContentIndex = lines.findIndex((line) => line.length > 0);
+
+  if (firstContentIndex === -1) return null;
+
+  const firstLine = lines[firstContentIndex]?.toLowerCase();
+
+  const isPlainTable = firstLine === "table:" || firstLine === "table";
+  const isConnectedTable =
+    firstLine === "table lines:" ||
+    firstLine === "table lines" ||
+    firstLine === "table line:" ||
+    firstLine === "table line";
+
+  if (!isPlainTable && !isConnectedTable) return null;
+
+  const dataLines = lines.slice(firstContentIndex + 1).filter(Boolean);
+  const rows =
+    dataLines[0]?.toLowerCase().replace(/\s/g, "") === "x,y"
+      ? dataLines.slice(1)
+      : dataLines;
+
+  const tableRows = rows.map((row) => {
+    const [x = "", y = ""] = row.split(",").map((part) => part.trim());
+
+    return { x, y };
+  });
+
+  return {
+    connect: isConnectedTable,
+    rows: tableRows.length > 0 ? tableRows : [{ x: "", y: "" }],
+  };
+}
+
+function buildTableExpression(table: EditableTable) {
+  const header = table.connect ? "table lines:" : "table:";
+  const rows = table.rows.length > 0 ? table.rows : [{ x: "", y: "" }];
+
+  return [
+    header,
+    "x, y",
+    ...rows.map((row) => `${row.x.trim()}, ${row.y.trim()}`),
+  ].join("\n");
+}
+
+function createDefaultTableExpression() {
+  return buildTableExpression({
+    connect: false,
+    rows: [
+      { x: "-2", y: "4" },
+      { x: "-1", y: "1" },
+      { x: "0", y: "0" },
+      { x: "1", y: "1" },
+      { x: "2", y: "4" },
+    ],
+  });
+}
+
 function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const graphCanvasRef = useRef<GraphCanvasHandle | null>(null);
@@ -507,6 +579,69 @@ function App() {
     markUnsaved();
   }
 
+  function updateTableExpression(
+    id: string,
+    updater: (table: EditableTable) => EditableTable,
+  ) {
+    setExpressions((current) =>
+      current.map((expression) => {
+        if (expression.id !== id) return expression;
+
+        const table =
+          parseEditableTable(expression.raw) ??
+          ({
+            connect: false,
+            rows: [{ x: "", y: "" }],
+          } satisfies EditableTable);
+
+        return {
+          ...expression,
+          raw: buildTableExpression(updater(table)),
+        };
+      }),
+    );
+
+    markUnsaved();
+  }
+
+  function updateTableCell(
+    id: string,
+    rowIndex: number,
+    axis: "x" | "y",
+    value: string,
+  ) {
+    updateTableExpression(id, (table) => ({
+      ...table,
+      rows: table.rows.map((row, index) =>
+        index === rowIndex ? { ...row, [axis]: value } : row,
+      ),
+    }));
+  }
+
+  function addTableRow(id: string) {
+    updateTableExpression(id, (table) => ({
+      ...table,
+      rows: [...table.rows, { x: "", y: "" }],
+    }));
+  }
+
+  function removeTableRow(id: string, rowIndex: number) {
+    updateTableExpression(id, (table) => ({
+      ...table,
+      rows:
+        table.rows.length <= 1
+          ? [{ x: "", y: "" }]
+          : table.rows.filter((_, index) => index !== rowIndex),
+    }));
+  }
+
+  function toggleTableLines(id: string) {
+    updateTableExpression(id, (table) => ({
+      ...table,
+      connect: !table.connect,
+    }));
+  }
+
   function toggleExpression(id: string) {
     setExpressions((current) =>
       current.map((expression) =>
@@ -524,6 +659,18 @@ function App() {
     setExpressions((current) => [...current, expression]);
     setNextColorIndex((current) => current + 1);
     focusExpression(expression.id);
+    markUnsaved();
+  }
+
+  function addTableExpression() {
+    const expression = {
+      ...createEmptyExpression(nextColorIndex),
+      raw: createDefaultTableExpression(),
+    };
+
+    setExpressions((current) => [...current, expression]);
+    setNextColorIndex((current) => current + 1);
+    setFocusedExpressionId(expression.id);
     markUnsaved();
   }
 
@@ -873,11 +1020,20 @@ function App() {
         <section className="panel">
           <div className="panel-header">
             <h2>Expressions</h2>
-            <button className="add-expression-button" onClick={addExpression}>
-              <svg className="icon-fill" viewBox="0 0 16 16" aria-hidden="true">
-                <path d="M7.75 2a.75.75 0 0 1 .75.75V7h4.25a.75.75 0 0 1 0 1.5H8.5v4.25a.75.75 0 0 1-1.5 0V8.5H2.75a.75.75 0 0 1 0-1.5H7V2.75A.75.75 0 0 1 7.75 2Z" />
-              </svg>
-            </button>
+            <div className="panel-actions">
+              <button
+                className="add-table-button"
+                onClick={addTableExpression}
+                title="Add table"
+              >
+                table
+              </button>
+              <button className="add-expression-button" onClick={addExpression}>
+                <svg className="icon-fill" viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M7.75 2a.75.75 0 0 1 .75.75V7h4.25a.75.75 0 0 1 0 1.5H8.5v4.25a.75.75 0 0 1-1.5 0V8.5H2.75a.75.75 0 0 1 0-1.5H7V2.75A.75.75 0 0 1 7.75 2Z" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {expressions.length === 0 ? (
@@ -887,6 +1043,7 @@ function App() {
               {expressions.map((expression) => {
                 const result = evaluateMathExpression(expression.raw, expressions);
                 const slider = parseNumericVariableAssignment(expression.raw);
+                const table = parseEditableTable(expression.raw);
 
                 return (
                   <div
@@ -914,64 +1071,142 @@ function App() {
                     </button>
 
                     <div className="expression-input-stack">
-                      <textarea
-                        ref={(element) => {
-                          expressionInputRefs.current[expression.id] = element;
-                          resizeExpressionInput(element);
-                        }}
-                        className="expression-textarea"
-                        rows={1}
-                        value={expression.raw}
-                        onFocus={() => setFocusedExpressionId(expression.id)}
-                        onChange={(event) =>
-                          updateExpression(expression.id, event.target.value)
-                        }
-                        onInput={(event) =>
-                          resizeExpressionInput(
-                            event.currentTarget as HTMLTextAreaElement,
-                          )
-                        }
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" && !event.shiftKey) {
-                            event.preventDefault();
-                            addExpressionAfter(expression.id);
-                          }
-                        }}
-                        placeholder="Type an expression..."
-                        spellCheck={false}
-                      />
+                      {table ? (
+                        <div className="table-editor">
+                          <div className="table-editor-toolbar">
+                            <span>table</span>
+                            <button
+                              className={`table-toggle ${
+                                table.connect ? "table-toggle-active" : ""
+                              }`}
+                              onClick={() => toggleTableLines(expression.id)}
+                            >
+                              connect lines
+                            </button>
+                          </div>
 
-                      {result ? (
-                        <span className="expression-result">{result}</span>
-                      ) : null}
+                          <div className="table-grid">
+                            <div className="table-heading">x</div>
+                            <div className="table-heading">y</div>
+                            <div className="table-heading" />
 
-                      {slider ? (
-                        <div className="slider-control">
-                          <span className="slider-label">
-                            {formatSliderConfigNumber(slider.min)}
-                          </span>
-                          <input
-                            type="range"
-                            min={slider.min}
-                            max={slider.max}
-                            step={slider.step}
-                            value={Math.max(
-                              slider.min,
-                              Math.min(slider.max, slider.value),
-                            )}
-                            style={{ accentColor: expression.color }}
+                            {table.rows.map((row, rowIndex) => (
+                              <div className="table-row" key={rowIndex}>
+                                <input
+                                  value={row.x}
+                                  onFocus={() =>
+                                    setFocusedExpressionId(expression.id)
+                                  }
+                                  onChange={(event) =>
+                                    updateTableCell(
+                                      expression.id,
+                                      rowIndex,
+                                      "x",
+                                      event.target.value,
+                                    )
+                                  }
+                                  placeholder="x"
+                                  spellCheck={false}
+                                />
+                                <input
+                                  value={row.y}
+                                  onFocus={() =>
+                                    setFocusedExpressionId(expression.id)
+                                  }
+                                  onChange={(event) =>
+                                    updateTableCell(
+                                      expression.id,
+                                      rowIndex,
+                                      "y",
+                                      event.target.value,
+                                    )
+                                  }
+                                  placeholder="y"
+                                  spellCheck={false}
+                                />
+                                <button
+                                  className="table-remove-row"
+                                  onClick={() =>
+                                    removeTableRow(expression.id, rowIndex)
+                                  }
+                                  title="Remove row"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+
+                          <button
+                            className="table-add-row"
+                            onClick={() => addTableRow(expression.id)}
+                          >
+                            add row
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <textarea
+                            ref={(element) => {
+                              expressionInputRefs.current[expression.id] =
+                                element;
+                              resizeExpressionInput(element);
+                            }}
+                            className="expression-textarea"
+                            rows={1}
+                            value={expression.raw}
+                            onFocus={() => setFocusedExpressionId(expression.id)}
                             onChange={(event) =>
-                              updateExpressionFromSlider(
-                                expression.id,
-                                Number(event.target.value),
+                              updateExpression(expression.id, event.target.value)
+                            }
+                            onInput={(event) =>
+                              resizeExpressionInput(
+                                event.currentTarget as HTMLTextAreaElement,
                               )
                             }
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" && !event.shiftKey) {
+                                event.preventDefault();
+                                addExpressionAfter(expression.id);
+                              }
+                            }}
+                            placeholder="Type an expression..."
+                            spellCheck={false}
                           />
-                          <span className="slider-label">
-                            {formatSliderConfigNumber(slider.max)}
-                          </span>
-                        </div>
-                      ) : null}
+
+                          {result ? (
+                            <span className="expression-result">{result}</span>
+                          ) : null}
+
+                          {slider ? (
+                            <div className="slider-control">
+                              <span className="slider-label">
+                                {formatSliderConfigNumber(slider.min)}
+                              </span>
+                              <input
+                                type="range"
+                                min={slider.min}
+                                max={slider.max}
+                                step={slider.step}
+                                value={Math.max(
+                                  slider.min,
+                                  Math.min(slider.max, slider.value),
+                                )}
+                                style={{ accentColor: expression.color }}
+                                onChange={(event) =>
+                                  updateExpressionFromSlider(
+                                    expression.id,
+                                    Number(event.target.value),
+                                  )
+                                }
+                              />
+                              <span className="slider-label">
+                                {formatSliderConfigNumber(slider.max)}
+                              </span>
+                            </div>
+                          ) : null}
+                        </>
+                      )}
                     </div>
 
                     <label
@@ -1002,7 +1237,7 @@ function App() {
             </div>
           )}
 
-          <p className="hint">Try: table:, x, y, -2, 4</p>
+          <p className="hint">Try: y = x^2, x^2 + y^2 = 25, or add a table.</p>
         </section>
 
         <section className="panel library-panel">
