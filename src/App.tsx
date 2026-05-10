@@ -402,6 +402,7 @@ function App() {
     null,
   );
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   function resizeExpressionInput(element: HTMLTextAreaElement | null) {
     if (!element) return;
@@ -1002,8 +1003,8 @@ function App() {
             </button>
             <button onClick={resetGraph} title="Reset graph" aria-label="Reset graph">
               <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m15 14 5-5-5-5" />
-                <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13" />
+                <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+                <path d="M21 3v5h-5" />
               </svg>
             </button>
             <button onClick={saveGraph} title="Save graph" aria-label="Save graph">
@@ -1011,6 +1012,17 @@ function App() {
                 <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
                 <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" />
                 <path d="M7 3v4a1 1 0 0 0 1 1h7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setIsSettingsOpen((current) => !current)}
+              title="Open settings"
+              aria-label="Open settings"
+              aria-expanded={isSettingsOpen}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                <circle cx="12" cy="12" r="4" />
               </svg>
             </button>
           </div>
@@ -1036,6 +1048,89 @@ function App() {
               <path d="m13 17 5-5-5-5" />
             </svg>
           </button>
+        ) : null}
+
+        {isSettingsOpen ? (
+          <div
+            className="settings-popover"
+            role="dialog"
+            aria-labelledby="settings-title"
+          >
+            <div className="settings-header">
+              <div>
+                <h2 id="settings-title">settings</h2>
+                <p>early controls for future graph behavior</p>
+              </div>
+
+              <button
+                className="settings-close-button"
+                onClick={() => setIsSettingsOpen(false)}
+                title="Close settings"
+                aria-label="Close settings"
+              >
+                <svg className="icon-fill" viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M2.344 2.343h-.001a8 8 0 0 1 11.314 11.314A8.002 8.002 0 0 1 .234 10.089a8 8 0 0 1 2.11-7.746Zm1.06 10.253a6.5 6.5 0 1 0 9.108-9.275 6.5 6.5 0 0 0-9.108 9.275ZM6.03 4.97 8 6.94l1.97-1.97a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l1.97 1.97a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-1.97 1.97a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L6.94 8 4.97 6.03a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018Z" />
+                </svg>
+              </button>
+            </div>
+
+            <section className="settings-section">
+              <h3>appearance</h3>
+
+              <div className="settings-row">
+                <div>
+                  <span>theme</span>
+                  <small>dark only for now</small>
+                </div>
+                <button
+                  className="setting-switch setting-switch-active"
+                  type="button"
+                  aria-pressed="true"
+                  disabled
+                >
+                  <span />
+                </button>
+              </div>
+            </section>
+
+            <section className="settings-section">
+              <h3>graph labels</h3>
+
+              <div className="settings-row">
+                <div>
+                  <span>decimal coordinates</span>
+                  <small>symbolic π labels can come later</small>
+                </div>
+                <button
+                  className="setting-switch setting-switch-active"
+                  type="button"
+                  aria-pressed="true"
+                  disabled
+                >
+                  <span />
+                </button>
+              </div>
+            </section>
+
+            <section className="settings-section">
+              <h3>sliders</h3>
+
+              <div className="settings-row">
+                <div>
+                  <span>custom step controls</span>
+                  <small>currently handled through text syntax</small>
+                </div>
+                <button
+                  className="setting-switch"
+                  type="button"
+                  aria-pressed="false"
+                  disabled
+                >
+                  <span />
+                </button>
+              </div>
+            </section>
+          </div>
         ) : null}
 
         <div className="graph-stage">
