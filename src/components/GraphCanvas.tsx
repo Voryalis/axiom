@@ -1366,6 +1366,7 @@ function drawCompiledYExpression(
   ctx.lineWidth = 2.5;
 
   let started = false;
+  const intersectionSampleStep = Math.max(1, Math.ceil(width / 320));
 
   for (let px = 0; px <= width; px++) {
     const x = screenToGraphX(px, width, viewport);
@@ -1391,12 +1392,14 @@ function drawCompiledYExpression(
       continue;
     }
 
-    points.push({
-      x,
-      y,
-      screenX: px,
-      screenY: sy,
-    });
+    if (px % intersectionSampleStep === 0 || px === width) {
+      points.push({
+        x,
+        y,
+        screenX: px,
+        screenY: sy,
+      });
+    }
 
     if (!started) {
       ctx.moveTo(px, sy);
@@ -1632,11 +1635,6 @@ function drawConnectedTableLines(
   for (const point of points) {
     const sx = graphToScreenX(point.x, width, viewport);
     const sy = graphToScreenY(point.y, height, viewport);
-
-    if (sx < -40 || sx > width + 40 || sy < -40 || sy > height + 40) {
-      started = false;
-      continue;
-    }
 
     if (!started) {
       ctx.moveTo(sx, sy);

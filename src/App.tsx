@@ -703,6 +703,61 @@ function App() {
     }
   }
 
+  function handleTablePaste(
+    event: React.ClipboardEvent<HTMLInputElement>,
+    id: string,
+    startRowIndex: number,
+    startAxis: "x" | "y",
+  ) {
+    const pastedText = event.clipboardData.getData("text");
+
+    if (!pastedText.includes("\n") && !pastedText.includes("\t")) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const pastedRows = pastedText
+      .trim()
+      .split(/\r?\n/)
+      .map((line) =>
+        line
+          .split(/\t|,/)
+          .map((cell) => cell.trim()),
+      )
+      .filter((row) => row.some((cell) => cell.length > 0));
+
+    if (pastedRows.length === 0) return;
+
+    updateTableExpression(id, (table) => {
+      const rows = table.rows.map((row) => ({ ...row }));
+
+      while (rows.length < startRowIndex + pastedRows.length) {
+        rows.push({ x: "", y: "" });
+      }
+
+      pastedRows.forEach((pastedRow, pastedRowIndex) => {
+        const targetRowIndex = startRowIndex + pastedRowIndex;
+        const targetRow = rows[targetRowIndex];
+
+        if (!targetRow) return;
+
+        if (startAxis === "x") {
+          targetRow.x = pastedRow[0] ?? "";
+          targetRow.y = pastedRow[1] ?? targetRow.y;
+        } else {
+          targetRow.y = pastedRow[0] ?? "";
+        }
+      });
+
+      return {
+        ...table,
+        rows,
+      };
+    });
+  }
+
   function toggleTableLines(id: string) {
     updateTableExpression(id, (table) => ({
       ...table,
@@ -1278,6 +1333,14 @@ function App() {
                                       "x",
                                     )
                                   }
+                                  onPaste={(event) =>
+                                    handleTablePaste(
+                                      event,
+                                      expression.id,
+                                      rowIndex,
+                                      "x",
+                                    )
+                                  }
                                   placeholder="x"
                                   spellCheck={false}
                                 />
@@ -1305,6 +1368,14 @@ function App() {
                                       expression.id,
                                       rowIndex,
                                       table.rows.length,
+                                      "y",
+                                    )
+                                  }
+                                  onPaste={(event) =>
+                                    handleTablePaste(
+                                      event,
+                                      expression.id,
+                                      rowIndex,
                                       "y",
                                     )
                                   }
