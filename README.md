@@ -36,6 +36,7 @@ main goals:
 - square graph units
 - double-click to reset viewport
 - floating zoom in, zoom out, and reset view controls
+- collapsible sidebar / graph-only mode
 
 ### expressions
 
@@ -98,7 +99,6 @@ main goals:
 
 ### graph controls
 
-- collapsible sidebar / graph-only mode
 - better linux touchpad pinch zoom support
 - add desmos-like shift-drag behavior for stretching/scaling a selected line
 

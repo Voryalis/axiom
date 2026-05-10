@@ -401,12 +401,24 @@ function App() {
   const [focusedExpressionId, setFocusedExpressionId] = useState<string | null>(
     null,
   );
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   function resizeExpressionInput(element: HTMLTextAreaElement | null) {
     if (!element) return;
 
-    element.style.height = "0px";
-    element.style.height = `${element.scrollHeight}px`;
+    const rect = element.getBoundingClientRect();
+
+    if (rect.width < 120) {
+      return;
+    }
+
+    if (element.value.trim().length === 0) {
+      element.style.height = "24px";
+      return;
+    }
+
+    element.style.height = "auto";
+    element.style.height = `${Math.min(element.scrollHeight, 160)}px`;
   }
 
   function focusExpression(id: string) {
@@ -728,10 +740,14 @@ function App() {
   }, [activeGraphId, title, expressions, nextColorIndex, focusedExpressionId]);
 
   useEffect(() => {
-    for (const expression of expressions) {
-      resizeExpressionInput(expressionInputRefs.current[expression.id] ?? null);
-    }
-  }, [expressions]);
+    if (isSidebarCollapsed) return;
+
+    requestAnimationFrame(() => {
+      for (const expression of expressions) {
+        resizeExpressionInput(expressionInputRefs.current[expression.id] ?? null);
+      }
+    });
+  }, [expressions, isSidebarCollapsed]);
 
   useEffect(() => {
     function resetPageZoom() {
@@ -755,7 +771,7 @@ function App() {
   }, []);
 
   return (
-    <main className="app">
+    <main className={`app ${isSidebarCollapsed ? "app-sidebar-collapsed" : ""}`}>
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">A</div>
@@ -764,6 +780,15 @@ function App() {
             <p>Local graphing calculator</p>
           </div>
         </div>
+
+        <button
+          className="sidebar-collapse-glyph"
+          onClick={() => setIsSidebarCollapsed(true)}
+          title="Hide sidebar"
+          aria-label="Hide sidebar"
+        >
+          «
+        </button>
 
         <section className="panel">
           <div className="panel-header">
@@ -867,7 +892,11 @@ function App() {
                       ) : null}
                     </div>
 
-                    <label className="color-picker-label" title="Change line color">
+                    <label
+                      className="color-picker-label"
+                      title="Change line color"
+                      style={{ background: expression.color }}
+                    >
                       <input
                         className="color-picker"
                         type="color"
@@ -964,6 +993,17 @@ function App() {
             onChange={(event) => importJson(event.target.files?.[0])}
           />
         </div>
+
+        {isSidebarCollapsed ? (
+          <button
+            className="sidebar-open-glyph"
+            onClick={() => setIsSidebarCollapsed(false)}
+            title="Show sidebar"
+            aria-label="Show sidebar"
+          >
+            »
+          </button>
+        ) : null}
 
         <div className="graph-stage">
           <GraphCanvas ref={graphCanvasRef} expressions={expressions} />
