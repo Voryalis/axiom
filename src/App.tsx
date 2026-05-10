@@ -1054,18 +1054,6 @@ function App() {
           </div>
         </div>
 
-        <button
-          className="sidebar-collapse-glyph"
-          onClick={() => setIsSidebarCollapsed(true)}
-          title="Hide sidebar"
-          aria-label="Hide sidebar"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="m11 17-5-5 5-5" />
-            <path d="m18 17-5-5 5-5" />
-          </svg>
-        </button>
-
         <section className="panel">
           <div className="expression-create-toolbar">
             <button
@@ -1093,6 +1081,17 @@ function App() {
                 </button>
               </div>
             ) : null}
+            <button
+              className="sidebar-collapse-glyph inline-collapse-glyph"
+              onClick={() => setIsSidebarCollapsed(true)}
+              title="Hide sidebar"
+              aria-label="Hide sidebar"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m11 17-5-5 5-5" />
+                <path d="m18 17-5-5 5-5" />
+              </svg>
+            </button>
           </div>
 
           {expressions.length === 0 ? (
