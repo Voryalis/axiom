@@ -811,6 +811,22 @@ function App() {
   }, [showAxisLabels]);
 
   useEffect(() => {
+    if (!isSettingsOpen) return;
+
+    function handleSettingsEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsSettingsOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleSettingsEscape);
+
+    return () => {
+      window.removeEventListener("keydown", handleSettingsEscape);
+    };
+  }, [isSettingsOpen]);
+
+  useEffect(() => {
     function resetPageZoom() {
       document.body.style.setProperty("zoom", "1");
       document.documentElement.style.setProperty("zoom", "1");
