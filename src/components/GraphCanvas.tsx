@@ -107,6 +107,8 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
     const renderedPointsRef = useRef<RenderedPoint[]>([]);
     const hoveredPointRef = useRef<RenderedPoint | null>(null);
     const pinnedPointRef = useRef<RenderedPoint | null>(null);
+    const isViewportInteractingRef = useRef(false);
+    const viewportInteractionTimeoutRef = useRef<number | null>(null);
 
     function renderCurrentViewport() {
       const canvas = canvasRef.current;
@@ -138,12 +140,35 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         expressions,
         viewportRef.current,
         showAxisLabels,
+        !isViewportInteractingRef.current,
       );
 
       renderedPointsRef.current = renderedPoints;
     }
 
+    function startViewportInteraction() {
+      if (viewportInteractionTimeoutRef.current !== null) {
+        window.clearTimeout(viewportInteractionTimeoutRef.current);
+        viewportInteractionTimeoutRef.current = null;
+      }
+
+      isViewportInteractingRef.current = true;
+    }
+
+    function finishViewportInteraction() {
+      if (viewportInteractionTimeoutRef.current !== null) {
+        window.clearTimeout(viewportInteractionTimeoutRef.current);
+      }
+
+      viewportInteractionTimeoutRef.current = window.setTimeout(() => {
+        isViewportInteractingRef.current = false;
+        viewportInteractionTimeoutRef.current = null;
+        renderCurrentViewport();
+      }, 120);
+    }
+
     function zoomViewport(factor: number) {
+      startViewportInteraction();
       const viewport = viewportRef.current;
 
       const centerX = (viewport.xMin + viewport.xMax) / 2;
@@ -171,6 +196,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       pinnedPointRef.current = null;
 
       renderCurrentViewport();
+      finishViewportInteraction();
     }
 
     useImperativeHandle(ref, () => ({
@@ -287,6 +313,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           expressions,
           viewportRef.current,
           showAxisLabels,
+          !isViewportInteractingRef.current,
         );
 
         renderedPointsRef.current = renderedPoints;
@@ -318,6 +345,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       const handleWheel = (event: WheelEvent) => {
         event.preventDefault();
         event.stopPropagation();
+        startViewportInteraction();
 
         const rect = canvas.getBoundingClientRect();
         const viewport = viewportRef.current;
@@ -348,11 +376,13 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         );
 
         render();
+        finishViewportInteraction();
       };
 
       const handlePointerDown = (event: PointerEvent) => {
         event.preventDefault();
 
+        startViewportInteraction();
         isDraggingRef.current = true;
         lastPointerRef.current = { x: event.clientX, y: event.clientY };
         canvas.setPointerCapture(event.pointerId);
@@ -406,6 +436,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
 
       const handlePointerUp = (event: PointerEvent) => {
         isDraggingRef.current = false;
+        finishViewportInteraction();
 
         if (canvas.hasPointerCapture(event.pointerId)) {
           canvas.releasePointerCapture(event.pointerId);
@@ -430,11 +461,19 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       const handlePointerLeave = () => {
         isDraggingRef.current = false;
         hoveredPointRef.current = null;
+        finishViewportInteraction();
         canvas.style.cursor = "grab";
         render();
       };
 
       const resetViewport = () => {
+        isViewportInteractingRef.current = false;
+
+        if (viewportInteractionTimeoutRef.current !== null) {
+          window.clearTimeout(viewportInteractionTimeoutRef.current);
+          viewportInteractionTimeoutRef.current = null;
+        }
+
         viewportRef.current = { ...INITIAL_VIEWPORT };
         render();
       };
@@ -477,6 +516,7 @@ function draw(
   expressions: GraphExpression[],
   viewport: Viewport,
   showAxisLabels: boolean,
+  shouldFindIntersections: boolean,
 ) {
   const renderedPoints: RenderedPoint[] = [];
   const renderedCurves: RenderedCurve[] = [];
@@ -500,7 +540,7 @@ function draw(
 
     if (table && table.points.length > 0) {
       if (table.connect) {
-        drawConnectedTableLines(
+        const tableCurvePoints = drawConnectedTableLines(
           ctx,
           width,
           height,
@@ -508,6 +548,14 @@ function draw(
           expression.color,
           viewport,
         );
+
+        if (tableCurvePoints.length > 1) {
+          renderedCurves.push({
+            expressionId: `${expression.id}-table-line`,
+            color: expression.color,
+            points: tableCurvePoints,
+          });
+        }
       }
 
       table.points.forEach((point, index) => {
@@ -600,15 +648,17 @@ function draw(
     }
   }
 
-  const intersections = findCurveIntersections(renderedCurves);
+  if (shouldFindIntersections) {
+    const intersections = findCurveIntersections(renderedCurves);
 
-  intersections.forEach((intersection) => {
-    const renderedPoint = drawIntersectionPoint(ctx, intersection);
+    intersections.forEach((intersection) => {
+      const renderedPoint = drawIntersectionPoint(ctx, intersection);
 
-    if (renderedPoint) {
-      renderedPoints.push(renderedPoint);
-    }
-  });
+      if (renderedPoint) {
+        renderedPoints.push(renderedPoint);
+      }
+    });
+  }
 
   return renderedPoints;
 }
@@ -1620,8 +1670,10 @@ function drawConnectedTableLines(
   points: GraphPoint[],
   color: string,
   viewport: Viewport,
-) {
-  if (points.length < 2) return;
+): RenderedCurvePoint[] {
+  const renderedCurvePoints: RenderedCurvePoint[] = [];
+
+  if (points.length < 2) return renderedCurvePoints;
 
   ctx.save();
   ctx.beginPath();
@@ -1636,6 +1688,13 @@ function drawConnectedTableLines(
     const sx = graphToScreenX(point.x, width, viewport);
     const sy = graphToScreenY(point.y, height, viewport);
 
+    renderedCurvePoints.push({
+      x: point.x,
+      y: point.y,
+      screenX: sx,
+      screenY: sy,
+    });
+
     if (!started) {
       ctx.moveTo(sx, sy);
       started = true;
@@ -1646,6 +1705,8 @@ function drawConnectedTableLines(
 
   ctx.stroke();
   ctx.restore();
+
+  return renderedCurvePoints;
 }
 
 function drawPoint(
@@ -1850,6 +1911,50 @@ function findCurveIntersections(curves: RenderedCurve[]) {
   return intersections;
 }
 
+function findPointOnSegment(
+  point: RenderedCurvePoint,
+  segmentStart: RenderedCurvePoint,
+  segmentEnd: RenderedCurvePoint,
+) {
+  const segmentLength = Math.hypot(
+    segmentEnd.screenX - segmentStart.screenX,
+    segmentEnd.screenY - segmentStart.screenY,
+  );
+
+  if (segmentLength < 0.0001) return null;
+
+  const distanceToSegment =
+    Math.abs(
+      (segmentEnd.screenY - segmentStart.screenY) * point.screenX -
+        (segmentEnd.screenX - segmentStart.screenX) * point.screenY +
+        segmentEnd.screenX * segmentStart.screenY -
+        segmentEnd.screenY * segmentStart.screenX,
+    ) / segmentLength;
+
+  if (distanceToSegment > 2) return null;
+
+  const minX = Math.min(segmentStart.screenX, segmentEnd.screenX) - 2;
+  const maxX = Math.max(segmentStart.screenX, segmentEnd.screenX) + 2;
+  const minY = Math.min(segmentStart.screenY, segmentEnd.screenY) - 2;
+  const maxY = Math.max(segmentStart.screenY, segmentEnd.screenY) + 2;
+
+  if (
+    point.screenX < minX ||
+    point.screenX > maxX ||
+    point.screenY < minY ||
+    point.screenY > maxY
+  ) {
+    return null;
+  }
+
+  return {
+    x: point.x,
+    y: point.y,
+    screenX: point.screenX,
+    screenY: point.screenY,
+  };
+}
+
 function findSegmentIntersection(
   a1: RenderedCurvePoint,
   a2: RenderedCurvePoint,
@@ -1869,7 +1974,10 @@ function findSegmentIntersection(
   const denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
 
   if (Math.abs(denominator) < 0.0001) {
-    return null;
+    const overlappingEndpoint =
+      findPointOnSegment(b1, a1, a2) ?? findPointOnSegment(b2, a1, a2);
+
+    return overlappingEndpoint;
   }
 
   const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator;
