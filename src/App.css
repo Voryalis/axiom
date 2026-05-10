@@ -697,13 +697,13 @@ input {
 }
 
 .setting-switch-active {
-  border-color: #1f6feb;
-  background: rgba(31, 111, 235, 0.18);
+  border-color: #8b949e;
+  background: #30363d;
 }
 
 .setting-switch-active span {
   left: 21px;
-  background: #58a6ff;
+  background: #f0f6fc;
 }
 
 .setting-switch:disabled {
@@ -732,9 +732,23 @@ input {
 }
 
 .setting-switch-active:not(:disabled):hover {
-  border-color: #58a6ff;
+  border-color: #c9d1d9;
 }
 
 .setting-switch-active:not(:disabled):hover span {
-  background: #79c0ff;
+  background: #ffffff;
+}
+
+
+.settings-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-save-badge {
+  color: #8b949e;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
 }

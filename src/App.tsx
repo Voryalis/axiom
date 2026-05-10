@@ -417,6 +417,7 @@ function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const graphCanvasRef = useRef<GraphCanvasHandle | null>(null);
   const zoomRepeatIntervalRef = useRef<number | null>(null);
+  const hasSavedSettingsOnceRef = useRef(false);
   const expressionInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>(
     {},
   );
@@ -440,6 +441,7 @@ function App() {
   const [showAxisLabels, setShowAxisLabels] = useState(
     () => loadAppSettings().showAxisLabels,
   );
+  const [settingsSaveStatus, setSettingsSaveStatus] = useState("");
 
   function resizeExpressionInput(element: HTMLTextAreaElement | null) {
     if (!element) return;
@@ -788,9 +790,24 @@ function App() {
   }, [expressions, isSidebarCollapsed]);
 
   useEffect(() => {
+    if (!hasSavedSettingsOnceRef.current) {
+      hasSavedSettingsOnceRef.current = true;
+      return;
+    }
+
     saveAppSettings({
       showAxisLabels,
     });
+
+    setSettingsSaveStatus("saved");
+
+    const timeout = window.setTimeout(() => {
+      setSettingsSaveStatus("");
+    }, 1400);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
   }, [showAxisLabels]);
 
   useEffect(() => {
@@ -1101,7 +1118,14 @@ function App() {
           >
             <div className="settings-header">
               <div>
-                <h2 id="settings-title">settings</h2>
+                <div className="settings-title-row">
+                  <h2 id="settings-title">settings</h2>
+                  {settingsSaveStatus ? (
+                    <span className="settings-save-badge">
+                      {settingsSaveStatus}
+                    </span>
+                  ) : null}
+                </div>
                 <p>early controls for future graph behavior</p>
               </div>
 
