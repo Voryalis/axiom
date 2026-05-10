@@ -151,13 +151,13 @@ input {
   min-width: 40px;
   height: 28px;
   place-items: center;
-  border: 1px solid #3d444d;
-  border-radius: 7px;
+  border: 1px solid #30363d;
+  border-radius: 6px;
   background: #21262d;
   color: #c9d1d9;
   cursor: pointer;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1;
   box-shadow: inset 0 1px 0 rgba(240, 246, 252, 0.03);
 }
@@ -165,7 +165,7 @@ input {
 .add-expression-button:hover,
 .new-graph-button:hover {
   background: #30363d;
-  border-color: #57606a;
+  border-color: #8b949e;
   color: #f0f6fc;
 }
 
@@ -436,17 +436,26 @@ input {
 }
 
 .topbar-actions button {
-  border: 1px solid #3d444d;
-  border-radius: 9px;
-  background: #2d333b;
-  color: #f0f6fc;
-  padding: 8px 12px;
+  display: grid;
+  width: 32px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: #21262d;
+  color: #c9d1d9;
+  padding: 0;
   cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1;
+  box-shadow: inset 0 1px 0 rgba(240, 246, 252, 0.03);
 }
 
 .topbar-actions button:hover {
   background: #30363d;
-  border-color: #57606a;
+  border-color: #8b949e;
+  color: #f0f6fc;
 }
 
 .hidden-file-input {
@@ -479,23 +488,27 @@ input {
 }
 
 .graph-floating-controls button {
-  display: grid;
-  width: 44px;
-  height: 44px;
-  place-items: center;
-  border: 1px solid #3d444d;
-  border-radius: 10px;
-  background: rgba(45, 51, 59, 0.95);
-  color: #f0f6fc;
-  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: rgba(33, 38, 45, 0.96);
+  color: #c9d1d9;
+  font-size: 20px;
+  font-weight: 500;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(1, 4, 9, 0.28);
+  padding: 0;
+  box-shadow: 0 8px 20px rgba(1, 4, 9, 0.24);
 }
 
 .graph-floating-controls button:hover {
   background: rgba(48, 54, 61, 0.98);
-  border-color: #57606a;
+  border-color: #8b949e;
+  color: #f0f6fc;
 }
 
 .graph-floating-controls button:focus-visible {
@@ -519,4 +532,40 @@ input {
 
 .sidebar::-webkit-scrollbar-thumb:hover {
   background: #6e7681;
+}
+
+.topbar-actions button svg,
+.add-expression-button svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.topbar-actions button svg.icon-fill,
+.add-expression-button svg.icon-fill {
+  fill: currentColor;
+  stroke: none;
+}
+
+.sidebar-collapse-glyph svg,
+.sidebar-open-glyph svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.add-expression-button {
+  min-width: 30px;
+  width: 30px;
+  padding: 0;
 }
