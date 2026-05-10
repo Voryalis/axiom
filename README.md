@@ -46,13 +46,13 @@ main goals:
 - deletable final expression
 - turn graph lines on and off
 - change each line color
+- generated unique colors after the first preset colors run out
 
 ### math engine
 
 - normal math evaluation for non-graph expressions
 - basic sliders for numeric variable expressions
-- custom slider min, max, and step values with syntax like 
-`a = 3 [0, 10, 0.5]`
+- custom slider min, max, and step values with syntax like `a = 3 [0, 10, 0.5]`
 - slider accent colors match their graph line colors
 
 ### points
@@ -60,6 +60,12 @@ main goals:
 - point plotting with expressions like `(1, 2)`
 - variable-based point plotting, like `(a, b)`
 - point coordinate labels on hover and click
+
+### points and intersections
+
+- basic intersection detection between visible explicit curves
+- show dots where supported curves intersect
+- click or hover supported intersection dots to show coordinates
 
 ### tables
 
@@ -73,6 +79,7 @@ main goals:
 - basic equation support, like `y = x`, `x = 2`, `x = a`, and `x = y`
 - basic implicit equation graphing, like `x^2 + y^2 = 25`
 - sideways equation graphing, like `x = y^2`
+
 ### saving and library
 
 - clean startup graph
@@ -94,6 +101,11 @@ main goals:
 ### interface
 
 - scrollable sidebar for many expressions and library items
+- cleaner github-dark inspired sidebar styling
+- subtle glyph-style sidebar collapse and reopen control
+- cleaner expression row layout
+- cleaner color picker square styling
+- cleaner plus and new buttons
 
 ## future ideas
 
@@ -106,6 +118,8 @@ main goals:
 
 - on-screen math keyboard
 - more keyboard shortcuts
+- better calculator/math evaluation
+- support more complete desmos-like expression behavior
 
 ### sliders
 
@@ -113,19 +127,13 @@ main goals:
 - slider ui controls for min, max, and step values instead of only text syntax
 - optional settings/popup control for slider movement amount
 - animated sliders
-- editable slider value directly in the slider control, similar to desmos
-- slider ui controls for min, max, and step values instead of only text syntax
-- optional settings/popup control for slider movement amount
 
 ### points and intersections
 
-- desmos-style point coordinate labels on hover/click
-- basic intersection detection between visible explicit curves
-- show dots where supported curves intersect
-- click or hover supported intersection dots to show coordinates
-- intersection points between graphs
-- display the intersection coordinates
-- desmos-like point hover / selection behavior
+- more complete intersection detection
+- intersection detection involving implicit equations
+- desmos-style point hover / selection behavior
+- setting for coordinate label format: decimal by default, optional symbolic constants like `π` when detected
 
 ### tables
 
@@ -139,11 +147,11 @@ main goals:
 
 future table controls idea:
 
-`txt`
-`table expression`
-`[x] show points`
-`[ ] connect lines`
-
+```txt
+table expression
+[x] show points
+[ ] connect lines
+```
 
 ### advanced graphing
 
@@ -157,19 +165,19 @@ future table controls idea:
 - inequalities with variables on either side, like `x <= y`
 - fix any valid desmos-style syntax that does not graph correctly
 
-### design and settings 
+### design and settings
 
 - themes
-- settings panel 
+- settings panel
 - toggleable light/dark theme in settings
+- settings should open as a desmos-like popup/overlay so the graph stays visible while settings are changed
 - restyled color picker that matches axiom's theme
 - replace topbar text buttons like save, reset, import, and export with clean icon/symbol buttons
-- redesign the interface so it feels hand-made and polished.
+- redesign the interface so it feels hand-made and polished
 - move the general ui style closer to github’s clean, structured design language
 - keep graph line colors independent from the github-style interface palette
+- make plus, new, and other utility buttons consistently match the github-dark aesthetic
 - keep expanding toward desmos-parity and eventually beyond-desmos features
-- setting for coordinate label format: decimal by default, optional symbolic constants like `π` when detected
-- settings should open as a desmos-like popup/overlay so the graph stays visible while settings are changed
 
 ### performance
 
@@ -181,24 +189,29 @@ future table controls idea:
 
 install dependencies:
 
-`npm install`
+```fish
+npm install
+```
 
 run the development app:
 
-`npm run tauri dev`
+```fish
+npm run tauri dev
+```
 
 ## build
 
 for a production desktop build:
 
-`npm run tauri build`
+```fish
+npm run tauri build
+```
 
 ## known issues
 
 - linux webkit/tauri pinch gesture may trigger native webview zoom; current workaround forces page zoom back to normal
-## status 
+- vite may warn that some chunks are larger than 500 kb after minification, probably because mathjs is large
+
+## status
 
 early development
-
-
-
