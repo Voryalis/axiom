@@ -964,6 +964,11 @@ function App() {
     setNextColorIndex((current) => current + 1);
     setFocusedExpressionId(expression.id);
     setIsCreateMenuOpen(false);
+
+    requestAnimationFrame(() => {
+      focusTableCell(expression.id, 0, "x");
+    });
+
     markUnsaved();
   }
 
