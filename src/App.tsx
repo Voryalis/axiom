@@ -1115,6 +1115,7 @@ function App() {
 
     setExpressions((current) => [...current, expression]);
     setNextColorIndex((current) => current + 1);
+    setFocusedExpressionId(expression.id);
     focusExpression(expression.id);
     markUnsaved();
   }
