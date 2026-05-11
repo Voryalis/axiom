@@ -1285,3 +1285,15 @@ input {
 .expression-card:not(.expression-card-table) {
   border-radius: 6px !important;
 }
+
+/* Graph floating control icons */
+.graph-floating-controls button svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
