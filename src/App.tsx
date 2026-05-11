@@ -906,6 +906,19 @@ function App() {
     }
 
     if (event.key === "Backspace" && event.currentTarget.value.length === 0) {
+      const table = expressions
+        .map((expression) =>
+          expression.id === id ? getEditableTable(expression) : null,
+        )
+        .find((candidate) => candidate !== null);
+
+      const row = table?.rows[rowIndex];
+      const isRowEmpty = row ? isEditableTableRowEmpty(row) : true;
+
+      if (!isRowEmpty) {
+        return;
+      }
+
       event.preventDefault();
       event.stopPropagation();
       removeTableRow(id, rowIndex, axis);
