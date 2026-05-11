@@ -903,7 +903,9 @@ function parseTableExpression(
   };
 }
 
-function parseInequalityExpression(rawExpression: string): ParsedInequality | null {
+function parseInequalityExpression(
+  rawExpression: string,
+): ParsedInequality | null {
   const trimmed = rawExpression.trim();
   const match = trimmed.match(/^(x|y)\s*(>=|<=|>|<)\s*(.+)$/i);
 
@@ -989,7 +991,9 @@ function graphToScreenX(x: number, width: number, viewport: Viewport) {
 }
 
 function graphToScreenY(y: number, height: number, viewport: Viewport) {
-  return height - ((y - viewport.yMin) / (viewport.yMax - viewport.yMin)) * height;
+  return (
+    height - ((y - viewport.yMin) / (viewport.yMax - viewport.yMin)) * height
+  );
 }
 
 function screenToGraphX(screenX: number, width: number, viewport: Viewport) {
@@ -1012,7 +1016,11 @@ function getGridStep(range: number) {
   return 10 * magnitude;
 }
 
-function drawBackground(ctx: CanvasRenderingContext2D, width: number, height: number) {
+function drawBackground(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+) {
   ctx.fillStyle = "#1d1e21";
   ctx.fillRect(0, 0, width, height);
 }
@@ -1540,7 +1548,15 @@ function drawInequality(
   scope: Record<string, number>,
 ) {
   if (inequality.variable === "x") {
-    drawVerticalInequality(ctx, width, height, inequality, color, viewport, scope);
+    drawVerticalInequality(
+      ctx,
+      width,
+      height,
+      inequality,
+      color,
+      viewport,
+      scope,
+    );
     return;
   }
 
@@ -1886,7 +1902,10 @@ function findNearestPoint(
   let nearestDistance = Infinity;
 
   for (const point of points) {
-    const distance = Math.hypot(point.screenX - screenX, point.screenY - screenY);
+    const distance = Math.hypot(
+      point.screenX - screenX,
+      point.screenY - screenY,
+    );
 
     if (distance <= POINT_HIT_RADIUS && distance < nearestDistance) {
       nearestPoint = point;
@@ -1932,12 +1951,17 @@ function findCurveIntersections(curves: RenderedCurve[]) {
   const intersections: RenderedPoint[] = [];
 
   for (let firstIndex = 0; firstIndex < curves.length; firstIndex++) {
-    for (let secondIndex = firstIndex + 1; secondIndex < curves.length; secondIndex++) {
+    for (
+      let secondIndex = firstIndex + 1;
+      secondIndex < curves.length;
+      secondIndex++
+    ) {
       const firstCurve = curves[firstIndex];
       const secondCurve = curves[secondIndex];
 
       if (!firstCurve || !secondCurve) continue;
-      if (firstCurve.points.length < 2 || secondCurve.points.length < 2) continue;
+      if (firstCurve.points.length < 2 || secondCurve.points.length < 2)
+        continue;
 
       for (let i = 0; i < firstCurve.points.length - 1; i++) {
         const a1 = firstCurve.points[i];

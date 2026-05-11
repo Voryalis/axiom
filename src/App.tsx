@@ -168,9 +168,7 @@ function normalizeExpression(expression: GraphExpression): GraphExpression {
     ...expression,
     showPoints,
     showLabel:
-      typeof expression.showLabel === "boolean"
-        ? expression.showLabel
-        : false,
+      typeof expression.showLabel === "boolean" ? expression.showLabel : false,
     tableData:
       expression.tableData ??
       (parsedTable
@@ -496,9 +494,7 @@ function updateVariableAssignment(raw: string, value: number) {
 }
 
 function parseEditableTable(rawExpression: string): EditableTable | null {
-  const lines = rawExpression
-    .split("\n")
-    .map((line) => line.trim());
+  const lines = rawExpression.split("\n").map((line) => line.trim());
 
   const firstContentIndex = lines.findIndex((line) => line.length > 0);
 
@@ -602,21 +598,25 @@ function App() {
   const graphCanvasRef = useRef<GraphCanvasHandle | null>(null);
   const zoomRepeatIntervalRef = useRef<number | null>(null);
   const hasSavedSettingsOnceRef = useRef(false);
-  const expressionInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>(
-    {},
-  );
+  const expressionInputRefs = useRef<
+    Record<string, HTMLTextAreaElement | null>
+  >({});
   const tableInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const startingExpressions = useMemo(() => createDefaultExpressions(), []);
 
-  const [activeGraphId, setActiveGraphId] = useState<string>(crypto.randomUUID());
+  const [activeGraphId, setActiveGraphId] = useState<string>(
+    crypto.randomUUID(),
+  );
   const [title, setTitle] = useState("Untitled Graph");
   const [expressions, setExpressions] =
     useState<GraphExpression[]>(startingExpressions);
   const [nextColorIndex, setNextColorIndex] = useState(
     startingExpressions.length,
   );
-  const [library, setLibrary] = useState<SavedGraph[]>(() => loadGraphLibrary());
+  const [library, setLibrary] = useState<SavedGraph[]>(() =>
+    loadGraphLibrary(),
+  );
   const [saveStatus, setSaveStatus] = useState("Clean graph");
   const [focusedExpressionId, setFocusedExpressionId] = useState<string | null>(
     null,
@@ -705,7 +705,10 @@ function App() {
     setExpressions((current) =>
       current.map((expression) =>
         expression.id === id
-          ? { ...expression, raw: updateVariableAssignment(expression.raw, value) }
+          ? {
+              ...expression,
+              raw: updateVariableAssignment(expression.raw, value),
+            }
           : expression,
       ),
     );
@@ -793,11 +796,7 @@ function App() {
     }
   }
 
-  function removeTableRow(
-    id: string,
-    rowIndex: number,
-    focusAxis?: "x" | "y",
-  ) {
+  function removeTableRow(id: string, rowIndex: number, focusAxis?: "x" | "y") {
     const table = expressions
       .map((expression) =>
         expression.id === id ? getEditableTable(expression) : null,
@@ -814,7 +813,7 @@ function App() {
     const nextRowIndex =
       nextRows.length <= 1 ? 0 : Math.min(rowIndex, nextRows.length - 1);
 
-    const nextAxis = nextRows.length <= 1 ? "x" : focusAxis ?? "x";
+    const nextAxis = nextRows.length <= 1 ? "x" : (focusAxis ?? "x");
 
     updateTableExpression(
       id,
@@ -857,7 +856,10 @@ function App() {
       event.preventDefault();
       event.stopPropagation();
       const start = event.currentTarget.selectionStart ?? 0;
-      event.currentTarget.setSelectionRange(start, event.currentTarget.value.length);
+      event.currentTarget.setSelectionRange(
+        start,
+        event.currentTarget.value.length,
+      );
       return;
     }
 
@@ -874,6 +876,7 @@ function App() {
       focusTableCell(id, Math.max(0, rowCount - 1), "y");
       return;
     }
+
     if (event.key === "Tab") {
       event.preventDefault();
       event.stopPropagation();
@@ -1012,9 +1015,7 @@ function App() {
         const trimmedLine = line.trim();
 
         if (trimmedLine.includes("\t") || trimmedLine.includes(",")) {
-          return trimmedLine
-            .split(/\t|,/)
-            .map((cell) => cell.trim());
+          return trimmedLine.split(/\t|,/).map((cell) => cell.trim());
         }
 
         return trimmedLine.split(/\s+/);
@@ -1052,8 +1053,7 @@ function App() {
 
     const lastRowIndex = startRowIndex + pastedRows.length - 1;
     const lastRow = pastedRows[pastedRows.length - 1] ?? [];
-    const focusAxis =
-      startAxis === "x" && lastRow.length > 1 ? "y" : startAxis;
+    const focusAxis = startAxis === "x" && lastRow.length > 1 ? "y" : startAxis;
 
     focusTableCell(id, lastRowIndex, focusAxis);
   }
@@ -1212,10 +1212,7 @@ function App() {
       return;
     }
 
-    if (
-      event.key === "Backspace" &&
-      event.currentTarget.value.length === 0
-    ) {
+    if (event.key === "Backspace" && event.currentTarget.value.length === 0) {
       event.preventDefault();
       event.stopPropagation();
       removeExpression(id);
@@ -1460,7 +1457,9 @@ function App() {
 
     requestAnimationFrame(() => {
       for (const expression of expressions) {
-        resizeExpressionInput(expressionInputRefs.current[expression.id] ?? null);
+        resizeExpressionInput(
+          expressionInputRefs.current[expression.id] ?? null,
+        );
       }
     });
   }, [expressions, isSidebarCollapsed]);
@@ -1538,7 +1537,9 @@ function App() {
   }, []);
 
   return (
-    <main className={`app ${isSidebarCollapsed ? "app-sidebar-collapsed" : ""}`}>
+    <main
+      className={`app ${isSidebarCollapsed ? "app-sidebar-collapsed" : ""}`}
+    >
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">A</div>
@@ -1593,7 +1594,10 @@ function App() {
           {expressions.length === 0 ? null : (
             <div className="expression-list">
               {expressions.map((expression) => {
-                const result = evaluateMathExpression(expression.raw, expressions);
+                const result = evaluateMathExpression(
+                  expression.raw,
+                  expressions,
+                );
                 const slider = parseNumericVariableAssignment(expression.raw);
                 const table = getEditableTable(expression);
                 const pointExpression = isPointExpression(expression.raw);
@@ -1614,7 +1618,9 @@ function App() {
                         className="visibility-button"
                         onClick={() => toggleExpression(expression.id)}
                         title={
-                          expression.visible ? "Hide expression" : "Show expression"
+                          expression.visible
+                            ? "Hide expression"
+                            : "Show expression"
                         }
                         style={{ borderColor: expression.color }}
                       >
@@ -1689,7 +1695,8 @@ function App() {
                                     ] = element;
                                   }}
                                   className={
-                                    activeTableCell?.expressionId === expression.id &&
+                                    activeTableCell?.expressionId ===
+                                      expression.id &&
                                     activeTableCell.rowIndex === rowIndex &&
                                     activeTableCell.axis === "x"
                                       ? "table-cell-active"
@@ -1740,7 +1747,8 @@ function App() {
                                     ] = element;
                                   }}
                                   className={
-                                    activeTableCell?.expressionId === expression.id &&
+                                    activeTableCell?.expressionId ===
+                                      expression.id &&
                                     activeTableCell.rowIndex === rowIndex &&
                                     activeTableCell.axis === "y"
                                       ? "table-cell-active"
@@ -1799,9 +1807,14 @@ function App() {
                             className="expression-textarea"
                             rows={1}
                             value={expression.raw}
-                            onFocus={() => setFocusedExpressionId(expression.id)}
+                            onFocus={() =>
+                              setFocusedExpressionId(expression.id)
+                            }
                             onChange={(event) =>
-                              updateExpression(expression.id, event.target.value)
+                              updateExpression(
+                                expression.id,
+                                event.target.value,
+                              )
                             }
                             onInput={(event) =>
                               resizeExpressionInput(
@@ -1836,7 +1849,13 @@ function App() {
                                 </svg>
                               ) : (
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                                  <rect width="18" height="18" x="3" y="3" rx="2" />
+                                  <rect
+                                    width="18"
+                                    height="18"
+                                    x="3"
+                                    y="3"
+                                    rx="2"
+                                  />
                                 </svg>
                               )}
                               <span>Label</span>
@@ -1884,7 +1903,10 @@ function App() {
                         type="color"
                         value={expression.color}
                         onChange={(event) =>
-                          updateExpressionColor(expression.id, event.target.value)
+                          updateExpressionColor(
+                            expression.id,
+                            event.target.value,
+                          )
                         }
                       />
                     </label>
@@ -1901,7 +1923,6 @@ function App() {
               })}
             </div>
           )}
-
         </section>
 
         <section className="panel library-panel">
@@ -1956,19 +1977,31 @@ function App() {
 
           <div className="topbar-actions">
             <span className="save-status">{saveStatus}</span>
-            <button onClick={openImportDialog} title="Import JSON" aria-label="Import JSON">
+            <button
+              onClick={openImportDialog}
+              title="Import JSON"
+              aria-label="Import JSON"
+            >
               <svg className="icon-fill" viewBox="0 0 16 16" aria-hidden="true">
                 <path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14Z" />
                 <path d="M11.78 4.72a.749.749 0 1 1-1.06 1.06L8.75 3.811V9.5a.75.75 0 0 1-1.5 0V3.811L5.28 5.78a.749.749 0 1 1-1.06-1.06l3.25-3.25a.749.749 0 0 1 1.06 0l3.25 3.25Z" />
               </svg>
             </button>
-            <button onClick={exportJson} title="Export JSON" aria-label="Export JSON">
+            <button
+              onClick={exportJson}
+              title="Export JSON"
+              aria-label="Export JSON"
+            >
               <svg className="icon-fill" viewBox="0 0 16 16" aria-hidden="true">
                 <path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14Z" />
                 <path d="M7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.969a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1 1.06-1.06l1.97 1.969Z" />
               </svg>
             </button>
-            <button onClick={exportPng} title="Export PNG" aria-label="Export PNG">
+            <button
+              onClick={exportPng}
+              title="Export PNG"
+              aria-label="Export PNG"
+            >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1-3.1a2 2 0 0 0-2.814.014L6 21" />
                 <path d="m14 19.5 3-3 3 3" />
@@ -1976,13 +2009,21 @@ function App() {
                 <circle cx="9" cy="9" r="2" />
               </svg>
             </button>
-            <button onClick={resetGraph} title="Reset graph" aria-label="Reset graph">
+            <button
+              onClick={resetGraph}
+              title="Reset graph"
+              aria-label="Reset graph"
+            >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
                 <path d="M21 3v5h-5" />
               </svg>
             </button>
-            <button onClick={saveGraph} title="Save graph" aria-label="Save graph">
+            <button
+              onClick={saveGraph}
+              title="Save graph"
+              aria-label="Save graph"
+            >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
                 <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" />
@@ -2050,7 +2091,11 @@ function App() {
                 title="Close settings"
                 aria-label="Close settings"
               >
-                <svg className="icon-fill" viewBox="0 0 16 16" aria-hidden="true">
+                <svg
+                  className="icon-fill"
+                  viewBox="0 0 16 16"
+                  aria-hidden="true"
+                >
                   <path d="M2.344 2.343h-.001a8 8 0 0 1 11.314 11.314A8.002 8.002 0 0 1 .234 10.089a8 8 0 0 1 2.11-7.746Zm1.06 10.253a6.5 6.5 0 1 0 9.108-9.275 6.5 6.5 0 0 0-9.108 9.275ZM6.03 4.97 8 6.94l1.97-1.97a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l1.97 1.97a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-1.97 1.97a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L6.94 8 4.97 6.03a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018Z" />
                 </svg>
               </button>
@@ -2165,7 +2210,11 @@ function App() {
               −
             </button>
 
-            <button onClick={resetView} title="Reset view" aria-label="Reset view">
+            <button
+              onClick={resetView}
+              title="Reset view"
+              aria-label="Reset view"
+            >
               ↺
             </button>
           </div>
