@@ -1181,6 +1181,12 @@ function App() {
   }
 
   function removeExpression(id: string) {
+    if (expressions.length <= 1) {
+      setFocusedExpressionId(id);
+      focusExpression(id);
+      return;
+    }
+
     const index = expressions.findIndex((expression) => expression.id === id);
     const nextExpressions = expressions.filter(
       (expression) => expression.id !== id,
