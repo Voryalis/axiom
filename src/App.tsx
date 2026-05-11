@@ -1216,6 +1216,13 @@ function App() {
       event.preventDefault();
       event.stopPropagation();
       removeExpression(id);
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.blur();
     }
   }
 
