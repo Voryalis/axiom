@@ -1437,11 +1437,11 @@ function App() {
 
       if (isModifierPressed && key === "w") {
         const target = event.target as HTMLElement | null;
-        const isEditingExpression = Boolean(
+        const isInsideExpressionList = Boolean(
           target?.closest(".expression-list"),
         );
 
-        if (!isEditingExpression) {
+        if (!isInsideExpressionList) {
           return;
         }
 
