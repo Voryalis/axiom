@@ -465,10 +465,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           mouseY,
         );
 
-        const isIntersectionPoint =
-          nearestPoint?.expressionId.startsWith("intersection-") ?? false;
-
-        pinnedPointRef.current = isIntersectionPoint ? nearestPoint : null;
+        pinnedPointRef.current = nearestPoint;
         renderWithPinnedPointLabel();
       };
 
