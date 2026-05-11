@@ -1444,6 +1444,16 @@ function App() {
         !event.altKey &&
         !isSettingsOpen
       ) {
+        const target = event.target as HTMLElement | null;
+        const isEditingText = Boolean(
+          target?.closest("input, textarea, select, button") ||
+          target?.isContentEditable,
+        );
+
+        if (isEditingText) {
+          return;
+        }
+
         event.preventDefault();
         addExpressionFromKeyboard();
       }
