@@ -629,6 +629,7 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
+  const [isViewportDirty, setIsViewportDirty] = useState(false);
   const [showAxisLabels, setShowAxisLabels] = useState(
     () => loadAppSettings().showAxisLabels,
   );
@@ -1422,6 +1423,7 @@ function App() {
 
   function resetView() {
     graphCanvasRef.current?.resetView();
+    setIsViewportDirty(false);
   }
 
   function zoomIn() {
@@ -2353,6 +2355,7 @@ function App() {
             ref={graphCanvasRef}
             expressions={expressions}
             showAxisLabels={showAxisLabels}
+            onViewportDirtyChange={setIsViewportDirty}
           />
 
           <div className="graph-floating-controls">
@@ -2396,13 +2399,15 @@ function App() {
               −
             </button>
 
-            <button
-              onClick={resetView}
-              title="Reset view"
-              aria-label="Reset view"
-            >
-              ↺
-            </button>
+            {isViewportDirty ? (
+              <button
+                onClick={resetView}
+                title="Reset view"
+                aria-label="Reset view"
+              >
+                ↺
+              </button>
+            ) : null}
           </div>
         </div>
       </section>

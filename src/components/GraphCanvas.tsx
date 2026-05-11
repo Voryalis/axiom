@@ -43,6 +43,7 @@ export type GraphExpression = {
 type GraphCanvasProps = {
   expressions: GraphExpression[];
   showAxisLabels: boolean;
+  onViewportDirtyChange?: (isDirty: boolean) => void;
 };
 
 export type GraphCanvasHandle = {
@@ -123,7 +124,10 @@ function enforceSquareUnits(
 }
 
 const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
-  function GraphCanvas({ expressions, showAxisLabels }, ref) {
+  function GraphCanvas(
+    { expressions, showAxisLabels, onViewportDirtyChange },
+    ref,
+  ) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const viewportRef = useRef<Viewport>({ ...INITIAL_VIEWPORT });
     const isDraggingRef = useRef(false);
@@ -213,6 +217,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
     }
 
     function zoomViewport(factor: number) {
+      onViewportDirtyChange?.(true);
       startViewportInteraction();
       const viewport = viewportRef.current;
 
@@ -257,6 +262,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       resetView() {
         viewportRef.current = { ...INITIAL_VIEWPORT };
         pinnedPointRef.current = null;
+        onViewportDirtyChange?.(false);
         renderCurrentViewport();
       },
       zoomIn() {
@@ -340,6 +346,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       const handleWheel = (event: WheelEvent) => {
         event.preventDefault();
         event.stopPropagation();
+        onViewportDirtyChange?.(true);
         startViewportInteraction();
 
         const rect = canvas.getBoundingClientRect();
@@ -385,6 +392,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       const handlePointerMove = (event: PointerEvent) => {
         if (isDraggingRef.current) {
           event.preventDefault();
+          onViewportDirtyChange?.(true);
           startViewportInteraction();
 
           const rect = canvas.getBoundingClientRect();
@@ -465,6 +473,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         }
 
         viewportRef.current = { ...INITIAL_VIEWPORT };
+        onViewportDirtyChange?.(false);
         renderWithPinnedPointLabel();
       };
 
@@ -493,7 +502,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         canvas.removeEventListener("click", handleClick);
         canvas.removeEventListener("dblclick", resetViewport);
       };
-    }, [expressions, showAxisLabels]);
+    }, [expressions, showAxisLabels, onViewportDirtyChange]);
 
     return <canvas ref={canvasRef} className="graph-canvas" />;
   },
