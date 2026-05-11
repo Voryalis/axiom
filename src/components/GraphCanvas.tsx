@@ -555,7 +555,9 @@ function draw(
   for (const expression of expressions) {
     if (!expression.visible) continue;
 
-    const table = parseTableExpression(expression.raw, scope);
+    const table =
+      parseStructuredTableExpression(expression.tableData, scope) ??
+      parseTableExpression(expression.raw, scope);
 
     if (table && table.points.length > 0) {
       if (table.connect) {
@@ -798,6 +800,43 @@ function parsePointExpression(
   } catch {
     return null;
   }
+}
+
+function parseStructuredTableExpression(
+  tableData: TableData | undefined,
+  scope: Record<string, number>,
+): ParsedTable | null {
+  if (!tableData) return null;
+
+  const points: GraphPoint[] = [];
+
+  for (const row of tableData.rows) {
+    const rawX = row.cells.x?.trim() ?? "";
+    const rawY = row.cells.y?.trim() ?? "";
+
+    if (!rawX || !rawY) continue;
+
+    try {
+      const x = math.evaluate(rawX, scope);
+      const y = math.evaluate(rawY, scope);
+
+      if (
+        typeof x === "number" &&
+        typeof y === "number" &&
+        Number.isFinite(x) &&
+        Number.isFinite(y)
+      ) {
+        points.push({ x, y });
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return {
+    points,
+    connect: tableData.connectLines,
+  };
 }
 
 function parseTableExpression(

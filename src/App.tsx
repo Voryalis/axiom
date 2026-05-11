@@ -118,17 +118,68 @@ function isValidExpression(value: unknown): value is GraphExpression {
   );
 }
 
+
+function createTableDataFromEditableTable(
+  table: EditableTable,
+  color: string,
+  previousTableData?: GraphExpression["tableData"],
+  showPoints = previousTableData?.showPoints ?? true,
+): NonNullable<GraphExpression["tableData"]> {
+  const rows = normalizeEditableTableRows(
+    table.rows.length > 0 ? table.rows : [{ x: "", y: "" }],
+  );
+
+  return {
+    version: 1,
+    columns: previousTableData?.columns ?? [
+      {
+        id: "x",
+        label: "x",
+        color,
+        visible: true,
+      },
+      {
+        id: "y",
+        label: "y",
+        color,
+        visible: true,
+      },
+    ],
+    rows: rows.map((row, index) => ({
+      id: previousTableData?.rows[index]?.id ?? crypto.randomUUID(),
+      cells: {
+        x: row.x,
+        y: row.y,
+      },
+    })),
+    connectLines: table.connect,
+    showPoints,
+  };
+}
+
 function normalizeExpression(expression: GraphExpression): GraphExpression {
+  const showPoints =
+    typeof expression.showPoints === "boolean" ? expression.showPoints : true;
+
+  const parsedTable = parseEditableTable(expression.raw);
+
   return {
     ...expression,
-    showPoints:
-      typeof expression.showPoints === "boolean"
-        ? expression.showPoints
-        : true,
+    showPoints,
     showLabel:
       typeof expression.showLabel === "boolean"
         ? expression.showLabel
         : false,
+    tableData:
+      expression.tableData ??
+      (parsedTable
+        ? createTableDataFromEditableTable(
+            parsedTable,
+            expression.color,
+            undefined,
+            showPoints,
+          )
+        : undefined),
   };
 }
 
@@ -518,12 +569,6 @@ function buildTableExpression(table: EditableTable) {
   ].join("\n");
 }
 
-function createDefaultTableExpression() {
-  return buildTableExpression({
-    connect: false,
-    rows: [{ x: "", y: "" }],
-  });
-}
 
 function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -649,9 +694,17 @@ function App() {
             rows: [{ x: "", y: "" }],
           } satisfies EditableTable);
 
+        const nextTable = updater(table);
+
         return {
           ...expression,
-          raw: buildTableExpression(updater(table)),
+          raw: buildTableExpression(nextTable),
+          tableData: createTableDataFromEditableTable(
+            nextTable,
+            expression.color,
+            expression.tableData,
+            expression.showPoints !== false,
+          ),
         };
       }),
     );
@@ -825,11 +878,22 @@ function App() {
 
   function toggleTablePoints(id: string) {
     setExpressions((current) =>
-      current.map((expression) =>
-        expression.id === id
-          ? { ...expression, showPoints: expression.showPoints === false }
-          : expression,
-      ),
+      current.map((expression) => {
+        if (expression.id !== id) return expression;
+
+        const showPoints = expression.showPoints === false;
+
+        return {
+          ...expression,
+          showPoints,
+          tableData: expression.tableData
+            ? {
+                ...expression.tableData,
+                showPoints,
+              }
+            : expression.tableData,
+        };
+      }),
     );
     markUnsaved();
   }
@@ -861,9 +925,16 @@ function App() {
   }
 
   function addTableExpression() {
+    const baseExpression = createEmptyExpression(nextColorIndex);
+    const table = {
+      connect: false,
+      rows: [{ x: "", y: "" }],
+    } satisfies EditableTable;
+
     const expression = {
-      ...createEmptyExpression(nextColorIndex),
-      raw: createDefaultTableExpression(),
+      ...baseExpression,
+      raw: buildTableExpression(table),
+      tableData: createTableDataFromEditableTable(table, baseExpression.color),
     };
 
     setExpressions((current) => [...current, expression]);
