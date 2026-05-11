@@ -1595,8 +1595,8 @@ function App() {
           <div className="expression-create-toolbar">
             <button
               className="add-expression-button"
-              onClick={(event) => {
-                event.stopPropagation();
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => {
                 setIsCreateMenuOpen((current) => !current);
               }}
               title="Add item"
