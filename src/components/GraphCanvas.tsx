@@ -15,6 +15,7 @@ export type GraphExpression = {
   raw: string;
   color: string;
   visible: boolean;
+  showPoints?: boolean;
 };
 
 type GraphCanvasProps = {
@@ -558,21 +559,23 @@ function draw(
         }
       }
 
-      table.points.forEach((point, index) => {
-        const renderedPoint = drawPoint(
-          ctx,
-          width,
-          height,
-          point,
-          expression.color,
-          `${expression.id}-table-${index}`,
-          viewport,
-        );
+      if (expression.showPoints !== false) {
+        table.points.forEach((point, index) => {
+          const renderedPoint = drawPoint(
+            ctx,
+            width,
+            height,
+            point,
+            expression.color,
+            `${expression.id}-table-${index}`,
+            viewport,
+          );
 
-        if (renderedPoint) {
-          renderedPoints.push(renderedPoint);
-        }
-      });
+          if (renderedPoint) {
+            renderedPoints.push(renderedPoint);
+          }
+        });
+      }
 
       continue;
     }
