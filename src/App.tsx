@@ -1142,9 +1142,7 @@ function App() {
     setFocusedExpressionId(expression.id);
     setIsCreateMenuOpen(false);
 
-    requestAnimationFrame(() => {
-      focusTableCell(expression.id, 0, "x");
-    });
+    focusTableCell(expression.id, 0, "x");
 
     markUnsaved();
   }
