@@ -2047,6 +2047,7 @@ function App() {
                       onClick={() => duplicateExpression(expression.id)}
                       title="Duplicate expression"
                       aria-label="Duplicate expression"
+                      type="button"
                     >
                       <svg viewBox="0 0 24 24" aria-hidden="true">
                         <rect
@@ -2065,6 +2066,8 @@ function App() {
                       className="remove-button"
                       onClick={() => removeExpression(expression.id)}
                       title="Remove expression"
+                      aria-label="Remove expression"
+                      type="button"
                     >
                       ×
                     </button>
