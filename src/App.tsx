@@ -600,6 +600,11 @@ function App() {
     });
   }
 
+  function selectExpressionFromGraph(id: string) {
+    setFocusedExpressionId(id);
+    focusExpression(id);
+  }
+
   function markUnsaved() {
     setSaveStatus("Unsaved changes");
   }
@@ -1325,6 +1330,10 @@ function App() {
                   <div
                     className={`expression-card ${
                       expression.visible ? "" : "expression-card-hidden"
+                    } ${
+                      focusedExpressionId === expression.id
+                        ? "expression-card-focused"
+                        : ""
                     } ${table ? "expression-card-table" : ""}`}
                     key={expression.id}
                   >
@@ -1815,6 +1824,7 @@ function App() {
             ref={graphCanvasRef}
             expressions={expressions}
             showAxisLabels={showAxisLabels}
+            onExpressionSelect={selectExpressionFromGraph}
           />
 
           <div className="graph-floating-controls">

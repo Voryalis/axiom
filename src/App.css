@@ -2064,3 +2064,22 @@ body {
 .point-label-control span {
   color: currentColor;
 }
+
+
+.expression-card-focused {
+  border-color: #8b949e !important;
+  background: #161b22 !important;
+}
+
+.expression-card-focused:hover {
+  border-color: #c9d1d9 !important;
+  background: #161b22 !important;
+}
+
+.expression-card-table.expression-card-focused {
+  background: transparent !important;
+}
+
+.expression-card-table.expression-card-focused .table-grid {
+  border-color: #8b949e !important;
+}

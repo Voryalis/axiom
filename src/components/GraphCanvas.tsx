@@ -22,6 +22,7 @@ export type GraphExpression = {
 type GraphCanvasProps = {
   expressions: GraphExpression[];
   showAxisLabels: boolean;
+  onExpressionSelect?: (expressionId: string) => void;
 };
 
 export type GraphCanvasHandle = {
@@ -101,7 +102,7 @@ function enforceSquareUnits(
 }
 
 const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
-  function GraphCanvas({ expressions, showAxisLabels }, ref) {
+  function GraphCanvas({ expressions, showAxisLabels, onExpressionSelect }, ref) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const viewportRef = useRef<Viewport>({ ...INITIAL_VIEWPORT });
     const isDraggingRef = useRef(false);
@@ -450,12 +451,14 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
 
         const expressionPoint =
           nearestPoint &&
-          expressions.some(
+          expressions.find(
             (expression) => expression.id === nearestPoint.expressionId,
           );
 
         if (nearestPoint && expressionPoint) {
           pinnedPointRef.current = null;
+          onExpressionSelect?.(nearestPoint.expressionId);
+          render();
           return;
         }
 
@@ -508,7 +511,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         canvas.removeEventListener("click", handleClick);
         canvas.removeEventListener("dblclick", resetViewport);
       };
-    }, [expressions, showAxisLabels]);
+    }, [expressions, showAxisLabels, onExpressionSelect]);
 
     return <canvas ref={canvasRef} className="graph-canvas" />;
   },
