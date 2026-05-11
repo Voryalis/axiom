@@ -833,6 +833,12 @@ function App() {
     rowCount: number,
     axis: "x" | "y",
   ) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.blur();
+      return;
+    }
     if (event.key === "Tab") {
       event.preventDefault();
       event.stopPropagation();
