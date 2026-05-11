@@ -1223,7 +1223,12 @@ function App() {
       return;
     }
 
-    if (event.key === "Backspace" && event.currentTarget.value.length === 0) {
+    if (
+      event.key === "Backspace" &&
+      event.currentTarget.value === "" &&
+      event.currentTarget.selectionStart === 0 &&
+      event.currentTarget.selectionEnd === 0
+    ) {
       event.preventDefault();
       event.stopPropagation();
       removeExpression(id);
