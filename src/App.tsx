@@ -1444,6 +1444,23 @@ function App() {
     }, 80);
   }
 
+  function isEditableShortcutTarget(target: EventTarget | null) {
+    if (!(target instanceof HTMLElement)) {
+      return false;
+    }
+
+    return Boolean(
+      target.closest("input, textarea, select, button") ||
+      target.isContentEditable,
+    );
+  }
+
+  function isExpressionListShortcutTarget(target: EventTarget | null) {
+    return target instanceof HTMLElement
+      ? Boolean(target.closest(".expression-list"))
+      : false;
+  }
+
   async function importJson(file: File | undefined) {
     if (!file) return;
 
@@ -1478,23 +1495,6 @@ function App() {
   }
 
   useEffect(() => {
-    function isEditableShortcutTarget(target: EventTarget | null) {
-      if (!(target instanceof HTMLElement)) {
-        return false;
-      }
-
-      return Boolean(
-        target.closest("input, textarea, select, button") ||
-        target.isContentEditable,
-      );
-    }
-
-    function isExpressionListShortcutTarget(target: EventTarget | null) {
-      return target instanceof HTMLElement
-        ? Boolean(target.closest(".expression-list"))
-        : false;
-    }
-
     function handleKeyDown(event: KeyboardEvent) {
       const isModifierPressed = event.ctrlKey || event.metaKey;
       const key = event.key.toLowerCase();
