@@ -261,6 +261,7 @@ function loadAppSettings(): AppSettings {
     };
   } catch {
     return {
+      showGraphDetails: true,
       showGrid: true,
       showMinorGrid: true,
       showAxes: true,
@@ -2380,12 +2381,12 @@ function App() {
               <button
                 className="settings-checkbox-row"
                 type="button"
-                aria-pressed={showGrid}
+                aria-pressed={showGraphDetails && showGrid}
                 disabled={!showGraphDetails}
                 onClick={() => setShowGrid((current) => !current)}
               >
                 <span className="settings-checkbox-icon">
-                  {renderSettingsCheckbox(showGrid)}
+                  {renderSettingsCheckbox(showGraphDetails && showGrid)}
                 </span>
                 <span>
                   <span>Show grid</span>
@@ -2396,12 +2397,14 @@ function App() {
               <button
                 className="settings-checkbox-row"
                 type="button"
-                aria-pressed={showMinorGrid}
+                aria-pressed={showGraphDetails && showGrid && showMinorGrid}
                 disabled={!showGraphDetails || !showGrid}
                 onClick={() => setShowMinorGrid((current) => !current)}
               >
                 <span className="settings-checkbox-icon">
-                  {renderSettingsCheckbox(showMinorGrid)}
+                  {renderSettingsCheckbox(
+                    showGraphDetails && showGrid && showMinorGrid,
+                  )}
                 </span>
                 <span>
                   <span>Show minor grid</span>
@@ -2412,12 +2415,12 @@ function App() {
               <button
                 className="settings-checkbox-row"
                 type="button"
-                aria-pressed={showAxes}
+                aria-pressed={showGraphDetails && showAxes}
                 disabled={!showGraphDetails}
                 onClick={() => setShowAxes((current) => !current)}
               >
                 <span className="settings-checkbox-icon">
-                  {renderSettingsCheckbox(showAxes)}
+                  {renderSettingsCheckbox(showGraphDetails && showAxes)}
                 </span>
                 <span>
                   <span>Show axes</span>
@@ -2428,12 +2431,14 @@ function App() {
               <button
                 className="settings-checkbox-row"
                 type="button"
-                aria-pressed={showAxisLabels}
+                aria-pressed={showGraphDetails && showAxes && showAxisLabels}
                 disabled={!showGraphDetails || !showAxes}
                 onClick={() => setShowAxisLabels((current) => !current)}
               >
                 <span className="settings-checkbox-icon">
-                  {renderSettingsCheckbox(showAxisLabels)}
+                  {renderSettingsCheckbox(
+                    showGraphDetails && showAxes && showAxisLabels,
+                  )}
                 </span>
                 <span>
                   <span>Show axis labels</span>
