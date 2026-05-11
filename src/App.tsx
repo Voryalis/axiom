@@ -1509,6 +1509,23 @@ function App() {
         }
       }
 
+      if (isModifierPressed && key === "d") {
+        const target = event.target as HTMLElement | null;
+        const isInsideExpressionList = Boolean(
+          target?.closest(".expression-list"),
+        );
+
+        if (!isInsideExpressionList) {
+          return;
+        }
+
+        event.preventDefault();
+
+        if (focusedExpressionId) {
+          duplicateExpression(focusedExpressionId);
+        }
+      }
+
       if (
         event.key === "Enter" &&
         !event.shiftKey &&
