@@ -1198,7 +1198,7 @@ function App() {
     );
 
     const nextFocusedExpression =
-      nextExpressions[Math.min(index, nextExpressions.length - 1)] ?? null;
+      nextExpressions[index] ?? nextExpressions[index - 1] ?? null;
 
     setExpressions(nextExpressions);
     setFocusedExpressionId(nextFocusedExpression?.id ?? null);
