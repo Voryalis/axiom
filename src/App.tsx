@@ -109,8 +109,20 @@ function isValidExpression(value: unknown): value is GraphExpression {
     typeof expression.id === "string" &&
     typeof expression.raw === "string" &&
     typeof expression.color === "string" &&
-    typeof expression.visible === "boolean"
+    typeof expression.visible === "boolean" &&
+    (typeof expression.showPoints === "boolean" ||
+      typeof expression.showPoints === "undefined")
   );
+}
+
+function normalizeExpression(expression: GraphExpression): GraphExpression {
+  return {
+    ...expression,
+    showPoints:
+      typeof expression.showPoints === "boolean"
+        ? expression.showPoints
+        : true,
+  };
 }
 
 function isValidSavedGraph(value: unknown): value is SavedGraph {
@@ -130,7 +142,7 @@ function normalizeGraph(value: SavedGraph): SavedGraph {
     id: typeof value.id === "string" ? value.id : crypto.randomUUID(),
     version: typeof value.version === "number" ? value.version : 1,
     title: value.title,
-    expressions: value.expressions,
+    expressions: value.expressions.map(normalizeExpression),
     updatedAt:
       typeof value.updatedAt === "string"
         ? value.updatedAt
@@ -893,7 +905,7 @@ function App() {
       id: activeGraphId,
       version: 1,
       title,
-      expressions,
+      expressions: expressions.map(normalizeExpression),
       updatedAt: new Date().toISOString(),
     };
   }
