@@ -2083,3 +2083,11 @@ body {
 .expression-card-table.expression-card-focused .table-grid {
   border-color: #8b949e !important;
 }
+
+.table-row input.table-cell-active {
+  border-color: #79c0ff;
+  background: #0b1623;
+  box-shadow:
+    0 0 0 1px rgba(121, 192, 255, 0.35),
+    0 0 0 4px rgba(88, 166, 255, 0.12);
+}

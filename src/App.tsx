@@ -118,7 +118,6 @@ function isValidExpression(value: unknown): value is GraphExpression {
   );
 }
 
-
 function createTableDataFromEditableTable(
   table: EditableTable,
   color: string,
@@ -622,6 +621,11 @@ function App() {
   const [focusedExpressionId, setFocusedExpressionId] = useState<string | null>(
     null,
   );
+  const [activeTableCell, setActiveTableCell] = useState<{
+    expressionId: string;
+    rowIndex: number;
+    axis: "x" | "y";
+  } | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
@@ -662,6 +666,8 @@ function App() {
   }
 
   function focusTableCell(id: string, rowIndex: number, axis: "x" | "y") {
+    setActiveTableCell({ expressionId: id, rowIndex, axis });
+
     requestAnimationFrame(() => {
       const element = tableInputRefs.current[`${id}-${rowIndex}-${axis}`];
       if (!element) return;
@@ -672,7 +678,6 @@ function App() {
       element.setSelectionRange(length, length);
     });
   }
-
 
   function markUnsaved() {
     setSaveStatus("Unsaved changes");
@@ -707,7 +712,7 @@ function App() {
     markUnsaved();
   }
 
-    function updateTableExpression(
+  function updateTableExpression(
     id: string,
     updater: (table: EditableTable) => EditableTable,
     options: { preserveEmptyRows?: boolean } = {},
@@ -758,7 +763,7 @@ function App() {
     }));
   }
 
-    function addTableRow(id: string, focusAxis?: "x" | "y") {
+  function addTableRow(id: string, focusAxis?: "x" | "y") {
     const table = expressions
       .map((expression) =>
         expression.id === id ? getEditableTable(expression) : null,
@@ -837,6 +842,22 @@ function App() {
       event.preventDefault();
       event.stopPropagation();
       event.currentTarget.blur();
+      return;
+    }
+
+    if (event.key === "Home" && event.shiftKey && !event.ctrlKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      const end = event.currentTarget.selectionEnd ?? 0;
+      event.currentTarget.setSelectionRange(0, end);
+      return;
+    }
+
+    if (event.key === "End" && event.shiftKey && !event.ctrlKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      const start = event.currentTarget.selectionStart ?? 0;
+      event.currentTarget.setSelectionRange(start, event.currentTarget.value.length);
       return;
     }
 
@@ -1667,10 +1688,22 @@ function App() {
                                       `${expression.id}-${rowIndex}-x`
                                     ] = element;
                                   }}
-                                  value={row.x}
-                                  onFocus={() =>
-                                    setFocusedExpressionId(expression.id)
+                                  className={
+                                    activeTableCell?.expressionId === expression.id &&
+                                    activeTableCell.rowIndex === rowIndex &&
+                                    activeTableCell.axis === "x"
+                                      ? "table-cell-active"
+                                      : undefined
                                   }
+                                  value={row.x}
+                                  onFocus={() => {
+                                    setFocusedExpressionId(expression.id);
+                                    setActiveTableCell({
+                                      expressionId: expression.id,
+                                      rowIndex,
+                                      axis: "x",
+                                    });
+                                  }}
                                   onChange={(event) =>
                                     updateTableCell(
                                       expression.id,
@@ -1705,10 +1738,22 @@ function App() {
                                       `${expression.id}-${rowIndex}-y`
                                     ] = element;
                                   }}
-                                  value={row.y}
-                                  onFocus={() =>
-                                    setFocusedExpressionId(expression.id)
+                                  className={
+                                    activeTableCell?.expressionId === expression.id &&
+                                    activeTableCell.rowIndex === rowIndex &&
+                                    activeTableCell.axis === "y"
+                                      ? "table-cell-active"
+                                      : undefined
                                   }
+                                  value={row.y}
+                                  onFocus={() => {
+                                    setFocusedExpressionId(expression.id);
+                                    setActiveTableCell({
+                                      expressionId: expression.id,
+                                      rowIndex,
+                                      axis: "y",
+                                    });
+                                  }}
                                   onChange={(event) =>
                                     updateTableCell(
                                       expression.id,
