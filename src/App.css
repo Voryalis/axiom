@@ -1,6 +1,6 @@
 :root {
-  color: #e6e6e6;
-  background: #1f2023;
+  color: #c9d1d9;
+  background: #0d1117;
   font-family:
     Inter,
     ui-sans-serif,
@@ -22,7 +22,7 @@ body,
   overflow: hidden;
   overscroll-behavior: none;
   touch-action: none;
-  background: #1f2023;
+  background: #0d1117;
 }
 body {
   min-width: 900px;
@@ -37,7 +37,7 @@ input {
   grid-template-columns: 320px 1fr;
   width: 100vw;
   height: 100vh;
-  background: #1f2023;
+  background: #0d1117;
   transition: grid-template-columns 0.18s ease;
 }
 .app-sidebar-collapsed {
@@ -809,26 +809,6 @@ input {
   color: #8b949e;
   font-size: 11px;
   line-height: 1.3;
-}
-:root {
-  color: #c9d1d9;
-  background: #0d1117;
-}
-html,
-body,
-#root {
-  background: #0d1117;
-}
-body {
-  background: #0d1117;
-}
-.app {
-  background: #0d1117;
-}
-.sidebar {
-  border-right: 1px solid #30363d;
-  background: #0d1117;
-  padding: 16px;
 }
 .brand {
   margin-bottom: 18px;
