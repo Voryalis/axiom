@@ -514,13 +514,7 @@ function buildTableExpression(table: EditableTable) {
 function createDefaultTableExpression() {
   return buildTableExpression({
     connect: false,
-    rows: [
-      { x: "-2", y: "4" },
-      { x: "-1", y: "1" },
-      { x: "0", y: "0" },
-      { x: "1", y: "1" },
-      { x: "2", y: "4" },
-    ],
+    rows: [{ x: "", y: "" }],
   });
 }
 
