@@ -1297,3 +1297,29 @@ input {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
+/* Scrollable settings popup */
+.settings-popover {
+  max-height: min(72vh, 520px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #484f58 #010409;
+}
+
+.settings-popover::-webkit-scrollbar {
+  width: 10px;
+}
+
+.settings-popover::-webkit-scrollbar-track {
+  background: #010409;
+}
+
+.settings-popover::-webkit-scrollbar-thumb {
+  border: 2px solid #010409;
+  border-radius: 999px;
+  background: #484f58;
+}
+
+.settings-popover::-webkit-scrollbar-thumb:hover {
+  background: #6e7681;
+}

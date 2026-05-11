@@ -21,6 +21,7 @@ type SavedGraph = {
 
 type AppSettings = {
   showGrid: boolean;
+  showMinorGrid: boolean;
   showAxes: boolean;
   showAxisLabels: boolean;
 };
@@ -234,6 +235,7 @@ function loadAppSettings(): AppSettings {
     if (!raw) {
       return {
         showGrid: true,
+        showMinorGrid: true,
         showAxes: true,
         showAxisLabels: true,
       };
@@ -243,6 +245,8 @@ function loadAppSettings(): AppSettings {
 
     return {
       showGrid: typeof parsed.showGrid === "boolean" ? parsed.showGrid : true,
+      showMinorGrid:
+        typeof parsed.showMinorGrid === "boolean" ? parsed.showMinorGrid : true,
       showAxes: typeof parsed.showAxes === "boolean" ? parsed.showAxes : true,
       showAxisLabels:
         typeof parsed.showAxisLabels === "boolean"
@@ -252,6 +256,7 @@ function loadAppSettings(): AppSettings {
   } catch {
     return {
       showGrid: true,
+      showMinorGrid: true,
       showAxes: true,
       showAxisLabels: true,
     };
@@ -639,6 +644,9 @@ function App() {
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isViewportDirty, setIsViewportDirty] = useState(false);
   const [showGrid, setShowGrid] = useState(() => loadAppSettings().showGrid);
+  const [showMinorGrid, setShowMinorGrid] = useState(
+    () => loadAppSettings().showMinorGrid,
+  );
   const [showAxes, setShowAxes] = useState(() => loadAppSettings().showAxes);
   const [showAxisLabels, setShowAxisLabels] = useState(
     () => loadAppSettings().showAxisLabels,
@@ -1619,6 +1627,7 @@ function App() {
 
     saveAppSettings({
       showGrid,
+      showMinorGrid,
       showAxes,
       showAxisLabels,
     });
@@ -1632,7 +1641,7 @@ function App() {
     return () => {
       window.clearTimeout(timeout);
     };
-  }, [showGrid, showAxes, showAxisLabels]);
+  }, [showGrid, showMinorGrid, showAxes, showAxisLabels]);
 
   useEffect(() => {
     if (!isCreateMenuOpen) return;
@@ -2347,6 +2356,23 @@ function App() {
 
               <div className="settings-row">
                 <div>
+                  <span>Show minor grid</span>
+                  <small>Show or hide the smaller grid subdivisions.</small>
+                </div>
+                <button
+                  className={`setting-switch ${
+                    showMinorGrid ? "setting-switch-active" : ""
+                  }`}
+                  type="button"
+                  aria-pressed={showMinorGrid}
+                  onClick={() => setShowMinorGrid((current) => !current)}
+                >
+                  <span />
+                </button>
+              </div>
+
+              <div className="settings-row">
+                <div>
                   <span>Show axes</span>
                   <small>Show or hide the x and y axes.</small>
                 </div>
@@ -2406,6 +2432,7 @@ function App() {
             ref={graphCanvasRef}
             expressions={expressions}
             showGrid={showGrid}
+            showMinorGrid={showMinorGrid}
             showAxes={showAxes}
             showAxisLabels={showAxisLabels}
             onViewportDirtyChange={setIsViewportDirty}

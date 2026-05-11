@@ -43,6 +43,7 @@ export type GraphExpression = {
 type GraphCanvasProps = {
   expressions: GraphExpression[];
   showGrid: boolean;
+  showMinorGrid: boolean;
   showAxes: boolean;
   showAxisLabels: boolean;
   onViewportDirtyChange?: (isDirty: boolean) => void;
@@ -127,7 +128,14 @@ function enforceSquareUnits(
 
 const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
   function GraphCanvas(
-    { expressions, showGrid, showAxes, showAxisLabels, onViewportDirtyChange },
+    {
+      expressions,
+      showGrid,
+      showMinorGrid,
+      showAxes,
+      showAxisLabels,
+      onViewportDirtyChange,
+    },
     ref,
   ) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -169,6 +177,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         expressions,
         viewportRef.current,
         showGrid,
+        showMinorGrid,
         showAxes,
         showAxisLabels,
         !isViewportInteractingRef.current,
@@ -509,6 +518,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
     }, [
       expressions,
       showGrid,
+      showMinorGrid,
       showAxes,
       showAxisLabels,
       onViewportDirtyChange,
@@ -525,6 +535,7 @@ function draw(
   expressions: GraphExpression[],
   viewport: Viewport,
   showGrid: boolean,
+  showMinorGrid: boolean,
   showAxes: boolean,
   showAxisLabels: boolean,
   shouldFindIntersections: boolean,
@@ -537,7 +548,7 @@ function draw(
   drawBackground(ctx, width, height);
 
   if (showGrid) {
-    drawGrid(ctx, width, height, viewport);
+    drawGrid(ctx, width, height, viewport, showMinorGrid);
   }
 
   if (showAxes) {
@@ -1028,19 +1039,23 @@ function drawGrid(
   width: number,
   height: number,
   viewport: Viewport,
+  showMinorGrid: boolean,
 ) {
   const majorStep = getGridStep(viewport.xMax - viewport.xMin);
   const minorStep = majorStep / 5;
+  const step = showMinorGrid ? minorStep : majorStep;
 
   ctx.save();
   ctx.lineWidth = 1;
 
-  const firstMinorX = Math.ceil(viewport.xMin / minorStep) * minorStep;
-  for (let x = firstMinorX; x <= viewport.xMax; x += minorStep) {
-    if (Math.abs(x) < minorStep / 1000) continue;
+  const firstX = Math.ceil(viewport.xMin / step) * step;
+  for (let x = firstX; x <= viewport.xMax; x += step) {
+    if (Math.abs(x) < step / 1000) continue;
 
     const sx = graphToScreenX(x, width, viewport);
     const isMajor = Math.abs(x / majorStep - Math.round(x / majorStep)) < 0.001;
+
+    if (!showMinorGrid && !isMajor) continue;
 
     ctx.beginPath();
     ctx.strokeStyle = isMajor ? "#3b3f48" : "#272a30";
@@ -1049,12 +1064,14 @@ function drawGrid(
     ctx.stroke();
   }
 
-  const firstMinorY = Math.ceil(viewport.yMin / minorStep) * minorStep;
-  for (let y = firstMinorY; y <= viewport.yMax; y += minorStep) {
-    if (Math.abs(y) < minorStep / 1000) continue;
+  const firstY = Math.ceil(viewport.yMin / step) * step;
+  for (let y = firstY; y <= viewport.yMax; y += step) {
+    if (Math.abs(y) < step / 1000) continue;
 
     const sy = graphToScreenY(y, height, viewport);
     const isMajor = Math.abs(y / majorStep - Math.round(y / majorStep)) < 0.001;
+
+    if (!showMinorGrid && !isMajor) continue;
 
     ctx.beginPath();
     ctx.strokeStyle = isMajor ? "#3b3f48" : "#272a30";
