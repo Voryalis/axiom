@@ -314,33 +314,10 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       if (!ctx) return;
 
       const render = () => {
+        renderCurrentViewport();
+
+        const renderedPoints = renderedPointsRef.current;
         const rect = parent.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
-
-        viewportRef.current = enforceSquareUnits(
-          viewportRef.current,
-          rect.width,
-          rect.height,
-        );
-
-        canvas.width = Math.floor(rect.width * dpr);
-        canvas.height = Math.floor(rect.height * dpr);
-        canvas.style.width = `${rect.width}px`;
-        canvas.style.height = `${rect.height}px`;
-
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-        const renderedPoints = draw(
-          ctx,
-          rect.width,
-          rect.height,
-          expressions,
-          viewportRef.current,
-          showAxisLabels,
-          !isViewportInteractingRef.current,
-        );
-
-        renderedPointsRef.current = renderedPoints;
 
         const freshPinnedPoint = findMatchingRenderedPoint(
           pinnedPointRef.current,
