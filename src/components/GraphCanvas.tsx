@@ -129,7 +129,6 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
     const isDraggingRef = useRef(false);
     const lastPointerRef = useRef({ x: 0, y: 0 });
     const renderedPointsRef = useRef<RenderedPoint[]>([]);
-    const hoveredPointRef = useRef<RenderedPoint | null>(null);
     const pinnedPointRef = useRef<RenderedPoint | null>(null);
     const isViewportInteractingRef = useRef(false);
     const viewportInteractionTimeoutRef = useRef<number | null>(null);
@@ -216,7 +215,6 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         ? enforceSquareUnits(nextViewport, rect.width, rect.height)
         : nextViewport;
 
-      hoveredPointRef.current = null;
       pinnedPointRef.current = null;
 
       renderCurrentViewport();
@@ -236,7 +234,6 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       },
       resetView() {
         viewportRef.current = { ...INITIAL_VIEWPORT };
-        hoveredPointRef.current = null;
         pinnedPointRef.current = null;
         renderCurrentViewport();
       },
@@ -323,13 +320,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           pinnedPointRef.current,
           renderedPoints,
         );
-        const freshHoveredPoint = findMatchingRenderedPoint(
-          hoveredPointRef.current,
-          renderedPoints,
-        );
-
         pinnedPointRef.current = freshPinnedPoint;
-        hoveredPointRef.current = freshHoveredPoint;
 
         if (freshPinnedPoint) {
           drawPointLabel(ctx, rect.width, rect.height, freshPinnedPoint);
@@ -418,13 +409,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           mouseY,
         );
 
-        const previousHoveredId = hoveredPointRef.current?.expressionId ?? null;
-        const nextHoveredId = nearestPoint?.expressionId ?? null;
-
-        if (previousHoveredId !== nextHoveredId) {
-          hoveredPointRef.current = nearestPoint;
-          canvas.style.cursor = nearestPoint ? "pointer" : "grab";
-        }
+        canvas.style.cursor = nearestPoint ? "pointer" : "grab";
       };
 
       const handlePointerUp = (event: PointerEvent) => {
@@ -456,7 +441,6 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
 
       const handlePointerLeave = () => {
         isDraggingRef.current = false;
-        hoveredPointRef.current = null;
         finishViewportInteraction();
         canvas.style.cursor = "grab";
         render();
