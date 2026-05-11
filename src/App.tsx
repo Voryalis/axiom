@@ -25,6 +25,7 @@ type AppSettings = {
   showMinorGrid: boolean;
   showAxes: boolean;
   showAxisLabels: boolean;
+  showIntersections: boolean;
 };
 
 type EditableTableRow = {
@@ -240,6 +241,7 @@ function loadAppSettings(): AppSettings {
         showMinorGrid: true,
         showAxes: true,
         showAxisLabels: true,
+        showIntersections: true,
       };
     }
 
@@ -257,6 +259,10 @@ function loadAppSettings(): AppSettings {
       showAxisLabels:
         typeof parsed.showAxisLabels === "boolean"
           ? parsed.showAxisLabels
+          : true,
+      showIntersections:
+        typeof parsed.showIntersections === "boolean"
+          ? parsed.showIntersections
           : true,
     };
   } catch {
@@ -661,13 +667,18 @@ function App() {
   const [showAxisLabels, setShowAxisLabels] = useState(
     () => loadAppSettings().showAxisLabels,
   );
+  const [showIntersections, setShowIntersections] = useState(
+    () => loadAppSettings().showIntersections,
+  );
   const [settingsSaveStatus, setSettingsSaveStatus] = useState("");
 
   const isGridVisible = showGraphDetails && showGrid;
   const isMinorGridVisible = isGridVisible && showMinorGrid;
   const isAxesVisible = showGraphDetails && showAxes;
   const isAxisLabelsVisible = isAxesVisible && showAxisLabels;
-  const hasVisibleGraphDetails = isGridVisible || isAxesVisible;
+  const areIntersectionsVisible = showGraphDetails && showIntersections;
+  const hasVisibleGraphDetails =
+    isGridVisible || isAxesVisible || areIntersectionsVisible;
 
   function resizeExpressionInput(element: HTMLTextAreaElement | null) {
     if (!element) return;
@@ -1660,6 +1671,7 @@ function App() {
       showMinorGrid,
       showAxes,
       showAxisLabels,
+      showIntersections,
     });
 
     setSettingsSaveStatus("saved");
@@ -1671,7 +1683,14 @@ function App() {
     return () => {
       window.clearTimeout(timeout);
     };
-  }, [showGraphDetails, showGrid, showMinorGrid, showAxes, showAxisLabels]);
+  }, [
+    showGraphDetails,
+    showGrid,
+    showMinorGrid,
+    showAxes,
+    showAxisLabels,
+    showIntersections,
+  ]);
 
   useEffect(() => {
     if (!isCreateMenuOpen) return;
@@ -2389,6 +2408,7 @@ function App() {
                     setShowMinorGrid(true);
                     setShowAxes(true);
                     setShowAxisLabels(true);
+                    setShowIntersections(true);
                   }}
                 >
                   <span />
@@ -2458,6 +2478,22 @@ function App() {
                   <small>Show or hide the numbers on the graph axes.</small>
                 </span>
               </button>
+
+              <button
+                className="settings-checkbox-row"
+                type="button"
+                aria-pressed={areIntersectionsVisible}
+                disabled={!showGraphDetails}
+                onClick={() => setShowIntersections((current) => !current)}
+              >
+                <span className="settings-checkbox-icon">
+                  {renderSettingsCheckbox(areIntersectionsVisible)}
+                </span>
+                <span>
+                  <span>Show intersections</span>
+                  <small>Show or hide detected curve crossing points.</small>
+                </span>
+              </button>
             </section>
 
             <section className="settings-section">
@@ -2489,6 +2525,7 @@ function App() {
             showMinorGrid={isMinorGridVisible}
             showAxes={isAxesVisible}
             showAxisLabels={isAxisLabelsVisible}
+            showIntersections={areIntersectionsVisible}
             onViewportDirtyChange={setIsViewportDirty}
           />
 

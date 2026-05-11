@@ -46,6 +46,7 @@ type GraphCanvasProps = {
   showMinorGrid: boolean;
   showAxes: boolean;
   showAxisLabels: boolean;
+  showIntersections: boolean;
   onViewportDirtyChange?: (isDirty: boolean) => void;
 };
 
@@ -134,6 +135,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       showMinorGrid,
       showAxes,
       showAxisLabels,
+      showIntersections,
       onViewportDirtyChange,
     },
     ref,
@@ -180,7 +182,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         showMinorGrid,
         showAxes,
         showAxisLabels,
-        !isViewportInteractingRef.current,
+        showIntersections && !isViewportInteractingRef.current,
       );
 
       renderedPointsRef.current = renderedPoints;
@@ -521,6 +523,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       showMinorGrid,
       showAxes,
       showAxisLabels,
+      showIntersections,
       onViewportDirtyChange,
     ]);
 
