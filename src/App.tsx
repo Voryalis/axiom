@@ -93,6 +93,7 @@ function createEmptyExpression(index: number): GraphExpression {
     color: generateExpressionColor(index),
     visible: true,
     showPoints: true,
+    showLabel: false,
   };
 }
 
@@ -111,7 +112,9 @@ function isValidExpression(value: unknown): value is GraphExpression {
     typeof expression.color === "string" &&
     typeof expression.visible === "boolean" &&
     (typeof expression.showPoints === "boolean" ||
-      typeof expression.showPoints === "undefined")
+      typeof expression.showPoints === "undefined") &&
+    (typeof expression.showLabel === "boolean" ||
+      typeof expression.showLabel === "undefined")
   );
 }
 
@@ -122,6 +125,10 @@ function normalizeExpression(expression: GraphExpression): GraphExpression {
       typeof expression.showPoints === "boolean"
         ? expression.showPoints
         : true,
+    showLabel:
+      typeof expression.showLabel === "boolean"
+        ? expression.showLabel
+        : false,
   };
 }
 
@@ -826,6 +833,18 @@ function App() {
     markUnsaved();
   }
 
+  function togglePointLabel(id: string) {
+    setExpressions((current) =>
+      current.map((expression) =>
+        expression.id === id && isPointExpression(expression.raw)
+          ? { ...expression, showLabel: !expression.showLabel }
+          : expression,
+      ),
+    );
+
+    markUnsaved();
+  }
+
   function addExpression() {
     const expression = createEmptyExpression(nextColorIndex);
 
@@ -1300,6 +1319,7 @@ function App() {
                 const result = evaluateMathExpression(expression.raw, expressions);
                 const slider = parseNumericVariableAssignment(expression.raw);
                 const table = parseEditableTable(expression.raw);
+                const pointExpression = isPointExpression(expression.raw);
 
                 return (
                   <div
@@ -1490,6 +1510,30 @@ function App() {
 
                           {result ? (
                             <span className="expression-result">{result}</span>
+                          ) : null}
+
+                          {pointExpression ? (
+                            <button
+                              className={`point-label-control ${
+                                expression.showLabel
+                                  ? "point-label-control-active"
+                                  : ""
+                              }`}
+                              onClick={() => togglePointLabel(expression.id)}
+                              type="button"
+                            >
+                              {expression.showLabel ? (
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                  <path d="M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344" />
+                                  <path d="m9 11 3 3L22 4" />
+                                </svg>
+                              ) : (
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                  <rect width="18" height="18" x="3" y="3" rx="2" />
+                                </svg>
+                              )}
+                              <span>Label</span>
+                            </button>
                           ) : null}
 
                           {slider ? (

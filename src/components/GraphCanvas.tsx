@@ -16,6 +16,7 @@ export type GraphExpression = {
   color: string;
   visible: boolean;
   showPoints?: boolean;
+  showLabel?: boolean;
 };
 
 type GraphCanvasProps = {
@@ -331,13 +332,6 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         pinnedPointRef.current = freshPinnedPoint;
         hoveredPointRef.current = freshHoveredPoint;
 
-        if (
-          freshHoveredPoint &&
-          freshHoveredPoint.expressionId !== freshPinnedPoint?.expressionId
-        ) {
-          drawPointLabel(ctx, rect.width, rect.height, freshHoveredPoint);
-        }
-
         if (freshPinnedPoint) {
           drawPointLabel(ctx, rect.width, rect.height, freshPinnedPoint);
         }
@@ -431,7 +425,6 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         if (previousHoveredId !== nextHoveredId) {
           hoveredPointRef.current = nearestPoint;
           canvas.style.cursor = nearestPoint ? "pointer" : "grab";
-          render();
         }
       };
 
@@ -454,6 +447,17 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           mouseX,
           mouseY,
         );
+
+        const expressionPoint =
+          nearestPoint &&
+          expressions.some(
+            (expression) => expression.id === nearestPoint.expressionId,
+          );
+
+        if (nearestPoint && expressionPoint) {
+          pinnedPointRef.current = null;
+          return;
+        }
 
         pinnedPointRef.current = nearestPoint;
         render();
@@ -632,6 +636,10 @@ function draw(
 
       if (renderedPoint) {
         renderedPoints.push(renderedPoint);
+
+        if (expression.showLabel) {
+          drawPointLabel(ctx, width, height, renderedPoint);
+        }
       }
 
       continue;

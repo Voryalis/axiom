@@ -2028,3 +2028,39 @@ body {
   fill: currentColor;
   stroke: none;
 }
+
+
+.point-label-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-top: 4px;
+  border: 0;
+  background: transparent;
+  color: #8b949e;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+  user-select: none;
+}
+
+.point-label-control:hover,
+.point-label-control-active {
+  color: #f0f6fc;
+}
+
+.point-label-control svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.point-label-control span {
+  color: currentColor;
+}
