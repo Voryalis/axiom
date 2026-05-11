@@ -839,6 +839,20 @@ function App() {
       event.currentTarget.blur();
       return;
     }
+
+    if (event.key === "Home" && event.ctrlKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      focusTableCell(id, 0, "x");
+      return;
+    }
+
+    if (event.key === "End" && event.ctrlKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      focusTableCell(id, Math.max(0, rowCount - 1), "y");
+      return;
+    }
     if (event.key === "Tab") {
       event.preventDefault();
       event.stopPropagation();
