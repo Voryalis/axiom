@@ -272,6 +272,7 @@ function loadAppSettings(): AppSettings {
       showMinorGrid: true,
       showAxes: true,
       showAxisLabels: true,
+      showIntersections: true,
     };
   }
 }
