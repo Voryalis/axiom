@@ -2368,10 +2368,12 @@ function App() {
                 </div>
                 <button
                   className={`setting-switch ${
-                    showGraphDetails ? "setting-switch-active" : ""
+                    showGraphDetails && (showGrid || showAxes)
+                      ? "setting-switch-active"
+                      : ""
                   }`}
                   type="button"
-                  aria-pressed={showGraphDetails}
+                  aria-pressed={showGraphDetails && (showGrid || showAxes)}
                   onClick={() => setShowGraphDetails((current) => !current)}
                 >
                   <span />
