@@ -548,14 +548,14 @@ function draw(
   drawBackground(ctx, width, height);
 
   if (showGrid) {
-    drawGrid(ctx, width, height, viewport, showMinorGrid);
+    drawGrid(ctx, width, height, viewport, showMinorGrid, showAxes);
   }
 
   if (showAxes) {
     drawAxes(ctx, width, height, viewport);
   }
 
-  if (showAxisLabels) {
+  if (showAxes && showAxisLabels) {
     drawLabels(ctx, width, height, viewport);
   }
 
@@ -1040,6 +1040,7 @@ function drawGrid(
   height: number,
   viewport: Viewport,
   showMinorGrid: boolean,
+  showAxes: boolean,
 ) {
   const majorStep = getGridStep(viewport.xMax - viewport.xMin);
   const minorStep = majorStep / 5;
@@ -1050,7 +1051,7 @@ function drawGrid(
 
   const firstX = Math.ceil(viewport.xMin / step) * step;
   for (let x = firstX; x <= viewport.xMax; x += step) {
-    if (Math.abs(x) < step / 1000) continue;
+    if (showAxes && Math.abs(x) < step / 1000) continue;
 
     const sx = graphToScreenX(x, width, viewport);
     const isMajor = Math.abs(x / majorStep - Math.round(x / majorStep)) < 0.001;
@@ -1066,7 +1067,7 @@ function drawGrid(
 
   const firstY = Math.ceil(viewport.yMin / step) * step;
   for (let y = firstY; y <= viewport.yMax; y += step) {
-    if (Math.abs(y) < step / 1000) continue;
+    if (showAxes && Math.abs(y) < step / 1000) continue;
 
     const sy = graphToScreenY(y, height, viewport);
     const isMajor = Math.abs(y / majorStep - Math.round(y / majorStep)) < 0.001;
