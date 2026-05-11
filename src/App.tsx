@@ -600,10 +600,6 @@ function App() {
     });
   }
 
-  function selectExpressionFromGraph(id: string) {
-    setFocusedExpressionId(id);
-    focusExpression(id);
-  }
 
   function markUnsaved() {
     setSaveStatus("Unsaved changes");
@@ -1824,7 +1820,6 @@ function App() {
             ref={graphCanvasRef}
             expressions={expressions}
             showAxisLabels={showAxisLabels}
-            onExpressionSelect={selectExpressionFromGraph}
           />
 
           <div className="graph-floating-controls">

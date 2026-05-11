@@ -22,7 +22,6 @@ export type GraphExpression = {
 type GraphCanvasProps = {
   expressions: GraphExpression[];
   showAxisLabels: boolean;
-  onExpressionSelect?: (expressionId: string) => void;
 };
 
 export type GraphCanvasHandle = {
@@ -55,6 +54,7 @@ type ParsedEquation = {
 
 type RenderedPoint = {
   expressionId: string;
+  sourceExpressionId?: string;
   point: GraphPoint;
   screenX: number;
   screenY: number;
@@ -102,7 +102,7 @@ function enforceSquareUnits(
 }
 
 const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
-  function GraphCanvas({ expressions, showAxisLabels, onExpressionSelect }, ref) {
+  function GraphCanvas({ expressions, showAxisLabels }, ref) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const viewportRef = useRef<Viewport>({ ...INITIAL_VIEWPORT });
     const isDraggingRef = useRef(false);
@@ -378,7 +378,6 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       const handlePointerDown = (event: PointerEvent) => {
         event.preventDefault();
 
-        startViewportInteraction();
         isDraggingRef.current = true;
         lastPointerRef.current = { x: event.clientX, y: event.clientY };
         canvas.setPointerCapture(event.pointerId);
@@ -387,6 +386,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       const handlePointerMove = (event: PointerEvent) => {
         if (isDraggingRef.current) {
           event.preventDefault();
+          startViewportInteraction();
 
           const rect = canvas.getBoundingClientRect();
           const viewport = viewportRef.current;
@@ -449,20 +449,10 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           mouseY,
         );
 
-        const expressionPoint =
-          nearestPoint &&
-          expressions.find(
-            (expression) => expression.id === nearestPoint.expressionId,
-          );
+        const isIntersectionPoint =
+          nearestPoint?.expressionId.startsWith("intersection-") ?? false;
 
-        if (nearestPoint && expressionPoint) {
-          pinnedPointRef.current = null;
-          onExpressionSelect?.(nearestPoint.expressionId);
-          render();
-          return;
-        }
-
-        pinnedPointRef.current = nearestPoint;
+        pinnedPointRef.current = isIntersectionPoint ? nearestPoint : null;
         render();
       };
 
@@ -511,7 +501,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         canvas.removeEventListener("click", handleClick);
         canvas.removeEventListener("dblclick", resetViewport);
       };
-    }, [expressions, showAxisLabels, onExpressionSelect]);
+    }, [expressions, showAxisLabels]);
 
     return <canvas ref={canvasRef} className="graph-canvas" />;
   },
@@ -576,6 +566,7 @@ function draw(
             expression.color,
             `${expression.id}-table-${index}`,
             viewport,
+            expression.id,
           );
 
           if (renderedPoint) {
@@ -1731,6 +1722,7 @@ function drawPoint(
   color: string,
   expressionId: string,
   viewport: Viewport,
+  sourceExpressionId = expressionId,
 ): RenderedPoint | null {
   const sx = graphToScreenX(point.x, width, viewport);
   const sy = graphToScreenY(point.y, height, viewport);
@@ -1749,6 +1741,7 @@ function drawPoint(
 
   return {
     expressionId,
+    sourceExpressionId,
     point,
     screenX: sx,
     screenY: sy,
