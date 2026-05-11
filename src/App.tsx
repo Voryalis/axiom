@@ -1766,7 +1766,14 @@ function App() {
                                       axis: "x",
                                     });
                                   }}
-                                  onBlur={() => setActiveTableCell(null)}
+                                  onBlur={() => {
+                                    setActiveTableCell(null);
+                                    setFocusedExpressionId((current) =>
+                                      current === expression.id
+                                        ? null
+                                        : current,
+                                    );
+                                  }}
                                   onChange={(event) =>
                                     updateTableCell(
                                       expression.id,
@@ -1818,7 +1825,14 @@ function App() {
                                       axis: "y",
                                     });
                                   }}
-                                  onBlur={() => setActiveTableCell(null)}
+                                  onBlur={() => {
+                                    setActiveTableCell(null);
+                                    setFocusedExpressionId((current) =>
+                                      current === expression.id
+                                        ? null
+                                        : current,
+                                    );
+                                  }}
                                   onChange={(event) =>
                                     updateTableCell(
                                       expression.id,
