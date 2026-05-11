@@ -861,42 +861,9 @@ input {
   color: #484f58;
 }
 
-.table-remove-row {
-  display: grid;
-  width: 24px;
-  height: 24px;
-  place-items: center;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: #8b949e;
-  cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
-  padding: 0;
-}
 
-.table-remove-row:hover {
-  background: rgba(110, 118, 129, 0.16);
-  color: #f0f6fc;
-}
 
-.table-add-row {
-  justify-self: start;
-  border: 1px solid #30363d;
-  border-radius: 6px;
-  background: #21262d;
-  color: #c9d1d9;
-  cursor: pointer;
-  font-size: 12px;
-  padding: 5px 8px;
-}
 
-.table-add-row:hover {
-  background: #30363d;
-  border-color: #8b949e;
-  color: #f0f6fc;
-}
 
 
 .expression-create-toolbar {
@@ -973,7 +940,6 @@ input {
 }
 
 .table-toggle,
-.table-add-row,
 .add-table-button,
 .add-expression-button {
   background: #21262d;
@@ -1111,15 +1077,13 @@ body {
 }
 
 .remove-button,
-.table-remove-row,
 .sidebar-collapse-glyph,
 .sidebar-open-glyph,
 .settings-close-button {
   color: #8b949e;
 }
 
-.remove-button:hover,
-.table-remove-row:hover,
+.remove-button:hover:hover,
 .sidebar-collapse-glyph:hover,
 .sidebar-open-glyph:hover,
 .settings-close-button:hover {
@@ -1132,13 +1096,6 @@ body {
 .topbar-actions button,
 .graph-floating-controls button,
 .table-toggle,
-.table-add-row {
-  border: 1px solid #30363d;
-  border-radius: 6px;
-  background: #21262d;
-  color: #c9d1d9;
-  box-shadow: inset 0 1px 0 rgba(240, 246, 252, 0.03);
-}
 
 .add-expression-button:hover,
 .add-table-button:hover,
@@ -1146,11 +1103,6 @@ body {
 .graph-floating-controls button:hover,
 .table-toggle:hover,
 .table-toggle-active,
-.table-add-row:hover {
-  border-color: #8b949e;
-  background: #30363d;
-  color: #f0f6fc;
-}
 
 .create-menu,
 .settings-popover {
@@ -1203,9 +1155,6 @@ body {
   box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.18);
 }
 
-.table-add-row {
-  background: #161b22;
-}
 
 .library-item {
   border: 1px solid #30363d;
@@ -1669,9 +1618,6 @@ body {
   background: #010409 !important;
 }
 
-.table-add-row {
-  margin-top: 2px;
-}
 
 .create-menu button {
   min-height: 38px;
@@ -1755,28 +1701,8 @@ body {
   color: #6e7681;
 }
 
-.table-remove-row {
-  display: grid;
-  width: 24px;
-  height: 34px;
-  place-items: center;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #8b949e;
-  font-size: 16px;
-  padding: 0;
-}
 
-.table-remove-row:hover {
-  background: transparent;
-  color: #f0f6fc;
-}
 
-.table-add-row {
-  justify-self: start;
-  margin-top: 8px;
-}
 
 
 .table-grid {
@@ -1805,10 +1731,6 @@ body {
   line-height: 28px;
 }
 
-.table-remove-row {
-  height: 28px !important;
-  color: #8b949e !important;
-}
 
 .table-editor-topbar {
   min-height: 26px !important;
@@ -1820,11 +1742,6 @@ body {
   padding: 4px 8px !important;
 }
 
-.table-add-row {
-  margin-top: 7px !important;
-  font-size: 12px !important;
-  padding: 5px 8px !important;
-}
 
 
 .table-editor {
@@ -1902,10 +1819,7 @@ body {
   box-shadow: inset 0 0 0 1px #58a6ff !important;
 }
 
-.table-remove-row,
-.table-add-row {
-  display: none !important;
-}
+
 
 
 .expression-card-table {
@@ -2098,10 +2012,8 @@ body {
   outline: none !important;
 }
 
-.table-add-row {
-  display: none !important;
-}
 
-.table-remove-row {
-  display: none !important;
+
+.table-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
 }
