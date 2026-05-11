@@ -124,10 +124,12 @@ function createTableDataFromEditableTable(
   color: string,
   previousTableData?: GraphExpression["tableData"],
   showPoints = previousTableData?.showPoints ?? true,
+  options: { preserveEmptyRows?: boolean } = {},
 ): NonNullable<GraphExpression["tableData"]> {
-  const rows = normalizeEditableTableRows(
-    table.rows.length > 0 ? table.rows : [{ x: "", y: "" }],
-  );
+  const sourceRows = table.rows.length > 0 ? table.rows : [{ x: "", y: "" }];
+  const rows = options.preserveEmptyRows
+    ? sourceRows
+    : normalizeEditableTableRows(sourceRows);
 
   return {
     version: 1,
@@ -579,11 +581,15 @@ function normalizeEditableTableRows(rows: EditableTableRow[]) {
   return normalizedRows;
 }
 
-function buildTableExpression(table: EditableTable) {
+function buildTableExpression(
+  table: EditableTable,
+  options: { preserveEmptyRows?: boolean } = {},
+) {
   const header = table.connect ? "table lines:" : "table:";
-  const rows = normalizeEditableTableRows(
-    table.rows.length > 0 ? table.rows : [{ x: "", y: "" }],
-  );
+  const sourceRows = table.rows.length > 0 ? table.rows : [{ x: "", y: "" }];
+  const rows = options.preserveEmptyRows
+    ? sourceRows
+    : normalizeEditableTableRows(sourceRows);
 
   return [
     header,
@@ -591,7 +597,6 @@ function buildTableExpression(table: EditableTable) {
     ...rows.map((row) => `${row.x.trim()}, ${row.y.trim()}`),
   ].join("\n");
 }
-
 
 function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -702,9 +707,10 @@ function App() {
     markUnsaved();
   }
 
-  function updateTableExpression(
+    function updateTableExpression(
     id: string,
     updater: (table: EditableTable) => EditableTable,
+    options: { preserveEmptyRows?: boolean } = {},
   ) {
     setExpressions((current) =>
       current.map((expression) => {
@@ -721,12 +727,13 @@ function App() {
 
         return {
           ...expression,
-          raw: buildTableExpression(nextTable),
+          raw: buildTableExpression(nextTable, options),
           tableData: createTableDataFromEditableTable(
             nextTable,
             expression.color,
             expression.tableData,
             expression.showPoints !== false,
+            options,
           ),
         };
       }),
@@ -751,23 +758,30 @@ function App() {
     }));
   }
 
-  function addTableRow(id: string, focusAxis?: "x" | "y") {
+    function addTableRow(id: string, focusAxis?: "x" | "y") {
     const table = expressions
       .map((expression) =>
         expression.id === id ? getEditableTable(expression) : null,
       )
       .find((candidate) => candidate !== null);
 
-    const normalizedRows = normalizeEditableTableRows(table?.rows ?? []);
-    const nextRowIndex = normalizedRows.length;
+    const currentRows =
+      table && table.rows.length > 0 ? table.rows : [{ x: "", y: "" }];
+    const nextRowIndex = currentRows.length;
 
-    updateTableExpression(id, (currentTable) => ({
-      ...currentTable,
-      rows: normalizeEditableTableRows([
-        ...normalizeEditableTableRows(currentTable.rows),
-        { x: "", y: "" },
-      ]),
-    }));
+    updateTableExpression(
+      id,
+      (currentTable) => ({
+        ...currentTable,
+        rows: [
+          ...(currentTable.rows.length > 0
+            ? currentTable.rows
+            : [{ x: "", y: "" }]),
+          { x: "", y: "" },
+        ],
+      }),
+      { preserveEmptyRows: true },
+    );
 
     if (focusAxis) {
       focusTableCell(id, nextRowIndex, focusAxis);
@@ -785,20 +799,31 @@ function App() {
       )
       .find((candidate) => candidate !== null);
 
-    const nextRowIndex = Math.max(0, rowIndex - 1);
-    const shouldRefocus = Boolean(focusAxis && table && table.rows.length > 1);
+    const currentRows = table?.rows ?? [{ x: "", y: "" }];
 
-    updateTableExpression(id, (currentTable) => ({
-      ...currentTable,
-      rows:
-        currentTable.rows.length <= 1
-          ? [{ x: "", y: "" }]
-          : currentTable.rows.filter((_, index) => index !== rowIndex),
-    }));
+    const nextRows =
+      currentRows.length <= 1
+        ? [{ x: "", y: "" }]
+        : currentRows.filter((_, index) => index !== rowIndex);
 
-    if (shouldRefocus && focusAxis) {
-      focusTableCell(id, nextRowIndex, focusAxis);
-    }
+    const nextRowIndex =
+      nextRows.length <= 1 ? 0 : Math.min(rowIndex, nextRows.length - 1);
+
+    const nextAxis = nextRows.length <= 1 ? "x" : focusAxis ?? "x";
+
+    updateTableExpression(
+      id,
+      (currentTable) => ({
+        ...currentTable,
+        rows:
+          currentTable.rows.length <= 1
+            ? [{ x: "", y: "" }]
+            : currentTable.rows.filter((_, index) => index !== rowIndex),
+      }),
+      { preserveEmptyRows: true },
+    );
+
+    focusTableCell(id, nextRowIndex, nextAxis);
   }
 
   function handleTableCellKeyDown(
@@ -814,8 +839,44 @@ function App() {
 
       if (rowIndex === rowCount - 1) {
         addTableRow(id, axis);
+      } else {
+        focusTableCell(id, rowIndex + 1, axis);
       }
 
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (rowIndex === rowCount - 1) {
+        addTableRow(id, axis);
+      } else {
+        focusTableCell(id, rowIndex + 1, axis);
+      }
+
+      return;
+    }
+
+    if (event.key === "ArrowUp" && rowIndex > 0) {
+      event.preventDefault();
+      event.stopPropagation();
+      focusTableCell(id, rowIndex - 1, axis);
+      return;
+    }
+
+    if (event.key === "ArrowRight" && axis === "x") {
+      event.preventDefault();
+      event.stopPropagation();
+      focusTableCell(id, rowIndex, "y");
+      return;
+    }
+
+    if (event.key === "ArrowLeft" && axis === "y") {
+      event.preventDefault();
+      event.stopPropagation();
+      focusTableCell(id, rowIndex, "x");
       return;
     }
 
