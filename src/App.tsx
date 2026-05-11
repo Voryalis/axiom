@@ -864,6 +864,17 @@ function App() {
       return;
     }
 
+    if (event.key === "Enter" && event.shiftKey) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (rowIndex > 0) {
+        focusTableCell(id, rowIndex - 1, axis);
+      }
+
+      return;
+    }
+
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       event.stopPropagation();
