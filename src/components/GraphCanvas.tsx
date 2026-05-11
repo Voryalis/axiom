@@ -169,6 +169,27 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       renderedPointsRef.current = renderedPoints;
     }
 
+    function drawPinnedPointLabel() {
+      const canvas = canvasRef.current;
+      const parent = canvas?.parentElement;
+      const ctx = canvas?.getContext("2d");
+
+      if (!canvas || !parent || !ctx) return;
+
+      const rect = parent.getBoundingClientRect();
+
+      const freshPinnedPoint = findMatchingRenderedPoint(
+        pinnedPointRef.current,
+        renderedPointsRef.current,
+      );
+
+      pinnedPointRef.current = freshPinnedPoint;
+
+      if (freshPinnedPoint) {
+        drawPointLabel(ctx, rect.width, rect.height, freshPinnedPoint);
+      }
+    }
+
     function startViewportInteraction() {
       if (viewportInteractionTimeoutRef.current !== null) {
         window.clearTimeout(viewportInteractionTimeoutRef.current);
@@ -187,6 +208,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         isViewportInteractingRef.current = false;
         viewportInteractionTimeoutRef.current = null;
         renderCurrentViewport();
+        drawPinnedPointLabel();
       }, 120);
     }
 
@@ -312,19 +334,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
 
       const renderWithPinnedPointLabel = () => {
         renderCurrentViewport();
-
-        const renderedPoints = renderedPointsRef.current;
-        const rect = parent.getBoundingClientRect();
-
-        const freshPinnedPoint = findMatchingRenderedPoint(
-          pinnedPointRef.current,
-          renderedPoints,
-        );
-        pinnedPointRef.current = freshPinnedPoint;
-
-        if (freshPinnedPoint) {
-          drawPointLabel(ctx, rect.width, rect.height, freshPinnedPoint);
-        }
+        drawPinnedPointLabel();
       };
 
       const handleWheel = (event: WheelEvent) => {
