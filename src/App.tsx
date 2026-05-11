@@ -1654,7 +1654,7 @@ function App() {
                         : ""
                     } ${table ? "expression-card-table" : ""}`}
                     key={expression.id}
-                    onMouseDown={(event) => {
+                    onPointerDown={(event) => {
                       if (table) return;
 
                       const target = event.target as HTMLElement;
