@@ -1245,8 +1245,21 @@ function App() {
     }
 
     if (expressions.length <= 1) {
+      setExpressions((current) =>
+        current.map((expression) =>
+          expression.id === id
+            ? {
+                ...expression,
+                raw: "",
+                tableData: undefined,
+                showLabel: false,
+              }
+            : expression,
+        ),
+      );
       setFocusedExpressionId(id);
       focusExpression(id);
+      markUnsaved();
       return;
     }
 
