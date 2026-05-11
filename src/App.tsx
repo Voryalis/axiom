@@ -905,7 +905,10 @@ function App() {
       return;
     }
 
-    if (event.key === "Backspace" && event.currentTarget.value.length === 0) {
+    if (
+      (event.key === "Backspace" || event.key === "Delete") &&
+      event.currentTarget.value.length === 0
+    ) {
       const table = expressions
         .map((expression) =>
           expression.id === id ? getEditableTable(expression) : null,
