@@ -2101,3 +2101,7 @@ body {
 .table-add-row {
   display: none !important;
 }
+
+.table-remove-row {
+  display: none !important;
+}
