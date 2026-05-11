@@ -474,9 +474,35 @@ function parseEditableTable(rawExpression: string): EditableTable | null {
   };
 }
 
+function isEditableTableRowEmpty(row: EditableTableRow) {
+  return row.x.trim().length === 0 && row.y.trim().length === 0;
+}
+
+function normalizeEditableTableRows(rows: EditableTableRow[]) {
+  const normalizedRows = rows.map((row) => ({ ...row }));
+
+  while (
+    normalizedRows.length > 1 &&
+    isEditableTableRowEmpty(normalizedRows[normalizedRows.length - 1]) &&
+    isEditableTableRowEmpty(normalizedRows[normalizedRows.length - 2])
+  ) {
+    normalizedRows.pop();
+  }
+
+  const lastRow = normalizedRows[normalizedRows.length - 1];
+
+  if (!lastRow || !isEditableTableRowEmpty(lastRow)) {
+    normalizedRows.push({ x: "", y: "" });
+  }
+
+  return normalizedRows;
+}
+
 function buildTableExpression(table: EditableTable) {
   const header = table.connect ? "table lines:" : "table:";
-  const rows = table.rows.length > 0 ? table.rows : [{ x: "", y: "" }];
+  const rows = normalizeEditableTableRows(
+    table.rows.length > 0 ? table.rows : [{ x: "", y: "" }],
+  );
 
   return [
     header,
@@ -639,8 +665,10 @@ function App() {
   ) {
     updateTableExpression(id, (table) => ({
       ...table,
-      rows: table.rows.map((row, index) =>
-        index === rowIndex ? { ...row, [axis]: value } : row,
+      rows: normalizeEditableTableRows(
+        table.rows.map((row, index) =>
+          index === rowIndex ? { ...row, [axis]: value } : row,
+        ),
       ),
     }));
   }
@@ -652,11 +680,15 @@ function App() {
       )
       .find((candidate) => candidate !== null);
 
-    const nextRowIndex = table?.rows.length ?? 0;
+    const normalizedRows = normalizeEditableTableRows(table?.rows ?? []);
+    const nextRowIndex = normalizedRows.length;
 
     updateTableExpression(id, (currentTable) => ({
       ...currentTable,
-      rows: [...currentTable.rows, { x: "", y: "" }],
+      rows: normalizeEditableTableRows([
+        ...normalizeEditableTableRows(currentTable.rows),
+        { x: "", y: "" },
+      ]),
     }));
 
     if (focusAxis) {
