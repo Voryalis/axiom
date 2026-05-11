@@ -20,6 +20,8 @@ type SavedGraph = {
 };
 
 type AppSettings = {
+  showGrid: boolean;
+  showAxes: boolean;
   showAxisLabels: boolean;
 };
 
@@ -231,6 +233,8 @@ function loadAppSettings(): AppSettings {
 
     if (!raw) {
       return {
+        showGrid: true,
+        showAxes: true,
         showAxisLabels: true,
       };
     }
@@ -238,6 +242,8 @@ function loadAppSettings(): AppSettings {
     const parsed = JSON.parse(raw);
 
     return {
+      showGrid: typeof parsed.showGrid === "boolean" ? parsed.showGrid : true,
+      showAxes: typeof parsed.showAxes === "boolean" ? parsed.showAxes : true,
       showAxisLabels:
         typeof parsed.showAxisLabels === "boolean"
           ? parsed.showAxisLabels
@@ -245,6 +251,8 @@ function loadAppSettings(): AppSettings {
     };
   } catch {
     return {
+      showGrid: true,
+      showAxes: true,
       showAxisLabels: true,
     };
   }
@@ -630,6 +638,8 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isViewportDirty, setIsViewportDirty] = useState(false);
+  const [showGrid, setShowGrid] = useState(() => loadAppSettings().showGrid);
+  const [showAxes, setShowAxes] = useState(() => loadAppSettings().showAxes);
   const [showAxisLabels, setShowAxisLabels] = useState(
     () => loadAppSettings().showAxisLabels,
   );
@@ -1608,6 +1618,8 @@ function App() {
     }
 
     saveAppSettings({
+      showGrid,
+      showAxes,
       showAxisLabels,
     });
 
@@ -1620,7 +1632,7 @@ function App() {
     return () => {
       window.clearTimeout(timeout);
     };
-  }, [showAxisLabels]);
+  }, [showGrid, showAxes, showAxisLabels]);
 
   useEffect(() => {
     if (!isCreateMenuOpen) return;
@@ -2314,7 +2326,41 @@ function App() {
             </section>
 
             <section className="settings-section">
-              <h3>Graph labels</h3>
+              <h3>Graph display</h3>
+
+              <div className="settings-row">
+                <div>
+                  <span>Show grid</span>
+                  <small>Show or hide the graph grid lines.</small>
+                </div>
+                <button
+                  className={`setting-switch ${
+                    showGrid ? "setting-switch-active" : ""
+                  }`}
+                  type="button"
+                  aria-pressed={showGrid}
+                  onClick={() => setShowGrid((current) => !current)}
+                >
+                  <span />
+                </button>
+              </div>
+
+              <div className="settings-row">
+                <div>
+                  <span>Show axes</span>
+                  <small>Show or hide the x and y axes.</small>
+                </div>
+                <button
+                  className={`setting-switch ${
+                    showAxes ? "setting-switch-active" : ""
+                  }`}
+                  type="button"
+                  aria-pressed={showAxes}
+                  onClick={() => setShowAxes((current) => !current)}
+                >
+                  <span />
+                </button>
+              </div>
 
               <div className="settings-row">
                 <div>
@@ -2359,6 +2405,8 @@ function App() {
           <GraphCanvas
             ref={graphCanvasRef}
             expressions={expressions}
+            showGrid={showGrid}
+            showAxes={showAxes}
             showAxisLabels={showAxisLabels}
             onViewportDirtyChange={setIsViewportDirty}
           />

@@ -42,6 +42,8 @@ export type GraphExpression = {
 
 type GraphCanvasProps = {
   expressions: GraphExpression[];
+  showGrid: boolean;
+  showAxes: boolean;
   showAxisLabels: boolean;
   onViewportDirtyChange?: (isDirty: boolean) => void;
 };
@@ -125,7 +127,7 @@ function enforceSquareUnits(
 
 const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
   function GraphCanvas(
-    { expressions, showAxisLabels, onViewportDirtyChange },
+    { expressions, showGrid, showAxes, showAxisLabels, onViewportDirtyChange },
     ref,
   ) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -166,6 +168,8 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         rect.height,
         expressions,
         viewportRef.current,
+        showGrid,
+        showAxes,
         showAxisLabels,
         !isViewportInteractingRef.current,
       );
@@ -502,7 +506,13 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         canvas.removeEventListener("click", handleClick);
         canvas.removeEventListener("dblclick", resetViewport);
       };
-    }, [expressions, showAxisLabels, onViewportDirtyChange]);
+    }, [
+      expressions,
+      showGrid,
+      showAxes,
+      showAxisLabels,
+      onViewportDirtyChange,
+    ]);
 
     return <canvas ref={canvasRef} className="graph-canvas" />;
   },
@@ -514,6 +524,8 @@ function draw(
   height: number,
   expressions: GraphExpression[],
   viewport: Viewport,
+  showGrid: boolean,
+  showAxes: boolean,
   showAxisLabels: boolean,
   shouldFindIntersections: boolean,
 ) {
@@ -523,8 +535,14 @@ function draw(
   ctx.clearRect(0, 0, width, height);
 
   drawBackground(ctx, width, height);
-  drawGrid(ctx, width, height, viewport);
-  drawAxes(ctx, width, height, viewport);
+
+  if (showGrid) {
+    drawGrid(ctx, width, height, viewport);
+  }
+
+  if (showAxes) {
+    drawAxes(ctx, width, height, viewport);
+  }
 
   if (showAxisLabels) {
     drawLabels(ctx, width, height, viewport);
