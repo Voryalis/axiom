@@ -891,14 +891,24 @@ function App() {
       return;
     }
 
-    if (event.key === "ArrowRight" && axis === "x") {
+    if (
+      event.key === "ArrowRight" &&
+      axis === "x" &&
+      event.currentTarget.selectionStart === event.currentTarget.value.length &&
+      event.currentTarget.selectionEnd === event.currentTarget.value.length
+    ) {
       event.preventDefault();
       event.stopPropagation();
       focusTableCell(id, rowIndex, "y");
       return;
     }
 
-    if (event.key === "ArrowLeft" && axis === "y") {
+    if (
+      event.key === "ArrowLeft" &&
+      axis === "y" &&
+      event.currentTarget.selectionStart === 0 &&
+      event.currentTarget.selectionEnd === 0
+    ) {
       event.preventDefault();
       event.stopPropagation();
       focusTableCell(id, rowIndex, "x");
