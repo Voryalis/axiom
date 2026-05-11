@@ -824,7 +824,7 @@ input {
 
 .table-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 24px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 6px;
   align-items: center;
 }
@@ -1611,7 +1611,7 @@ body {
 }
 
 .table-grid {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 24px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .table-row input {
@@ -1664,7 +1664,7 @@ body {
 
 .table-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 24px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   column-gap: 10px;
   row-gap: 0;
   align-items: center;
