@@ -1180,6 +1180,63 @@ function App() {
     markUnsaved();
   }
 
+  function duplicateExpression(id: string) {
+    const index = expressions.findIndex((expression) => expression.id === id);
+
+    if (index === -1) {
+      return;
+    }
+
+    const sourceExpression = expressions[index];
+    const color = generateExpressionColor(nextColorIndex);
+    const duplicatedExpression: GraphExpression = {
+      ...sourceExpression,
+      id: crypto.randomUUID(),
+      color,
+      tableData: sourceExpression.tableData
+        ? {
+            ...sourceExpression.tableData,
+            columns: sourceExpression.tableData.columns.map((column) => ({
+              ...column,
+              color,
+            })),
+            rows: sourceExpression.tableData.rows.map((row) => ({
+              ...row,
+              id: crypto.randomUUID(),
+              cells: { ...row.cells },
+            })),
+          }
+        : undefined,
+    };
+
+    setExpressions((current) => {
+      const currentIndex = current.findIndex(
+        (expression) => expression.id === id,
+      );
+
+      if (currentIndex === -1) {
+        return current;
+      }
+
+      return [
+        ...current.slice(0, currentIndex + 1),
+        duplicatedExpression,
+        ...current.slice(currentIndex + 1),
+      ];
+    });
+
+    setNextColorIndex((current) => current + 1);
+    setFocusedExpressionId(duplicatedExpression.id);
+
+    if (duplicatedExpression.tableData) {
+      focusTableCell(duplicatedExpression.id, 0, "x");
+    } else {
+      focusExpression(duplicatedExpression.id);
+    }
+
+    markUnsaved();
+  }
+
   function removeExpression(id: string) {
     const index = expressions.findIndex((expression) => expression.id === id);
 
@@ -1984,6 +2041,25 @@ function App() {
                         }
                       />
                     </label>
+
+                    <button
+                      className="remove-button"
+                      onClick={() => duplicateExpression(expression.id)}
+                      title="Duplicate expression"
+                      aria-label="Duplicate expression"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <rect
+                          width="14"
+                          height="14"
+                          x="8"
+                          y="8"
+                          rx="2"
+                          ry="2"
+                        />
+                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                      </svg>
+                    </button>
 
                     <button
                       className="remove-button"

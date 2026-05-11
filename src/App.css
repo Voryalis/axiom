@@ -263,6 +263,16 @@ input {
   background: rgba(110, 118, 129, 0.16);
   color: #f0f6fc;
 }
+
+.remove-button svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .hint {
   margin: 10px 2px 0;
   color: #8b949e;
