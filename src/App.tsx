@@ -663,6 +663,12 @@ function App() {
   );
   const [settingsSaveStatus, setSettingsSaveStatus] = useState("");
 
+  const isGridVisible = showGraphDetails && showGrid;
+  const isMinorGridVisible = isGridVisible && showMinorGrid;
+  const isAxesVisible = showGraphDetails && showAxes;
+  const isAxisLabelsVisible = isAxesVisible && showAxisLabels;
+  const hasVisibleGraphDetails = isGridVisible || isAxesVisible;
+
   function resizeExpressionInput(element: HTMLTextAreaElement | null) {
     if (!element) return;
 
@@ -2368,13 +2374,22 @@ function App() {
                 </div>
                 <button
                   className={`setting-switch ${
-                    showGraphDetails && (showGrid || showAxes)
-                      ? "setting-switch-active"
-                      : ""
+                    hasVisibleGraphDetails ? "setting-switch-active" : ""
                   }`}
                   type="button"
-                  aria-pressed={showGraphDetails && (showGrid || showAxes)}
-                  onClick={() => setShowGraphDetails((current) => !current)}
+                  aria-pressed={hasVisibleGraphDetails}
+                  onClick={() => {
+                    if (hasVisibleGraphDetails) {
+                      setShowGraphDetails(false);
+                      return;
+                    }
+
+                    setShowGraphDetails(true);
+                    setShowGrid(true);
+                    setShowMinorGrid(true);
+                    setShowAxes(true);
+                    setShowAxisLabels(true);
+                  }}
                 >
                   <span />
                 </button>
@@ -2383,12 +2398,12 @@ function App() {
               <button
                 className="settings-checkbox-row"
                 type="button"
-                aria-pressed={showGraphDetails && showGrid}
+                aria-pressed={isGridVisible}
                 disabled={!showGraphDetails}
                 onClick={() => setShowGrid((current) => !current)}
               >
                 <span className="settings-checkbox-icon">
-                  {renderSettingsCheckbox(showGraphDetails && showGrid)}
+                  {renderSettingsCheckbox(isGridVisible)}
                 </span>
                 <span>
                   <span>Show grid</span>
@@ -2399,14 +2414,12 @@ function App() {
               <button
                 className="settings-checkbox-row"
                 type="button"
-                aria-pressed={showGraphDetails && showGrid && showMinorGrid}
+                aria-pressed={isMinorGridVisible}
                 disabled={!showGraphDetails || !showGrid}
                 onClick={() => setShowMinorGrid((current) => !current)}
               >
                 <span className="settings-checkbox-icon">
-                  {renderSettingsCheckbox(
-                    showGraphDetails && showGrid && showMinorGrid,
-                  )}
+                  {renderSettingsCheckbox(isMinorGridVisible)}
                 </span>
                 <span>
                   <span>Show minor grid</span>
@@ -2417,12 +2430,12 @@ function App() {
               <button
                 className="settings-checkbox-row"
                 type="button"
-                aria-pressed={showGraphDetails && showAxes}
+                aria-pressed={isAxesVisible}
                 disabled={!showGraphDetails}
                 onClick={() => setShowAxes((current) => !current)}
               >
                 <span className="settings-checkbox-icon">
-                  {renderSettingsCheckbox(showGraphDetails && showAxes)}
+                  {renderSettingsCheckbox(isAxesVisible)}
                 </span>
                 <span>
                   <span>Show axes</span>
@@ -2433,14 +2446,12 @@ function App() {
               <button
                 className="settings-checkbox-row"
                 type="button"
-                aria-pressed={showGraphDetails && showAxes && showAxisLabels}
+                aria-pressed={isAxisLabelsVisible}
                 disabled={!showGraphDetails || !showAxes}
                 onClick={() => setShowAxisLabels((current) => !current)}
               >
                 <span className="settings-checkbox-icon">
-                  {renderSettingsCheckbox(
-                    showGraphDetails && showAxes && showAxisLabels,
-                  )}
+                  {renderSettingsCheckbox(isAxisLabelsVisible)}
                 </span>
                 <span>
                   <span>Show axis labels</span>
@@ -2474,10 +2485,10 @@ function App() {
           <GraphCanvas
             ref={graphCanvasRef}
             expressions={expressions}
-            showGrid={showGraphDetails && showGrid}
-            showMinorGrid={showGraphDetails && showGrid && showMinorGrid}
-            showAxes={showGraphDetails && showAxes}
-            showAxisLabels={showGraphDetails && showAxes && showAxisLabels}
+            showGrid={isGridVisible}
+            showMinorGrid={isMinorGridVisible}
+            showAxes={isAxesVisible}
+            showAxisLabels={isAxisLabelsVisible}
             onViewportDirtyChange={setIsViewportDirty}
           />
 
