@@ -1524,6 +1524,11 @@ function App() {
         resetGraph();
       }
 
+      if (isModifierPressed && key === "0") {
+        event.preventDefault();
+        resetView();
+      }
+
       if (isModifierPressed && key === "w") {
         if (!isExpressionListShortcutTarget(event.target)) {
           return;
