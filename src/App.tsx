@@ -1612,6 +1612,19 @@ function App() {
                         : ""
                     } ${table ? "expression-card-table" : ""}`}
                     key={expression.id}
+                    onMouseDown={(event) => {
+                      if (table) return;
+
+                      const target = event.target as HTMLElement;
+                      const isInteractiveTarget = target.closest(
+                        "button, input, textarea, select",
+                      );
+
+                      if (isInteractiveTarget) return;
+
+                      event.preventDefault();
+                      focusExpression(expression.id);
+                    }}
                   >
                     <div className="expression-left-tools">
                       <button
@@ -1810,6 +1823,11 @@ function App() {
                             onFocus={() =>
                               setFocusedExpressionId(expression.id)
                             }
+                            onBlur={() => {
+                              setFocusedExpressionId((current) =>
+                                current === expression.id ? null : current,
+                              );
+                            }}
                             onChange={(event) =>
                               updateExpression(
                                 expression.id,
