@@ -1323,3 +1323,65 @@ input {
 .settings-popover::-webkit-scrollbar-thumb:hover {
   background: #6e7681;
 }
+
+/* Settings checkbox rows */
+.settings-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #c9d1d9;
+  cursor: pointer;
+  padding: 6px 0;
+  text-align: left;
+}
+
+.settings-checkbox-row:hover:not(:disabled) {
+  color: #f0f6fc;
+}
+
+.settings-checkbox-row:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.settings-checkbox-row > span:last-child {
+  display: grid;
+  gap: 2px;
+}
+
+.settings-checkbox-row > span:last-child > span {
+  color: currentColor;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.settings-checkbox-row small {
+  color: #8b949e;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.settings-checkbox-icon {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: currentColor;
+}
+
+.settings-checkbox-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

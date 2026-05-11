@@ -20,6 +20,7 @@ type SavedGraph = {
 };
 
 type AppSettings = {
+  showGraphDetails: boolean;
   showGrid: boolean;
   showMinorGrid: boolean;
   showAxes: boolean;
@@ -234,6 +235,7 @@ function loadAppSettings(): AppSettings {
 
     if (!raw) {
       return {
+        showGraphDetails: true,
         showGrid: true,
         showMinorGrid: true,
         showAxes: true,
@@ -244,6 +246,10 @@ function loadAppSettings(): AppSettings {
     const parsed = JSON.parse(raw);
 
     return {
+      showGraphDetails:
+        typeof parsed.showGraphDetails === "boolean"
+          ? parsed.showGraphDetails
+          : true,
       showGrid: typeof parsed.showGrid === "boolean" ? parsed.showGrid : true,
       showMinorGrid:
         typeof parsed.showMinorGrid === "boolean" ? parsed.showMinorGrid : true,
@@ -643,6 +649,9 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isViewportDirty, setIsViewportDirty] = useState(false);
+  const [showGraphDetails, setShowGraphDetails] = useState(
+    () => loadAppSettings().showGraphDetails,
+  );
   const [showGrid, setShowGrid] = useState(() => loadAppSettings().showGrid);
   const [showMinorGrid, setShowMinorGrid] = useState(
     () => loadAppSettings().showMinorGrid,
@@ -700,6 +709,19 @@ function App() {
 
   function markUnsaved() {
     setSaveStatus("Unsaved changes");
+  }
+
+  function renderSettingsCheckbox(isChecked: boolean) {
+    return isChecked ? (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344" />
+        <path d="m9 11 3 3L22 4" />
+      </svg>
+    ) : (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect width="18" height="18" x="3" y="3" rx="2" />
+      </svg>
+    );
   }
 
   function updateExpression(id: string, raw: string) {
@@ -1626,6 +1648,7 @@ function App() {
     }
 
     saveAppSettings({
+      showGraphDetails,
       showGrid,
       showMinorGrid,
       showAxes,
@@ -1641,7 +1664,7 @@ function App() {
     return () => {
       window.clearTimeout(timeout);
     };
-  }, [showGrid, showMinorGrid, showAxes, showAxisLabels]);
+  }, [showGraphDetails, showGrid, showMinorGrid, showAxes, showAxisLabels]);
 
   useEffect(() => {
     if (!isCreateMenuOpen) return;
@@ -2339,71 +2362,84 @@ function App() {
 
               <div className="settings-row">
                 <div>
+                  <span>Show graph details</span>
+                  <small>Turn graph guides on or off together.</small>
+                </div>
+                <button
+                  className={`setting-switch ${
+                    showGraphDetails ? "setting-switch-active" : ""
+                  }`}
+                  type="button"
+                  aria-pressed={showGraphDetails}
+                  onClick={() => setShowGraphDetails((current) => !current)}
+                >
+                  <span />
+                </button>
+              </div>
+
+              <button
+                className="settings-checkbox-row"
+                type="button"
+                aria-pressed={showGrid}
+                disabled={!showGraphDetails}
+                onClick={() => setShowGrid((current) => !current)}
+              >
+                <span className="settings-checkbox-icon">
+                  {renderSettingsCheckbox(showGrid)}
+                </span>
+                <span>
                   <span>Show grid</span>
                   <small>Show or hide the graph grid lines.</small>
-                </div>
-                <button
-                  className={`setting-switch ${
-                    showGrid ? "setting-switch-active" : ""
-                  }`}
-                  type="button"
-                  aria-pressed={showGrid}
-                  onClick={() => setShowGrid((current) => !current)}
-                >
-                  <span />
-                </button>
-              </div>
+                </span>
+              </button>
 
-              <div className="settings-row">
-                <div>
+              <button
+                className="settings-checkbox-row"
+                type="button"
+                aria-pressed={showMinorGrid}
+                disabled={!showGraphDetails || !showGrid}
+                onClick={() => setShowMinorGrid((current) => !current)}
+              >
+                <span className="settings-checkbox-icon">
+                  {renderSettingsCheckbox(showMinorGrid)}
+                </span>
+                <span>
                   <span>Show minor grid</span>
                   <small>Show or hide the smaller grid subdivisions.</small>
-                </div>
-                <button
-                  className={`setting-switch ${
-                    showMinorGrid ? "setting-switch-active" : ""
-                  }`}
-                  type="button"
-                  aria-pressed={showMinorGrid}
-                  onClick={() => setShowMinorGrid((current) => !current)}
-                >
-                  <span />
-                </button>
-              </div>
+                </span>
+              </button>
 
-              <div className="settings-row">
-                <div>
+              <button
+                className="settings-checkbox-row"
+                type="button"
+                aria-pressed={showAxes}
+                disabled={!showGraphDetails}
+                onClick={() => setShowAxes((current) => !current)}
+              >
+                <span className="settings-checkbox-icon">
+                  {renderSettingsCheckbox(showAxes)}
+                </span>
+                <span>
                   <span>Show axes</span>
                   <small>Show or hide the x and y axes.</small>
-                </div>
-                <button
-                  className={`setting-switch ${
-                    showAxes ? "setting-switch-active" : ""
-                  }`}
-                  type="button"
-                  aria-pressed={showAxes}
-                  onClick={() => setShowAxes((current) => !current)}
-                >
-                  <span />
-                </button>
-              </div>
+                </span>
+              </button>
 
-              <div className="settings-row">
-                <div>
+              <button
+                className="settings-checkbox-row"
+                type="button"
+                aria-pressed={showAxisLabels}
+                disabled={!showGraphDetails || !showAxes}
+                onClick={() => setShowAxisLabels((current) => !current)}
+              >
+                <span className="settings-checkbox-icon">
+                  {renderSettingsCheckbox(showAxisLabels)}
+                </span>
+                <span>
                   <span>Show axis labels</span>
                   <small>Show or hide the numbers on the graph axes.</small>
-                </div>
-                <button
-                  className={`setting-switch ${
-                    showAxisLabels ? "setting-switch-active" : ""
-                  }`}
-                  type="button"
-                  aria-pressed={showAxisLabels}
-                  onClick={() => setShowAxisLabels((current) => !current)}
-                >
-                  <span />
-                </button>
-              </div>
+                </span>
+              </button>
             </section>
 
             <section className="settings-section">
@@ -2431,10 +2467,10 @@ function App() {
           <GraphCanvas
             ref={graphCanvasRef}
             expressions={expressions}
-            showGrid={showGrid}
-            showMinorGrid={showMinorGrid}
-            showAxes={showAxes}
-            showAxisLabels={showAxisLabels}
+            showGrid={showGraphDetails && showGrid}
+            showMinorGrid={showGraphDetails && showGrid && showMinorGrid}
+            showAxes={showGraphDetails && showAxes}
+            showAxisLabels={showGraphDetails && showAxes && showAxisLabels}
             onViewportDirtyChange={setIsViewportDirty}
           />
 
