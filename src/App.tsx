@@ -532,6 +532,29 @@ function parseEditableTable(rawExpression: string): EditableTable | null {
   };
 }
 
+function editableTableFromTableData(
+  tableData: GraphExpression["tableData"],
+): EditableTable | null {
+  if (!tableData) return null;
+
+  const rows = tableData.rows.map((row) => ({
+    x: row.cells.x ?? "",
+    y: row.cells.y ?? "",
+  }));
+
+  return {
+    connect: tableData.connectLines,
+    rows: rows.length > 0 ? rows : [{ x: "", y: "" }],
+  };
+}
+
+function getEditableTable(expression: GraphExpression) {
+  return (
+    editableTableFromTableData(expression.tableData) ??
+    parseEditableTable(expression.raw)
+  );
+}
+
 function isEditableTableRowEmpty(row: EditableTableRow) {
   return row.x.trim().length === 0 && row.y.trim().length === 0;
 }
@@ -688,7 +711,7 @@ function App() {
         if (expression.id !== id) return expression;
 
         const table =
-          parseEditableTable(expression.raw) ??
+          getEditableTable(expression) ??
           ({
             connect: false,
             rows: [{ x: "", y: "" }],
@@ -731,7 +754,7 @@ function App() {
   function addTableRow(id: string, focusAxis?: "x" | "y") {
     const table = expressions
       .map((expression) =>
-        expression.id === id ? parseEditableTable(expression.raw) : null,
+        expression.id === id ? getEditableTable(expression) : null,
       )
       .find((candidate) => candidate !== null);
 
@@ -758,7 +781,7 @@ function App() {
   ) {
     const table = expressions
       .map((expression) =>
-        expression.id === id ? parseEditableTable(expression.raw) : null,
+        expression.id === id ? getEditableTable(expression) : null,
       )
       .find((candidate) => candidate !== null);
 
@@ -1390,7 +1413,7 @@ function App() {
               {expressions.map((expression) => {
                 const result = evaluateMathExpression(expression.raw, expressions);
                 const slider = parseNumericVariableAssignment(expression.raw);
-                const table = parseEditableTable(expression.raw);
+                const table = getEditableTable(expression);
                 const pointExpression = isPointExpression(expression.raw);
 
                 return (
