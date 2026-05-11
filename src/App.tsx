@@ -1704,6 +1704,7 @@ function App() {
                                       axis: "x",
                                     });
                                   }}
+                                  onBlur={() => setActiveTableCell(null)}
                                   onChange={(event) =>
                                     updateTableCell(
                                       expression.id,
@@ -1754,6 +1755,7 @@ function App() {
                                       axis: "y",
                                     });
                                   }}
+                                  onBlur={() => setActiveTableCell(null)}
                                   onChange={(event) =>
                                     updateTableCell(
                                       expression.id,
