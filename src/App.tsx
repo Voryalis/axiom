@@ -930,11 +930,17 @@ function App() {
     const pastedRows = pastedText
       .trim()
       .split(/\r?\n/)
-      .map((line) =>
-        line
-          .split(/\t|,/)
-          .map((cell) => cell.trim()),
-      )
+      .map((line) => {
+        const trimmedLine = line.trim();
+
+        if (trimmedLine.includes("\t") || trimmedLine.includes(",")) {
+          return trimmedLine
+            .split(/\t|,/)
+            .map((cell) => cell.trim());
+        }
+
+        return trimmedLine.split(/\s+/);
+      })
       .filter((row) => row.some((cell) => cell.length > 0));
 
     if (pastedRows.length === 0) return;
@@ -962,9 +968,16 @@ function App() {
 
       return {
         ...table,
-        rows,
+        rows: normalizeEditableTableRows(rows),
       };
     });
+
+    const lastRowIndex = startRowIndex + pastedRows.length - 1;
+    const lastRow = pastedRows[pastedRows.length - 1] ?? [];
+    const focusAxis =
+      startAxis === "x" && lastRow.length > 1 ? "y" : startAxis;
+
+    focusTableCell(id, lastRowIndex, focusAxis);
   }
 
   function toggleTableLines(id: string) {
