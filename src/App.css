@@ -156,7 +156,7 @@ input {
 }
 .expression-list {
   display: grid;
-  gap: 10px;
+  gap: 16px;
 }
 .expression-card {
   display: flex;
@@ -1567,11 +1567,12 @@ body {
 .expression-card-table .visibility-button {
   margin-top: 42px;
 }
-.expression-card-table .color-picker-label {
-  margin-top: 42px;
-}
-.expression-card-table > .remove-button {
-  margin-top: 39px;
+.expression-card-table .expression-right-tools {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 0;
+  padding-top: 0;
 }
 .expression-card-table .expression-input-stack {
   max-width: 190px;
@@ -1586,6 +1587,13 @@ body {
   display: grid;
   justify-items: center;
   gap: 8px;
+  flex: 0 0 auto;
+}
+
+.expression-right-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   flex: 0 0 auto;
 }
 .expression-card-table .expression-left-tools {
@@ -1707,4 +1715,36 @@ body {
 }
 .table-grid {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+}
+
+/* Final table block alignment override */
+.expression-list {
+  gap: 22px;
+}
+
+.expression-card-table {
+  display: grid !important;
+  grid-template-columns: 24px 180px 24px !important;
+  column-gap: 18px !important;
+  justify-content: start !important;
+  align-items: start !important;
+  padding-left: 9px !important;
+}
+
+.expression-card-table .expression-left-tools,
+.expression-card-table .expression-right-tools {
+  width: 24px !important;
+  display: grid !important;
+  justify-items: center !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.expression-card-table .expression-input-stack,
+.expression-card-table .table-editor,
+.expression-card-table .table-grid,
+.expression-card-table .table-editor-topbar {
+  width: 180px !important;
+  max-width: 180px !important;
 }
