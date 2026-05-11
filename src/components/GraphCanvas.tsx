@@ -310,7 +310,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      const render = () => {
+      const renderWithPinnedPointLabel = () => {
         renderCurrentViewport();
 
         const renderedPoints = renderedPointsRef.current;
@@ -360,7 +360,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           rect.height,
         );
 
-        render();
+        renderWithPinnedPointLabel();
         finishViewportInteraction();
       };
 
@@ -395,7 +395,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           };
 
           lastPointerRef.current = { x: event.clientX, y: event.clientY };
-          render();
+          renderWithPinnedPointLabel();
           return;
         }
 
@@ -436,14 +436,14 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           nearestPoint?.expressionId.startsWith("intersection-") ?? false;
 
         pinnedPointRef.current = isIntersectionPoint ? nearestPoint : null;
-        render();
+        renderWithPinnedPointLabel();
       };
 
       const handlePointerLeave = () => {
         isDraggingRef.current = false;
         finishViewportInteraction();
         canvas.style.cursor = "grab";
-        render();
+        renderWithPinnedPointLabel();
       };
 
       const resetViewport = () => {
@@ -455,12 +455,12 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         }
 
         viewportRef.current = { ...INITIAL_VIEWPORT };
-        render();
+        renderWithPinnedPointLabel();
       };
 
-      render();
+      renderWithPinnedPointLabel();
 
-      const resizeObserver = new ResizeObserver(render);
+      const resizeObserver = new ResizeObserver(renderWithPinnedPointLabel);
       resizeObserver.observe(parent);
 
       canvas.addEventListener("wheel", handleWheel, { passive: false });
