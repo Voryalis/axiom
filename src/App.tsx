@@ -1478,6 +1478,23 @@ function App() {
   }
 
   useEffect(() => {
+    function isEditableShortcutTarget(target: EventTarget | null) {
+      if (!(target instanceof HTMLElement)) {
+        return false;
+      }
+
+      return Boolean(
+        target.closest("input, textarea, select, button") ||
+        target.isContentEditable,
+      );
+    }
+
+    function isExpressionListShortcutTarget(target: EventTarget | null) {
+      return target instanceof HTMLElement
+        ? Boolean(target.closest(".expression-list"))
+        : false;
+    }
+
     function handleKeyDown(event: KeyboardEvent) {
       const isModifierPressed = event.ctrlKey || event.metaKey;
       const key = event.key.toLowerCase();
@@ -1493,12 +1510,7 @@ function App() {
       }
 
       if (isModifierPressed && key === "w") {
-        const target = event.target as HTMLElement | null;
-        const isInsideExpressionList = Boolean(
-          target?.closest(".expression-list"),
-        );
-
-        if (!isInsideExpressionList) {
+        if (!isExpressionListShortcutTarget(event.target)) {
           return;
         }
 
@@ -1510,12 +1522,7 @@ function App() {
       }
 
       if (isModifierPressed && key === "d") {
-        const target = event.target as HTMLElement | null;
-        const isInsideExpressionList = Boolean(
-          target?.closest(".expression-list"),
-        );
-
-        if (!isInsideExpressionList) {
+        if (!isExpressionListShortcutTarget(event.target)) {
           return;
         }
 
@@ -1534,13 +1541,7 @@ function App() {
         !event.altKey &&
         !isSettingsOpen
       ) {
-        const target = event.target as HTMLElement | null;
-        const isEditingText = Boolean(
-          target?.closest("input, textarea, select, button") ||
-          target?.isContentEditable,
-        );
-
-        if (isEditingText) {
+        if (isEditableShortcutTarget(event.target)) {
           return;
         }
 
