@@ -1420,6 +1420,15 @@ function App() {
       }
 
       if (isModifierPressed && key === "w") {
+        const target = event.target as HTMLElement | null;
+        const isEditingExpression = Boolean(
+          target?.closest(".expression-list"),
+        );
+
+        if (!isEditingExpression) {
+          return;
+        }
+
         event.preventDefault();
 
         if (focusedExpressionId) {
