@@ -833,6 +833,31 @@ function App() {
     rowCount: number,
     axis: "x" | "y",
   ) {
+    if (event.key === "Tab") {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (event.shiftKey) {
+        if (axis === "y") {
+          focusTableCell(id, rowIndex, "x");
+        } else if (rowIndex > 0) {
+          focusTableCell(id, rowIndex - 1, "y");
+        }
+
+        return;
+      }
+
+      if (axis === "x") {
+        focusTableCell(id, rowIndex, "y");
+      } else if (rowIndex === rowCount - 1) {
+        addTableRow(id, "x");
+      } else {
+        focusTableCell(id, rowIndex + 1, "x");
+      }
+
+      return;
+    }
+
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       event.stopPropagation();
