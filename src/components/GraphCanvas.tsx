@@ -10,6 +10,26 @@ type Viewport = {
   yMax: number;
 };
 
+export type TableColumn = {
+  id: string;
+  label: string;
+  color: string;
+  visible: boolean;
+};
+
+export type TableRow = {
+  id: string;
+  cells: Record<string, string>;
+};
+
+export type TableData = {
+  version: 1;
+  columns: TableColumn[];
+  rows: TableRow[];
+  connectLines: boolean;
+  showPoints: boolean;
+};
+
 export type GraphExpression = {
   id: string;
   raw: string;
@@ -17,6 +37,7 @@ export type GraphExpression = {
   visible: boolean;
   showPoints?: boolean;
   showLabel?: boolean;
+  tableData?: TableData;
 };
 
 type GraphCanvasProps = {
