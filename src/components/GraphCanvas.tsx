@@ -1819,50 +1819,6 @@ function areCurvesOverlapping(
   return matchingPoints / comparedPoints >= 0.92;
 }
 
-function findPointOnSegment(
-  point: RenderedCurvePoint,
-  segmentStart: RenderedCurvePoint,
-  segmentEnd: RenderedCurvePoint,
-) {
-  const segmentLength = Math.hypot(
-    segmentEnd.screenX - segmentStart.screenX,
-    segmentEnd.screenY - segmentStart.screenY,
-  );
-
-  if (segmentLength < 0.0001) return null;
-
-  const distanceToSegment =
-    Math.abs(
-      (segmentEnd.screenY - segmentStart.screenY) * point.screenX -
-        (segmentEnd.screenX - segmentStart.screenX) * point.screenY +
-        segmentEnd.screenX * segmentStart.screenY -
-        segmentEnd.screenY * segmentStart.screenX,
-    ) / segmentLength;
-
-  if (distanceToSegment > 2) return null;
-
-  const minX = Math.min(segmentStart.screenX, segmentEnd.screenX) - 2;
-  const maxX = Math.max(segmentStart.screenX, segmentEnd.screenX) + 2;
-  const minY = Math.min(segmentStart.screenY, segmentEnd.screenY) - 2;
-  const maxY = Math.max(segmentStart.screenY, segmentEnd.screenY) + 2;
-
-  if (
-    point.screenX < minX ||
-    point.screenX > maxX ||
-    point.screenY < minY ||
-    point.screenY > maxY
-  ) {
-    return null;
-  }
-
-  return {
-    x: point.x,
-    y: point.y,
-    screenX: point.screenX,
-    screenY: point.screenY,
-  };
-}
-
 function findSegmentIntersection(
   a1: RenderedCurvePoint,
   a2: RenderedCurvePoint,
