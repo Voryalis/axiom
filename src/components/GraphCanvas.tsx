@@ -205,6 +205,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       pinnedPointRef.current = freshPinnedPoint;
 
       if (freshPinnedPoint) {
+        drawSelectedPointHighlight(ctx, freshPinnedPoint);
         drawPointLabel(ctx, rect.width, rect.height, freshPinnedPoint);
       }
     }
@@ -1839,6 +1840,21 @@ function drawPoint(
     screenY: sy,
     color,
   };
+}
+
+function drawSelectedPointHighlight(
+  ctx: CanvasRenderingContext2D,
+  renderedPoint: RenderedPoint,
+) {
+  ctx.save();
+
+  ctx.beginPath();
+  ctx.strokeStyle = "#f0f6fc";
+  ctx.lineWidth = 2;
+  ctx.arc(renderedPoint.screenX, renderedPoint.screenY, 8, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.restore();
 }
 
 function drawPointLabel(
