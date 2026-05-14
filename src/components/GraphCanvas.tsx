@@ -456,7 +456,16 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         );
 
         pinnedPointRef.current = null;
-        selectedCurveIdRef.current = nearestCurve?.expressionId ?? null;
+
+        if (
+          nearestCurve &&
+          selectedCurveIdRef.current === nearestCurve.expressionId
+        ) {
+          selectedCurveIdRef.current = null;
+        } else {
+          selectedCurveIdRef.current = nearestCurve?.expressionId ?? null;
+        }
+
         renderWithPinnedPointLabel();
       };
 
