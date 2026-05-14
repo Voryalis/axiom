@@ -701,6 +701,7 @@ function draw(
 
     if (selectedCurve) {
       drawSelectedCurve(ctx, selectedCurve);
+      drawSelectedCurveExtremum(ctx, selectedCurve);
     }
   }
 
@@ -748,6 +749,57 @@ function drawSelectedCurve(
 
   ctx.stroke();
   ctx.restore();
+}
+
+function drawSelectedCurveExtremum(
+  ctx: CanvasRenderingContext2D,
+  curve: RenderedCurve,
+) {
+  const extremum = findVisibleCurveExtremum(curve);
+
+  if (!extremum) return;
+
+  ctx.save();
+
+  ctx.beginPath();
+  ctx.fillStyle = "#f1f1f1";
+  ctx.strokeStyle = curve.color;
+  ctx.lineWidth = 2;
+  ctx.arc(extremum.screenX, extremum.screenY, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function findVisibleCurveExtremum(curve: RenderedCurve) {
+  if (curve.points.length < 3) return null;
+
+  let bestPoint: RenderedCurvePoint | null = null;
+  let bestStrength = 0;
+
+  for (let index = 1; index < curve.points.length - 1; index++) {
+    const previous = curve.points[index - 1];
+    const current = curve.points[index];
+    const next = curve.points[index + 1];
+
+    if (!previous || !current || !next) continue;
+
+    const isLocalMinimum = current.y <= previous.y && current.y <= next.y;
+    const isLocalMaximum = current.y >= previous.y && current.y >= next.y;
+
+    if (!isLocalMinimum && !isLocalMaximum) continue;
+
+    const strength =
+      Math.abs(current.y - previous.y) + Math.abs(current.y - next.y);
+
+    if (strength > bestStrength) {
+      bestPoint = current;
+      bestStrength = strength;
+    }
+  }
+
+  return bestPoint;
 }
 
 function findNearestCurve(
