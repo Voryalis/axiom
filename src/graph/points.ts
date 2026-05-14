@@ -150,7 +150,8 @@ export function findMatchingRenderedPoint(
 }
 
 function formatNumber(value: number) {
-  const rounded = Number(value.toFixed(6));
+  const normalized = Math.abs(value) < 1e-9 ? 0 : value;
+  const rounded = Number(normalized.toFixed(6));
 
   if (Object.is(rounded, -0)) return "0";
 

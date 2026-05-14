@@ -450,7 +450,15 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
 
         if (nearestPoint) {
           pinnedPointRef.current = nearestPoint;
-          selectedCurveIdRef.current = null;
+
+          const isSelectedCurveAnalysisPoint =
+            nearestPoint.sourceExpressionId === selectedCurveIdRef.current &&
+            nearestPoint.expressionId.includes("-extremum");
+
+          if (!isSelectedCurveAnalysisPoint) {
+            selectedCurveIdRef.current = null;
+          }
+
           renderWithPinnedPointLabel();
           return;
         }
@@ -701,7 +709,16 @@ function draw(
 
     if (selectedCurve) {
       drawSelectedCurve(ctx, selectedCurve);
-      drawSelectedCurveExtremum(ctx, selectedCurve);
+
+      const extremumPoints = drawSelectedCurveExtrema(
+        ctx,
+        selectedCurve,
+        width,
+        height,
+        viewport,
+      );
+
+      renderedPoints.push(...extremumPoints);
     }
   }
 
@@ -751,32 +768,54 @@ function drawSelectedCurve(
   ctx.restore();
 }
 
-function drawSelectedCurveExtremum(
+function drawSelectedCurveExtrema(
   ctx: CanvasRenderingContext2D,
   curve: RenderedCurve,
-) {
-  const extremum = findVisibleCurveExtremum(curve);
+  width: number,
+  height: number,
+  viewport: Viewport,
+): RenderedPoint[] {
+  const extrema = findVisibleCurveExtrema(curve);
 
-  if (!extremum) return;
+  return extrema.map((extremum, index) => {
+    const screenX = graphToScreenX(extremum.x, width, viewport);
+    const screenY = graphToScreenY(extremum.y, height, viewport);
 
-  ctx.save();
+    ctx.save();
 
-  ctx.beginPath();
-  ctx.fillStyle = "#f1f1f1";
-  ctx.strokeStyle = curve.color;
-  ctx.lineWidth = 2;
-  ctx.arc(extremum.screenX, extremum.screenY, 5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
+    ctx.beginPath();
+    ctx.fillStyle = "#f1f1f1";
+    ctx.strokeStyle = curve.color;
+    ctx.lineWidth = 2;
+    ctx.arc(screenX, screenY, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
 
-  ctx.restore();
+    ctx.restore();
+
+    return {
+      expressionId: `${curve.expressionId}-extremum-${index}`,
+      sourceExpressionId: curve.expressionId,
+      point: {
+        x: extremum.x,
+        y: extremum.y,
+      },
+      screenX,
+      screenY,
+      color: curve.color,
+    };
+  });
 }
 
-function findVisibleCurveExtremum(curve: RenderedCurve) {
-  if (curve.points.length < 3) return null;
+function findVisibleCurveExtrema(curve: RenderedCurve) {
+  if (curve.points.length < 3) return [];
 
-  let bestPoint: RenderedCurvePoint | null = null;
-  let bestStrength = 0;
+  const extrema: Array<{
+    x: number;
+    y: number;
+    screenX: number;
+    screenY: number;
+  }> = [];
 
   for (let index = 1; index < curve.points.length - 1; index++) {
     const previous = curve.points[index - 1];
@@ -793,13 +832,117 @@ function findVisibleCurveExtremum(curve: RenderedCurve) {
     const strength =
       Math.abs(current.y - previous.y) + Math.abs(current.y - next.y);
 
-    if (strength > bestStrength) {
-      bestPoint = current;
-      bestStrength = strength;
-    }
+    if (strength < 1e-8) continue;
+
+    const extremum = findQuadraticExtremumThroughPoints(
+      previous,
+      current,
+      next,
+    ) ?? {
+      x: current.x,
+      y: current.y,
+    };
+
+    const screenX =
+      findScreenCoordinateForGraphX(previous, current, next, extremum.x, "x") ??
+      current.screenX;
+    const screenY =
+      findScreenCoordinateForGraphX(previous, current, next, extremum.x, "y") ??
+      current.screenY;
+
+    const duplicate = extrema.some((existing) => {
+      return (
+        Math.hypot(existing.screenX - screenX, existing.screenY - screenY) < 18
+      );
+    });
+
+    if (duplicate) continue;
+
+    extrema.push({
+      x: extremum.x,
+      y: extremum.y,
+      screenX,
+      screenY,
+    });
   }
 
-  return bestPoint;
+  return extrema;
+}
+
+function findScreenCoordinateForGraphX(
+  first: RenderedCurvePoint,
+  second: RenderedCurvePoint,
+  third: RenderedCurvePoint,
+  graphX: number,
+  axis: "x" | "y",
+) {
+  const points = [first, second, third].sort((a, b) => a.x - b.x);
+
+  for (let index = 0; index < points.length - 1; index++) {
+    const start = points[index];
+    const end = points[index + 1];
+
+    if (!start || !end) continue;
+
+    const minX = Math.min(start.x, end.x);
+    const maxX = Math.max(start.x, end.x);
+
+    if (graphX < minX || graphX > maxX) continue;
+
+    const range = end.x - start.x;
+
+    if (Math.abs(range) < 1e-12) return null;
+
+    const t = (graphX - start.x) / range;
+
+    return axis === "x"
+      ? start.screenX + (end.screenX - start.screenX) * t
+      : start.screenY + (end.screenY - start.screenY) * t;
+  }
+
+  return null;
+}
+
+function findQuadraticExtremumThroughPoints(
+  first: RenderedCurvePoint,
+  second: RenderedCurvePoint,
+  third: RenderedCurvePoint,
+) {
+  const x1 = first.x;
+  const y1 = first.y;
+  const x2 = second.x;
+  const y2 = second.y;
+  const x3 = third.x;
+  const y3 = third.y;
+
+  const denominator = (x1 - x2) * (x1 - x3) * (x2 - x3);
+
+  if (Math.abs(denominator) < 1e-12) return null;
+
+  const a = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / denominator;
+
+  if (Math.abs(a) < 1e-12) return null;
+
+  const b =
+    (x3 * x3 * (y1 - y2) + x2 * x2 * (y3 - y1) + x1 * x1 * (y2 - y3)) /
+    denominator;
+
+  const c =
+    (x2 * x3 * (x2 - x3) * y1 +
+      x3 * x1 * (x3 - x1) * y2 +
+      x1 * x2 * (x1 - x2) * y3) /
+    denominator;
+
+  const x = -b / (2 * a);
+  const minX = Math.min(x1, x2, x3);
+  const maxX = Math.max(x1, x2, x3);
+
+  if (x < minX || x > maxX) return null;
+
+  return {
+    x,
+    y: a * x * x + b * x + c,
+  };
 }
 
 function findNearestCurve(
