@@ -113,7 +113,9 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
     const isDraggingRef = useRef(false);
     const lastPointerRef = useRef({ x: 0, y: 0 });
     const renderedPointsRef = useRef<RenderedPoint[]>([]);
+    const renderedCurvesRef = useRef<RenderedCurve[]>([]);
     const pinnedPointRef = useRef<RenderedPoint | null>(null);
+    const selectedCurveIdRef = useRef<string | null>(null);
     const isViewportInteractingRef = useRef(false);
     const viewportInteractionTimeoutRef = useRef<number | null>(null);
 
@@ -140,7 +142,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      const renderedPoints = draw(
+      const drawResult = draw(
         ctx,
         rect.width,
         rect.height,
@@ -151,9 +153,11 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         showAxes,
         showAxisLabels,
         showIntersections && !isViewportInteractingRef.current,
+        selectedCurveIdRef.current,
       );
 
-      renderedPointsRef.current = renderedPoints;
+      renderedPointsRef.current = drawResult.points;
+      renderedCurvesRef.current = drawResult.curves;
     }
 
     function drawPinnedPointLabel() {
@@ -246,6 +250,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       resetView() {
         viewportRef.current = { ...INITIAL_VIEWPORT };
         pinnedPointRef.current = null;
+        selectedCurveIdRef.current = null;
         onViewportDirtyChange?.(false);
         renderCurrentViewport();
       },
@@ -410,8 +415,11 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           mouseX,
           mouseY,
         );
+        const nearestCurve = nearestPoint
+          ? null
+          : findNearestCurve(renderedCurvesRef.current, mouseX, mouseY);
 
-        canvas.style.cursor = nearestPoint ? "pointer" : "grab";
+        canvas.style.cursor = nearestPoint || nearestCurve ? "pointer" : "grab";
       };
 
       const handlePointerUp = (event: PointerEvent) => {
@@ -434,7 +442,21 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           mouseY,
         );
 
-        pinnedPointRef.current = nearestPoint;
+        if (nearestPoint) {
+          pinnedPointRef.current = nearestPoint;
+          selectedCurveIdRef.current = null;
+          renderWithPinnedPointLabel();
+          return;
+        }
+
+        const nearestCurve = findNearestCurve(
+          renderedCurvesRef.current,
+          mouseX,
+          mouseY,
+        );
+
+        pinnedPointRef.current = null;
+        selectedCurveIdRef.current = nearestCurve?.expressionId ?? null;
         renderWithPinnedPointLabel();
       };
 
@@ -454,6 +476,8 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         }
 
         viewportRef.current = { ...INITIAL_VIEWPORT };
+        pinnedPointRef.current = null;
+        selectedCurveIdRef.current = null;
         onViewportDirtyChange?.(false);
         renderWithPinnedPointLabel();
       };
@@ -508,6 +532,7 @@ function draw(
   showAxes: boolean,
   showAxisLabels: boolean,
   shouldFindIntersections: boolean,
+  selectedCurveId: string | null,
 ) {
   const renderedPoints: RenderedPoint[] = [];
   const renderedCurves: RenderedCurve[] = [];
@@ -654,6 +679,16 @@ function draw(
     }
   }
 
+  if (selectedCurveId) {
+    const selectedCurve = renderedCurves.find(
+      (curve) => curve.expressionId === selectedCurveId,
+    );
+
+    if (selectedCurve) {
+      drawSelectedCurve(ctx, selectedCurve);
+    }
+  }
+
   if (shouldFindIntersections) {
     const intersections = findCurveIntersections(renderedCurves);
 
@@ -666,7 +701,96 @@ function draw(
     });
   }
 
-  return renderedPoints;
+  return {
+    points: renderedPoints,
+    curves: renderedCurves,
+  };
+}
+
+function drawSelectedCurve(
+  ctx: CanvasRenderingContext2D,
+  curve: RenderedCurve,
+) {
+  if (curve.points.length < 2) return;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.strokeStyle = "rgba(240, 246, 252, 0.55)";
+  ctx.lineWidth = 5;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+
+  curve.points.forEach((point, index) => {
+    if (index === 0) {
+      ctx.moveTo(point.screenX, point.screenY);
+    } else {
+      ctx.lineTo(point.screenX, point.screenY);
+    }
+  });
+
+  ctx.stroke();
+  ctx.restore();
+}
+
+function findNearestCurve(
+  curves: RenderedCurve[],
+  screenX: number,
+  screenY: number,
+) {
+  let nearest: RenderedCurve | null = null;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+  const hitRadius = 8;
+
+  for (const curve of curves) {
+    for (let index = 0; index < curve.points.length - 1; index++) {
+      const start = curve.points[index];
+      const end = curve.points[index + 1];
+
+      if (!start || !end) continue;
+
+      const distance = distanceToSegment(
+        screenX,
+        screenY,
+        start.screenX,
+        start.screenY,
+        end.screenX,
+        end.screenY,
+      );
+
+      if (distance <= hitRadius && distance < nearestDistance) {
+        nearest = curve;
+        nearestDistance = distance;
+      }
+    }
+  }
+
+  return nearest;
+}
+
+function distanceToSegment(
+  px: number,
+  py: number,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+) {
+  const dx = bx - ax;
+  const dy = by - ay;
+
+  if (dx === 0 && dy === 0) {
+    return Math.hypot(px - ax, py - ay);
+  }
+
+  const t = Math.max(
+    0,
+    Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)),
+  );
+
+  const projectionX = ax + t * dx;
+  const projectionY = ay + t * dy;
+
+  return Math.hypot(px - projectionX, py - projectionY);
 }
 
 function normalizeExpression(raw: string) {
@@ -1615,6 +1739,7 @@ function findCurveIntersections(curves: RenderedCurve[]) {
       if (!firstCurve || !secondCurve) continue;
       if (firstCurve.points.length < 2 || secondCurve.points.length < 2)
         continue;
+      if (areCurvesOverlapping(firstCurve, secondCurve)) continue;
 
       for (let i = 0; i < firstCurve.points.length - 1; i++) {
         const a1 = firstCurve.points[i];
@@ -1653,6 +1778,45 @@ function findCurveIntersections(curves: RenderedCurve[]) {
   }
 
   return intersections;
+}
+
+function areCurvesOverlapping(
+  firstCurve: RenderedCurve,
+  secondCurve: RenderedCurve,
+) {
+  const sampleCount = Math.min(
+    firstCurve.points.length,
+    secondCurve.points.length,
+  );
+
+  if (sampleCount < 2) return false;
+
+  let comparedPoints = 0;
+  let matchingPoints = 0;
+
+  const step = Math.max(1, Math.floor(sampleCount / 80));
+
+  for (let index = 0; index < sampleCount; index += step) {
+    const firstPoint = firstCurve.points[index];
+    const secondPoint = secondCurve.points[index];
+
+    if (!firstPoint || !secondPoint) continue;
+
+    comparedPoints++;
+
+    const screenDistance = Math.hypot(
+      firstPoint.screenX - secondPoint.screenX,
+      firstPoint.screenY - secondPoint.screenY,
+    );
+
+    if (screenDistance <= 2) {
+      matchingPoints++;
+    }
+  }
+
+  if (comparedPoints < 2) return false;
+
+  return matchingPoints / comparedPoints >= 0.92;
 }
 
 function findPointOnSegment(
@@ -1718,10 +1882,7 @@ function findSegmentIntersection(
   const denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
 
   if (Math.abs(denominator) < 0.0001) {
-    const overlappingEndpoint =
-      findPointOnSegment(b1, a1, a2) ?? findPointOnSegment(b2, a1, a2);
-
-    return overlappingEndpoint;
+    return null;
   }
 
   const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator;
