@@ -1,14 +1,17 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { all, create } from "mathjs";
+import {
+  INITIAL_VIEWPORT,
+  enforceSquareUnits,
+  getGridStep,
+  graphToScreenX,
+  graphToScreenY,
+  screenToGraphX,
+  screenToGraphY,
+  type Viewport,
+} from "../graph/viewport";
 
 const math = create(all, {});
-
-type Viewport = {
-  xMin: number;
-  xMax: number;
-  yMin: number;
-  yMax: number;
-};
 
 export type TableColumn = {
   id: string;
@@ -100,32 +103,8 @@ type RenderedCurve = {
   points: RenderedCurvePoint[];
 };
 
-const INITIAL_VIEWPORT: Viewport = {
-  xMin: -10,
-  xMax: 10,
-  yMin: -10,
-  yMax: 10,
-};
-
 const ZOOM_SENSITIVITY = 0.0015;
 const POINT_HIT_RADIUS = 10;
-
-function enforceSquareUnits(
-  viewport: Viewport,
-  width: number,
-  height: number,
-): Viewport {
-  const xRange = viewport.xMax - viewport.xMin;
-  const yRange = xRange * (height / width);
-  const yCenter = (viewport.yMin + viewport.yMax) / 2;
-
-  return {
-    xMin: viewport.xMin,
-    xMax: viewport.xMax,
-    yMin: yCenter - yRange / 2,
-    yMax: yCenter + yRange / 2,
-  };
-}
 
 const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
   function GraphCanvas(
@@ -994,36 +973,6 @@ function isGraphLikeExpression(rawExpression: string) {
     !parseInequalityExpression(rawExpression) &&
     !parseEquationExpression(rawExpression)
   );
-}
-
-function graphToScreenX(x: number, width: number, viewport: Viewport) {
-  return ((x - viewport.xMin) / (viewport.xMax - viewport.xMin)) * width;
-}
-
-function graphToScreenY(y: number, height: number, viewport: Viewport) {
-  return (
-    height - ((y - viewport.yMin) / (viewport.yMax - viewport.yMin)) * height
-  );
-}
-
-function screenToGraphX(screenX: number, width: number, viewport: Viewport) {
-  return viewport.xMin + (screenX / width) * (viewport.xMax - viewport.xMin);
-}
-
-function screenToGraphY(screenY: number, height: number, viewport: Viewport) {
-  return viewport.yMax - (screenY / height) * (viewport.yMax - viewport.yMin);
-}
-
-function getGridStep(range: number) {
-  const roughStep = range / 12;
-  const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
-  const normalized = roughStep / magnitude;
-
-  if (normalized <= 1) return magnitude;
-  if (normalized <= 2) return 2 * magnitude;
-  if (normalized <= 5) return 5 * magnitude;
-
-  return 10 * magnitude;
 }
 
 function drawBackground(
