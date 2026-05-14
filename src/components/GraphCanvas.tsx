@@ -1,6 +1,15 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { all, create } from "mathjs";
 import {
+  drawPoint,
+  drawPointLabel,
+  drawSelectedPointHighlight,
+  findMatchingRenderedPoint,
+  findNearestPoint,
+  type GraphPoint,
+  type RenderedPoint,
+} from "../graph/points";
+import {
   INITIAL_VIEWPORT,
   enforceSquareUnits,
   getGridStep,
@@ -60,11 +69,6 @@ export type GraphCanvasHandle = {
   zoomOut: () => void;
 };
 
-type GraphPoint = {
-  x: number;
-  y: number;
-};
-
 type ParsedTable = {
   points: GraphPoint[];
   connect: boolean;
@@ -81,15 +85,6 @@ type ParsedEquation = {
   right: string;
 };
 
-type RenderedPoint = {
-  expressionId: string;
-  sourceExpressionId?: string;
-  point: GraphPoint;
-  screenX: number;
-  screenY: number;
-  color: string;
-};
-
 type RenderedCurvePoint = {
   x: number;
   y: number;
@@ -104,7 +99,6 @@ type RenderedCurve = {
 };
 
 const ZOOM_SENSITIVITY = 0.0015;
-const POINT_HIT_RADIUS = 10;
 
 const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
   function GraphCanvas(
@@ -1754,159 +1748,6 @@ function drawConnectedTableLines(
   ctx.restore();
 
   return renderedCurvePoints;
-}
-
-function drawPoint(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  point: GraphPoint,
-  color: string,
-  expressionId: string,
-  viewport: Viewport,
-  sourceExpressionId = expressionId,
-): RenderedPoint | null {
-  const sx = graphToScreenX(point.x, width, viewport);
-  const sy = graphToScreenY(point.y, height, viewport);
-
-  if (sx < -20 || sx > width + 20 || sy < -20 || sy > height + 20) {
-    return null;
-  }
-
-  ctx.beginPath();
-  ctx.fillStyle = color;
-  ctx.strokeStyle = "#1d1e21";
-  ctx.lineWidth = 2;
-  ctx.arc(sx, sy, 5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-
-  return {
-    expressionId,
-    sourceExpressionId,
-    point,
-    screenX: sx,
-    screenY: sy,
-    color,
-  };
-}
-
-function drawSelectedPointHighlight(
-  ctx: CanvasRenderingContext2D,
-  renderedPoint: RenderedPoint,
-) {
-  ctx.save();
-
-  ctx.beginPath();
-  ctx.strokeStyle = "#f0f6fc";
-  ctx.lineWidth = 2;
-  ctx.arc(renderedPoint.screenX, renderedPoint.screenY, 8, 0, Math.PI * 2);
-  ctx.stroke();
-
-  ctx.restore();
-}
-
-function drawPointLabel(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  renderedPoint: RenderedPoint,
-) {
-  const label = `(${formatNumber(renderedPoint.point.x)}, ${formatNumber(
-    renderedPoint.point.y,
-  )})`;
-
-  ctx.save();
-
-  ctx.font = "12px system-ui, sans-serif";
-
-  const metrics = ctx.measureText(label);
-  const labelWidth = metrics.width + 18;
-  const labelHeight = 28;
-
-  let x = renderedPoint.screenX + 12;
-  let y = renderedPoint.screenY - labelHeight - 10;
-
-  if (x + labelWidth > width - 8) {
-    x = renderedPoint.screenX - labelWidth - 12;
-  }
-
-  if (y < 8) {
-    y = renderedPoint.screenY + 14;
-  }
-
-  if (y + labelHeight > height - 8) {
-    y = height - labelHeight - 8;
-  }
-
-  ctx.fillStyle = "#24262b";
-  ctx.strokeStyle = renderedPoint.color;
-  ctx.lineWidth = 1.5;
-
-  roundedRect(ctx, x, y, labelWidth, labelHeight, 8);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.fillStyle = "#f1f1f1";
-  ctx.fillText(label, x + 9, y + 18);
-
-  ctx.restore();
-}
-
-function roundedRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number,
-) {
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + width - radius, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-  ctx.lineTo(x + width, y + height - radius);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-  ctx.lineTo(x + radius, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
-}
-
-function findNearestPoint(
-  points: RenderedPoint[],
-  screenX: number,
-  screenY: number,
-) {
-  let nearestPoint: RenderedPoint | null = null;
-  let nearestDistance = Infinity;
-
-  for (const point of points) {
-    const distance = Math.hypot(
-      point.screenX - screenX,
-      point.screenY - screenY,
-    );
-
-    if (distance <= POINT_HIT_RADIUS && distance < nearestDistance) {
-      nearestPoint = point;
-      nearestDistance = distance;
-    }
-  }
-
-  return nearestPoint;
-}
-
-function findMatchingRenderedPoint(
-  point: RenderedPoint | null,
-  points: RenderedPoint[],
-) {
-  if (!point) return null;
-
-  return (
-    points.find((candidate) => candidate.expressionId === point.expressionId) ??
-    null
-  );
 }
 
 function drawIntersectionPoint(
