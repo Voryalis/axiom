@@ -705,7 +705,10 @@ function draw(
   }
 
   if (shouldFindIntersections) {
-    const intersections = findCurveIntersections(renderedCurves);
+    const intersections = findCurveIntersections(
+      renderedCurves,
+      selectedCurveId,
+    );
 
     intersections.forEach((intersection) => {
       const renderedPoint = drawIntersectionPoint(ctx, intersection);
@@ -1739,7 +1742,10 @@ function drawIntersectionPoint(
   return intersection;
 }
 
-function findCurveIntersections(curves: RenderedCurve[]) {
+function findCurveIntersections(
+  curves: RenderedCurve[],
+  selectedCurveId: string | null,
+) {
   const intersections: RenderedPoint[] = [];
 
   for (let firstIndex = 0; firstIndex < curves.length; firstIndex++) {
@@ -1752,6 +1758,13 @@ function findCurveIntersections(curves: RenderedCurve[]) {
       const secondCurve = curves[secondIndex];
 
       if (!firstCurve || !secondCurve) continue;
+      if (
+        selectedCurveId &&
+        firstCurve.expressionId !== selectedCurveId &&
+        secondCurve.expressionId !== selectedCurveId
+      ) {
+        continue;
+      }
       if (firstCurve.points.length < 2 || secondCurve.points.length < 2)
         continue;
       if (areCurvesOverlapping(firstCurve, secondCurve)) continue;
