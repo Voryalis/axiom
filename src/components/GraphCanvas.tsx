@@ -206,6 +206,8 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
 
     function zoomViewport(factor: number) {
       onViewportDirtyChange?.(true);
+      pinnedPointRef.current = null;
+      selectedCurveIdRef.current = null;
       startViewportInteraction();
       const viewport = viewportRef.current;
 
@@ -336,6 +338,8 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         event.preventDefault();
         event.stopPropagation();
         onViewportDirtyChange?.(true);
+        pinnedPointRef.current = null;
+        selectedCurveIdRef.current = null;
         startViewportInteraction();
 
         const rect = canvas.getBoundingClientRect();
@@ -382,6 +386,8 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         if (isDraggingRef.current) {
           event.preventDefault();
           onViewportDirtyChange?.(true);
+          pinnedPointRef.current = null;
+          selectedCurveIdRef.current = null;
           startViewportInteraction();
 
           const rect = canvas.getBoundingClientRect();
