@@ -454,7 +454,8 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
 
           const isSelectedCurveAnalysisPoint =
             nearestPoint.sourceExpressionId === selectedCurveIdRef.current &&
-            nearestPoint.expressionId.includes("-extremum");
+            (nearestPoint.expressionId.includes("-extremum") ||
+              nearestPoint.expressionId.includes("-root"));
 
           if (!isSelectedCurveAnalysisPoint) {
             selectedCurveIdRef.current = null;
@@ -718,8 +719,15 @@ function draw(
         height,
         viewport,
       );
+      const rootPoints = drawSelectedCurveRoots(
+        ctx,
+        selectedCurve,
+        width,
+        height,
+        viewport,
+      );
 
-      renderedPoints.push(...extremumPoints);
+      renderedPoints.push(...extremumPoints, ...rootPoints);
     }
   }
 
@@ -767,6 +775,123 @@ function drawSelectedCurve(
 
   ctx.stroke();
   ctx.restore();
+}
+
+function drawSelectedCurveRoots(
+  ctx: CanvasRenderingContext2D,
+  curve: RenderedCurve,
+  width: number,
+  height: number,
+  viewport: Viewport,
+): RenderedPoint[] {
+  const roots = findVisibleCurveRoots(curve);
+
+  return roots.map((root, index) => {
+    const screenX = graphToScreenX(root.x, width, viewport);
+    const screenY = graphToScreenY(root.y, height, viewport);
+
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.fillStyle = "#f1f1f1";
+    ctx.strokeStyle = curve.color;
+    ctx.lineWidth = 2;
+    ctx.arc(screenX, screenY, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+
+    return {
+      expressionId: `${curve.expressionId}-root-${index}`,
+      sourceExpressionId: curve.expressionId,
+      point: {
+        x: normalizeAnalysisCoordinate(root.x),
+        y: normalizeAnalysisCoordinate(root.y),
+      },
+      screenX,
+      screenY,
+      color: curve.color,
+    };
+  });
+}
+
+function findVisibleCurveRoots(curve: RenderedCurve) {
+  if (curve.points.length < 2) return [];
+
+  const roots: Array<{
+    x: number;
+    y: number;
+    screenX: number;
+    screenY: number;
+  }> = [];
+
+  for (let index = 0; index < curve.points.length - 1; index++) {
+    const first = curve.points[index];
+    const second = curve.points[index + 1];
+
+    if (!first || !second) continue;
+    if (!Number.isFinite(first.y) || !Number.isFinite(second.y)) continue;
+
+    let root: {
+      x: number;
+      y: number;
+      screenX: number;
+      screenY: number;
+    } | null = null;
+
+    if (Math.abs(first.y) < 1e-9) {
+      root = {
+        x: normalizeAnalysisCoordinate(first.x),
+        y: 0,
+        screenX: first.screenX,
+        screenY: first.screenY,
+      };
+    } else if ((first.y < 0 && second.y > 0) || (first.y > 0 && second.y < 0)) {
+      const amount =
+        Math.abs(first.y) / (Math.abs(first.y) + Math.abs(second.y));
+
+      root = {
+        x: normalizeAnalysisCoordinate(first.x + (second.x - first.x) * amount),
+        y: 0,
+        screenX: first.screenX + (second.screenX - first.screenX) * amount,
+        screenY: first.screenY + (second.screenY - first.screenY) * amount,
+      };
+    }
+
+    if (!root) continue;
+
+    const duplicate = roots.some((existing) => {
+      return (
+        Math.hypot(
+          existing.screenX - root.screenX,
+          existing.screenY - root.screenY,
+        ) < 18
+      );
+    });
+
+    if (duplicate) continue;
+
+    roots.push(root);
+  }
+
+  return roots;
+}
+
+function normalizeAnalysisCoordinate(value: number) {
+  if (!Number.isFinite(value)) return value;
+
+  const nearestInteger = Math.round(value);
+
+  if (Math.abs(value - nearestInteger) < 0.002) {
+    return nearestInteger;
+  }
+
+  if (Math.abs(value) < 1e-9) {
+    return 0;
+  }
+
+  return value;
 }
 
 function drawSelectedCurveExtrema(
