@@ -936,120 +936,12 @@ input {
   background: #161b22 !important;
   color: #f0f6fc !important;
 }
-.table-editor {
-  border: 0 !important;
-  background: transparent !important;
-  padding: 0 !important;
-}
-.table-editor-toolbar {
-  margin-bottom: 4px;
-}
-.table-grid {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-}
-.table-row input {
-  background: #010409 !important;
-}
 .create-menu button {
   min-height: 38px;
   align-content: center;
 }
 .create-menu small {
   display: none;
-}
-.table-editor {
-  display: grid;
-  gap: 6px;
-  width: 100%;
-  border: 0 !important;
-  background: transparent !important;
-  padding: 0 !important;
-}
-.table-editor-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  min-height: 28px;
-}
-.table-toggle {
-  border: 1px solid #30363d;
-  border-radius: 6px;
-  background: #161b22;
-  color: #c9d1d9;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 5px 10px;
-}
-.table-toggle:hover,
-.table-toggle-active {
-  border-color: #3d444d;
-  background: #21262d;
-  color: #f0f6fc;
-}
-.table-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  column-gap: 10px;
-  row-gap: 0;
-  align-items: center;
-}
-.table-heading {
-  color: #8b949e;
-  font-size: 13px;
-  font-weight: 600;
-  text-align: center;
-  padding: 0 0 6px;
-  border-bottom: 1px solid #30363d;
-}
-.table-row input {
-  height: 34px;
-  border: 0 !important;
-  border-bottom: 1px solid #21262d !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  color: #f0f6fc;
-  font-size: 14px;
-  padding: 0 6px !important;
-  text-align: center;
-  box-shadow: none !important;
-}
-.table-row input:focus {
-  border-color: #58a6ff !important;
-  box-shadow: none !important;
-}
-.table-row input::placeholder {
-  color: #6e7681;
-}
-.table-grid {
-  grid-template-columns: 64px 64px 22px !important;
-  justify-content: start;
-  column-gap: 8px !important;
-  row-gap: 0 !important;
-  padding-left: 0;
-}
-.table-heading {
-  height: 24px;
-  padding: 0 !important;
-  border-bottom: 1px solid #30363d !important;
-  color: #8b949e !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  line-height: 24px;
-}
-.table-row input {
-  height: 28px !important;
-  border-bottom: 1px solid #21262d !important;
-  color: #f0f6fc !important;
-  font-size: 13px !important;
-  line-height: 28px;
-}
-.table-editor-topbar {
-  min-height: 26px !important;
-  margin-bottom: 2px;
-}
-.table-toggle {
-  font-size: 11px !important;
-  padding: 4px 8px !important;
 }
 .table-editor {
   width: 100%;
