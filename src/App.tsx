@@ -5,6 +5,7 @@ import GraphCanvas, {
   type GraphExpression,
 } from "./components/GraphCanvas";
 import "./App.css";
+import { formatRoundedNumber } from "./graph/format";
 
 const math = create(all, {});
 
@@ -354,7 +355,7 @@ function parseSliderConfig(expression: string) {
 }
 
 function formatSliderConfigNumber(value: number) {
-  return Number(value.toFixed(6)).toString();
+  return formatRoundedNumber(value, 6);
 }
 
 function parseNumericVariableAssignment(rawExpression: string) {
@@ -507,7 +508,7 @@ function updateVariableAssignment(raw: string, value: number) {
   if (!assignment) return raw;
 
   const sliderConfig = parseSliderConfig(assignment.expression);
-  const rounded = Number(value.toFixed(6)).toString();
+  const rounded = formatRoundedNumber(value, 6);
 
   if (!sliderConfig.hasCustomConfig) {
     return `${assignment.name} = ${rounded}`;

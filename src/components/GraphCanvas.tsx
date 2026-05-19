@@ -26,6 +26,7 @@ import {
   screenToGraphY,
   type Viewport,
 } from "../graph/viewport";
+import { formatRoundedNumber, normalizeDisplayNumber } from "../graph/format";
 
 const math = create(all, {});
 
@@ -2139,7 +2140,9 @@ function formatNumber(value: number) {
     return "undefined";
   }
 
-  if (Math.abs(value) < 1e-8) {
+  value = normalizeDisplayNumber(value, 1e-8);
+
+  if (value === 0) {
     return "0";
   }
 
@@ -2153,7 +2156,7 @@ function formatNumber(value: number) {
     return value.toExponential(1);
   }
 
-  return Number(value.toFixed(4)).toString();
+  return formatRoundedNumber(value, 4, 1e-8);
 }
 
 function drawError(ctx: CanvasRenderingContext2D, message: string) {

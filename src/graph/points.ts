@@ -1,4 +1,5 @@
 import { graphToScreenX, graphToScreenY, type Viewport } from "./viewport";
+import { formatRoundedNumber } from "./format";
 
 export type GraphPoint = {
   x: number;
@@ -150,12 +151,7 @@ export function findMatchingRenderedPoint(
 }
 
 function formatNumber(value: number) {
-  const normalized = Math.abs(value) < 1e-9 ? 0 : value;
-  const rounded = Number(normalized.toFixed(6));
-
-  if (Object.is(rounded, -0)) return "0";
-
-  return rounded.toString();
+  return formatRoundedNumber(value, 6);
 }
 
 function roundRect(
