@@ -827,7 +827,7 @@ function drawSelectedCurveYIntercepts(
   ctx.fillStyle = "#f1f1f1";
   ctx.strokeStyle = curve.color;
   ctx.lineWidth = 2;
-  ctx.arc(screenX, screenY, 5, 0, Math.PI * 2);
+  ctx.arc(screenX, screenY, 4, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 
@@ -909,8 +909,8 @@ function drawSelectedCurveRoots(
     ctx.beginPath();
     ctx.fillStyle = "#f1f1f1";
     ctx.strokeStyle = curve.color;
-    ctx.lineWidth = 2;
-    ctx.arc(screenX, screenY, 5, 0, Math.PI * 2);
+    ctx.lineWidth = 1.5;
+    ctx.arc(screenX, screenY, 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
@@ -1028,8 +1028,8 @@ function drawSelectedCurveExtrema(
     ctx.beginPath();
     ctx.fillStyle = "#f1f1f1";
     ctx.strokeStyle = curve.color;
-    ctx.lineWidth = 2;
-    ctx.arc(screenX, screenY, 5, 0, Math.PI * 2);
+    ctx.lineWidth = 1.5;
+    ctx.arc(screenX, screenY, 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
