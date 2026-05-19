@@ -811,6 +811,12 @@ function drawSelectedCurveExtrema(
 function findVisibleCurveExtrema(curve: RenderedCurve) {
   if (curve.points.length < 3) return [];
 
+  const quadraticExtremum = findQuadraticCurveExtremum(curve);
+
+  if (quadraticExtremum) {
+    return [quadraticExtremum];
+  }
+
   const extrema: Array<{
     x: number;
     y: number;
@@ -902,6 +908,122 @@ function findScreenCoordinateForGraphX(
   }
 
   return null;
+}
+
+function findQuadraticCurveExtremum(curve: RenderedCurve) {
+  const points = curve.points.filter((point) => {
+    return (
+      Number.isFinite(point.x) &&
+      Number.isFinite(point.y) &&
+      Number.isFinite(point.screenX) &&
+      Number.isFinite(point.screenY)
+    );
+  });
+
+  if (points.length < 5) return null;
+
+  const first = points[0];
+  const middle = points[Math.floor(points.length / 2)];
+  const last = points[points.length - 1];
+
+  if (!first || !middle || !last) return null;
+
+  const coefficients = findQuadraticCoefficientsThroughPoints(
+    first,
+    middle,
+    last,
+  );
+
+  if (!coefficients) return null;
+
+  const { a, b, c } = coefficients;
+
+  if (Math.abs(a) < 1e-10) return null;
+
+  const maxError = getQuadraticFitMaxError(points, a, b, c);
+
+  if (maxError > 1e-5) return null;
+
+  const x = -b / (2 * a);
+  const minX = Math.min(...points.map((point) => point.x));
+  const maxX = Math.max(...points.map((point) => point.x));
+
+  if (x < minX || x > maxX) return null;
+
+  return {
+    x,
+    y: a * x * x + b * x + c,
+    screenX: graphToScreenX(x, 1, {
+      xMin: 0,
+      xMax: 1,
+      yMin: 0,
+      yMax: 1,
+    }),
+    screenY: graphToScreenY(a * x * x + b * x + c, 1, {
+      xMin: 0,
+      xMax: 1,
+      yMin: 0,
+      yMax: 1,
+    }),
+  };
+}
+
+function findQuadraticCoefficientsThroughPoints(
+  first: RenderedCurvePoint,
+  second: RenderedCurvePoint,
+  third: RenderedCurvePoint,
+) {
+  const x1 = first.x;
+  const y1 = first.y;
+  const x2 = second.x;
+  const y2 = second.y;
+  const x3 = third.x;
+  const y3 = third.y;
+
+  const denominator = (x1 - x2) * (x1 - x3) * (x2 - x3);
+
+  if (Math.abs(denominator) < 1e-12) return null;
+
+  const a = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / denominator;
+  const b =
+    (x3 * x3 * (y1 - y2) + x2 * x2 * (y3 - y1) + x1 * x1 * (y2 - y3)) /
+    denominator;
+  const c =
+    (x2 * x3 * (x2 - x3) * y1 +
+      x3 * x1 * (x3 - x1) * y2 +
+      x1 * x2 * (x1 - x2) * y3) /
+    denominator;
+
+  if (!Number.isFinite(a) || !Number.isFinite(b) || !Number.isFinite(c)) {
+    return null;
+  }
+
+  return { a, b, c };
+}
+
+function getQuadraticFitMaxError(
+  points: RenderedCurvePoint[],
+  a: number,
+  b: number,
+  c: number,
+) {
+  let maxError = 0;
+  const step = Math.max(1, Math.floor(points.length / 80));
+
+  for (let index = 0; index < points.length; index += step) {
+    const point = points[index];
+
+    if (!point) continue;
+
+    const expectedY = a * point.x * point.x + b * point.x + c;
+    const error = Math.abs(expectedY - point.y);
+
+    if (error > maxError) {
+      maxError = error;
+    }
+  }
+
+  return maxError;
 }
 
 function findQuadraticExtremumThroughPoints(
