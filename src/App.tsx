@@ -2169,7 +2169,7 @@ function App() {
                       </label>
 
                       <button
-                        className="remove-button"
+                        className="expression-action-button"
                         onClick={() => duplicateExpression(expression.id)}
                         title="Duplicate expression"
                         aria-label="Duplicate expression"
