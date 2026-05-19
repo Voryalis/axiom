@@ -1258,6 +1258,20 @@ input {
   line-height: 1.3;
 }
 
+.settings-subgroup {
+  display: grid;
+  gap: 6px;
+}
+
+.settings-subgroup h4 {
+  margin: 6px 0 2px;
+  color: #8b949e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .settings-checkbox-icon {
   display: grid;
   width: 18px;

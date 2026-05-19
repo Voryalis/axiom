@@ -2365,7 +2365,7 @@ function App() {
                     </span>
                   ) : null}
                 </div>
-                <p>Early controls for graph behavior.</p>
+                <p>Display options for graph guides and analysis overlays.</p>
               </div>
 
               <button
@@ -2409,7 +2409,9 @@ function App() {
               <div className="settings-row">
                 <div>
                   <span>Show graph details</span>
-                  <small>Turn graph guides on or off together.</small>
+                  <small>
+                    Master switch for grid, axes, and analysis overlays.
+                  </small>
                 </div>
                 <button
                   className={`setting-switch ${
@@ -2435,85 +2437,96 @@ function App() {
                 </button>
               </div>
 
-              <button
-                className="settings-checkbox-row"
-                type="button"
-                aria-pressed={isGridVisible}
-                disabled={!showGraphDetails}
-                onClick={() => setShowGrid((current) => !current)}
-              >
-                <span className="settings-checkbox-icon">
-                  {renderSettingsCheckbox(isGridVisible)}
-                </span>
-                <span>
-                  <span>Show grid</span>
-                  <small>Show or hide the graph grid lines.</small>
-                </span>
-              </button>
+              <div className="settings-subgroup">
+                <h4>Grid</h4>
+                <button
+                  className="settings-checkbox-row"
+                  type="button"
+                  aria-pressed={isGridVisible}
+                  disabled={!showGraphDetails}
+                  onClick={() => setShowGrid((current) => !current)}
+                >
+                  <span className="settings-checkbox-icon">
+                    {renderSettingsCheckbox(isGridVisible)}
+                  </span>
+                  <span>
+                    <span>Show grid</span>
+                    <small>Show major grid lines.</small>
+                  </span>
+                </button>
 
-              <button
-                className="settings-checkbox-row"
-                type="button"
-                aria-pressed={isMinorGridVisible}
-                disabled={!showGraphDetails || !showGrid}
-                onClick={() => setShowMinorGrid((current) => !current)}
-              >
-                <span className="settings-checkbox-icon">
-                  {renderSettingsCheckbox(isMinorGridVisible)}
-                </span>
-                <span>
-                  <span>Show minor grid</span>
-                  <small>Show or hide the smaller grid subdivisions.</small>
-                </span>
-              </button>
+                <button
+                  className="settings-checkbox-row"
+                  type="button"
+                  aria-pressed={isMinorGridVisible}
+                  disabled={!showGraphDetails || !showGrid}
+                  onClick={() => setShowMinorGrid((current) => !current)}
+                >
+                  <span className="settings-checkbox-icon">
+                    {renderSettingsCheckbox(isMinorGridVisible)}
+                  </span>
+                  <span>
+                    <span>Show minor grid</span>
+                    <small>
+                      Show subdivision grid lines between major lines.
+                    </small>
+                  </span>
+                </button>
+              </div>
 
-              <button
-                className="settings-checkbox-row"
-                type="button"
-                aria-pressed={isAxesVisible}
-                disabled={!showGraphDetails}
-                onClick={() => setShowAxes((current) => !current)}
-              >
-                <span className="settings-checkbox-icon">
-                  {renderSettingsCheckbox(isAxesVisible)}
-                </span>
-                <span>
-                  <span>Show axes</span>
-                  <small>Show or hide the x and y axes.</small>
-                </span>
-              </button>
+              <div className="settings-subgroup">
+                <h4>Axes</h4>
+                <button
+                  className="settings-checkbox-row"
+                  type="button"
+                  aria-pressed={isAxesVisible}
+                  disabled={!showGraphDetails}
+                  onClick={() => setShowAxes((current) => !current)}
+                >
+                  <span className="settings-checkbox-icon">
+                    {renderSettingsCheckbox(isAxesVisible)}
+                  </span>
+                  <span>
+                    <span>Show axes</span>
+                    <small>Show x- and y-axis lines.</small>
+                  </span>
+                </button>
 
-              <button
-                className="settings-checkbox-row"
-                type="button"
-                aria-pressed={isAxisLabelsVisible}
-                disabled={!showGraphDetails || !showAxes}
-                onClick={() => setShowAxisLabels((current) => !current)}
-              >
-                <span className="settings-checkbox-icon">
-                  {renderSettingsCheckbox(isAxisLabelsVisible)}
-                </span>
-                <span>
-                  <span>Show axis labels</span>
-                  <small>Show or hide the numbers on the graph axes.</small>
-                </span>
-              </button>
+                <button
+                  className="settings-checkbox-row"
+                  type="button"
+                  aria-pressed={isAxisLabelsVisible}
+                  disabled={!showGraphDetails || !showAxes}
+                  onClick={() => setShowAxisLabels((current) => !current)}
+                >
+                  <span className="settings-checkbox-icon">
+                    {renderSettingsCheckbox(isAxisLabelsVisible)}
+                  </span>
+                  <span>
+                    <span>Show axis labels</span>
+                    <small>Show numeric labels along the axes.</small>
+                  </span>
+                </button>
+              </div>
 
-              <button
-                className="settings-checkbox-row"
-                type="button"
-                aria-pressed={areIntersectionsVisible}
-                disabled={!showGraphDetails}
-                onClick={() => setShowIntersections((current) => !current)}
-              >
-                <span className="settings-checkbox-icon">
-                  {renderSettingsCheckbox(areIntersectionsVisible)}
-                </span>
-                <span>
-                  <span>Show intersections</span>
-                  <small>Show or hide detected curve crossing points.</small>
-                </span>
-              </button>
+              <div className="settings-subgroup">
+                <h4>Analysis</h4>
+                <button
+                  className="settings-checkbox-row"
+                  type="button"
+                  aria-pressed={areIntersectionsVisible}
+                  disabled={!showGraphDetails}
+                  onClick={() => setShowIntersections((current) => !current)}
+                >
+                  <span className="settings-checkbox-icon">
+                    {renderSettingsCheckbox(areIntersectionsVisible)}
+                  </span>
+                  <span>
+                    <span>Show intersections</span>
+                    <small>Show detected curve intersection points.</small>
+                  </span>
+                </button>
+              </div>
             </section>
 
             <section className="settings-section">
