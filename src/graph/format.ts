@@ -3,7 +3,11 @@ export function normalizeDisplayNumber(value: number, epsilon = 1e-9) {
   return Math.abs(value) < epsilon ? 0 : value;
 }
 
-export function formatRoundedNumber(value: number, decimals: number, epsilon = 1e-9) {
+export function formatRoundedNumber(
+  value: number,
+  decimals: number,
+  epsilon = 1e-9,
+) {
   const normalized = normalizeDisplayNumber(value, epsilon);
 
   if (!Number.isFinite(normalized)) return "undefined";
