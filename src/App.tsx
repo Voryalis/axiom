@@ -2550,6 +2550,36 @@ function App() {
                   </span>
                 </button>
               </div>
+
+              <div className="settings-subgroup">
+                <h4>Coordinate labels</h4>
+                <div
+                  className="settings-theme-options"
+                  role="group"
+                  aria-label="Coordinate label mode options"
+                >
+                  <button
+                    className="settings-theme-option settings-theme-option-active"
+                    type="button"
+                    aria-pressed="true"
+                    disabled
+                  >
+                    Decimal
+                  </button>
+                  <button
+                    className="settings-theme-option"
+                    type="button"
+                    aria-pressed="false"
+                    disabled
+                  >
+                    Symbolic / π
+                  </button>
+                </div>
+                <small className="settings-theme-note">
+                  Decimal coordinate labels are active. Symbolic labels are
+                  planned for later.
+                </small>
+              </div>
             </section>
 
             <section className="settings-section">
