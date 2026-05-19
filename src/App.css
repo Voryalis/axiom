@@ -809,6 +809,45 @@ input {
   background: transparent;
 }
 
+.create-menu-template-section {
+  display: grid;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  border-top: 1px solid #21262d;
+}
+
+.create-menu-template-section > span {
+  color: #8b949e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.create-menu-template-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.create-menu-template-grid button {
+  min-height: 30px;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: #010409;
+  color: #c9d1d9;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  padding: 0 8px;
+  text-align: center;
+}
+
+.create-menu-template-grid button:hover {
+  border-color: #3d444d;
+  background: #161b22;
+  color: #f0f6fc;
+}
+
 .create-menu span {
   color: #f0f6fc;
   font-size: 13px;
@@ -1449,4 +1488,293 @@ input {
 
 .expression-result-invalid {
   color: #f85149;
+}
+
+/* Create menu v2 typography and templates */
+.create-menu button,
+.create-menu-template-trigger,
+.create-menu-template-grid button {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 12px !important;
+}
+
+.create-menu > button span {
+  font-size: 12px !important;
+}
+
+.create-menu-template-section {
+  display: grid;
+  gap: 6px;
+  padding: 6px 8px 8px;
+  border-top: 1px solid #21262d;
+}
+
+.create-menu-template-trigger {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 30px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #8b949e !important;
+  cursor: pointer;
+  padding: 0 2px !important;
+  text-align: left;
+}
+
+.create-menu-template-trigger:hover {
+  background: transparent !important;
+  color: #f0f6fc !important;
+}
+
+.create-menu-template-trigger svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.create-menu-template-trigger[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+.create-menu-template-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.create-menu-template-grid button {
+  min-height: 28px !important;
+  border: 1px solid #30363d !important;
+  border-radius: 6px !important;
+  background: #010409 !important;
+  color: #c9d1d9 !important;
+  padding: 0 8px !important;
+  text-align: center !important;
+}
+
+.create-menu-template-grid button:hover {
+  border-color: #3d444d !important;
+  background: #161b22 !important;
+  color: #f0f6fc !important;
+}
+
+/* Create menu v3 consistent button styling */
+.create-menu .create-menu-primary-button {
+  display: grid !important;
+  min-height: 30px !important;
+  border: 1px solid #30363d !important;
+  border-radius: 6px !important;
+  background: #010409 !important;
+  color: #c9d1d9 !important;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 12px !important;
+  padding: 0 10px !important;
+  text-align: center !important;
+}
+
+.create-menu .create-menu-primary-button:hover {
+  border-color: #3d444d !important;
+  background: #161b22 !important;
+  color: #f0f6fc !important;
+}
+
+.create-menu .create-menu-primary-button span {
+  color: currentColor !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.create-menu-template-trigger span {
+  color: currentColor !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+.create-menu-template-trigger svg {
+  flex: 0 0 auto;
+}
+
+/* Create menu v3 active override */
+.create-menu .create-menu-primary-button {
+  display: grid !important;
+  min-height: 30px !important;
+  border: 1px solid #30363d !important;
+  border-radius: 6px !important;
+  background: #010409 !important;
+  color: #c9d1d9 !important;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 12px !important;
+  padding: 0 10px !important;
+  text-align: center !important;
+}
+
+.create-menu .create-menu-primary-button:hover {
+  border-color: #3d444d !important;
+  background: #161b22 !important;
+  color: #f0f6fc !important;
+}
+
+.create-menu .create-menu-primary-button span {
+  color: currentColor !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.create-menu-template-trigger {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  min-height: 30px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #8b949e !important;
+  cursor: pointer !important;
+  padding: 0 2px !important;
+}
+
+.create-menu-template-trigger:hover {
+  background: transparent !important;
+  color: #f0f6fc !important;
+}
+
+.create-menu-template-trigger span {
+  color: currentColor !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+.create-menu-template-trigger svg {
+  width: 15px !important;
+  height: 15px !important;
+  flex: 0 0 auto !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+.create-menu-template-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 6px !important;
+}
+
+.create-menu-template-grid button {
+  min-height: 28px !important;
+  border: 1px solid #30363d !important;
+  border-radius: 6px !important;
+  background: #010409 !important;
+  color: #c9d1d9 !important;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 12px !important;
+  padding: 0 8px !important;
+  text-align: center !important;
+}
+
+.create-menu-template-grid button:hover {
+  border-color: #3d444d !important;
+  background: #161b22 !important;
+  color: #f0f6fc !important;
+}
+
+/* Create menu v4: restore compact list style */
+.create-menu .create-menu-primary-button {
+  display: grid !important;
+  min-height: 40px !important;
+  width: 100% !important;
+  border: 0 !important;
+  border-bottom: 1px solid #21262d !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #f0f6fc !important;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  padding: 0 12px !important;
+  text-align: left !important;
+  text-transform: uppercase !important;
+}
+
+.create-menu .create-menu-primary-button:hover {
+  border-color: #21262d !important;
+  background: #161b22 !important;
+  color: #f0f6fc !important;
+}
+
+.create-menu .create-menu-primary-button span {
+  color: currentColor !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-align: left !important;
+  text-transform: uppercase !important;
+}
+
+.create-menu-template-section {
+  border-top: 0 !important;
+  padding: 0 !important;
+}
+
+.create-menu-template-trigger {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-height: 40px !important;
+  width: 100% !important;
+  border: 0 !important;
+  border-bottom: 1px solid #21262d !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #8b949e !important;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  padding: 0 12px !important;
+  text-align: left !important;
+}
+
+.create-menu-template-trigger:hover {
+  background: #161b22 !important;
+  color: #f0f6fc !important;
+}
+
+.create-menu-template-trigger span {
+  color: currentColor !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+.create-menu-template-trigger svg {
+  width: 14px !important;
+  height: 14px !important;
+  stroke: currentColor !important;
+}
+
+.create-menu-template-grid {
+  padding: 8px 10px 10px !important;
+  border-bottom: 1px solid #21262d !important;
+  background: #0d1117 !important;
 }
