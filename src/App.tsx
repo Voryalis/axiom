@@ -2085,7 +2085,15 @@ function App() {
                           />
 
                           {result ? (
-                            <span className="expression-result">{result}</span>
+                            <span
+                              className={`expression-result ${
+                                result === "invalid"
+                                  ? "expression-result-invalid"
+                                  : ""
+                              }`}
+                            >
+                              {result}
+                            </span>
                           ) : null}
 
                           {pointExpression ? (

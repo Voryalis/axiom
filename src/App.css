@@ -1437,3 +1437,7 @@ input {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
+.expression-result-invalid {
+  color: #f85149;
+}
