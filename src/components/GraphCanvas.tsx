@@ -2289,10 +2289,10 @@ function drawIntersectionPoint(
   ctx.save();
 
   ctx.beginPath();
-  ctx.fillStyle = "#f1f1f1";
+  ctx.fillStyle = "rgba(241, 241, 241, 0.82)";
   ctx.strokeStyle = intersection.color;
-  ctx.lineWidth = 2;
-  ctx.arc(intersection.screenX, intersection.screenY, 5, 0, Math.PI * 2);
+  ctx.lineWidth = 1.5;
+  ctx.arc(intersection.screenX, intersection.screenY, 4, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 
