@@ -800,6 +800,15 @@ input {
 .create-menu button:hover {
   background: #161b22;
 }
+.create-menu button:disabled {
+  color: #8b949e;
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.create-menu button:disabled:hover {
+  background: transparent;
+}
+
 .create-menu span {
   color: #f0f6fc;
   font-size: 13px;

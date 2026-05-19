@@ -1800,6 +1800,10 @@ function App() {
                 <button onClick={addTableExpression}>
                   <span>Table</span>
                 </button>
+                <button type="button" disabled aria-disabled="true">
+                  <span>Function templates</span>
+                  <small>Coming later (sin, cos, tan, √, abs, ...)</small>
+                </button>
               </div>
             ) : null}
             <button
