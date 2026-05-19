@@ -668,6 +668,7 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
+  const [isFunctionTemplatesOpen, setIsFunctionTemplatesOpen] = useState(false);
   const [isViewportDirty, setIsViewportDirty] = useState(false);
   const [showGraphDetails, setShowGraphDetails] = useState(
     () => loadAppSettings().showGraphDetails,
@@ -1198,6 +1199,7 @@ function App() {
 
   function addExpressionFromMenu() {
     setIsCreateMenuOpen(false);
+    setIsFunctionTemplatesOpen(false);
     addExpression();
   }
 
@@ -1218,9 +1220,25 @@ function App() {
     setNextColorIndex((current) => current + 1);
     setFocusedExpressionId(expression.id);
     setIsCreateMenuOpen(false);
+    setIsFunctionTemplatesOpen(false);
 
     focusTableCell(expression.id, 0, "x");
 
+    markUnsaved();
+  }
+
+  function addTemplateExpression(raw: string) {
+    const expression = {
+      ...createEmptyExpression(nextColorIndex),
+      raw,
+    };
+
+    setExpressions((current) => [...current, expression]);
+    setNextColorIndex((current) => current + 1);
+    setFocusedExpressionId(expression.id);
+    setIsCreateMenuOpen(false);
+    setIsFunctionTemplatesOpen(false);
+    focusExpression(expression.id);
     markUnsaved();
   }
 
@@ -1646,6 +1664,7 @@ function App() {
 
       if (event.key === "Escape" && isCreateMenuOpen) {
         setIsCreateMenuOpen(false);
+        setIsFunctionTemplatesOpen(false);
       }
     }
 
@@ -1779,7 +1798,11 @@ function App() {
               className="add-expression-button"
               onPointerDown={(event) => event.stopPropagation()}
               onClick={() => {
-                setIsCreateMenuOpen((current) => !current);
+                setIsCreateMenuOpen((current) => {
+                  const next = !current;
+                  setIsFunctionTemplatesOpen(false);
+                  return next;
+                });
               }}
               title="Add item"
               aria-label="Add item"
@@ -1794,16 +1817,73 @@ function App() {
                 className="create-menu"
                 onPointerDown={(event) => event.stopPropagation()}
               >
-                <button onClick={addExpressionFromMenu}>
+                <button
+                  className="create-menu-primary-button"
+                  onClick={addExpressionFromMenu}
+                >
                   <span>Expression</span>
                 </button>
-                <button onClick={addTableExpression}>
+                <button
+                  className="create-menu-primary-button"
+                  onClick={addTableExpression}
+                >
                   <span>Table</span>
                 </button>
-                <button type="button" disabled aria-disabled="true">
-                  <span>Function templates</span>
-                  <small>Coming later (sin, cos, tan, √, abs, ...)</small>
-                </button>
+
+                <div className="create-menu-template-section">
+                  <button
+                    className="create-menu-template-trigger"
+                    type="button"
+                    aria-expanded={isFunctionTemplatesOpen}
+                    onClick={() =>
+                      setIsFunctionTemplatesOpen((current) => !current)
+                    }
+                  >
+                    <span>Function templates</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      {isFunctionTemplatesOpen ? (
+                        <path d="m18 15-6-6-6 6" />
+                      ) : (
+                        <path d="m6 9 6 6 6-6" />
+                      )}
+                    </svg>
+                  </button>
+
+                  {isFunctionTemplatesOpen ? (
+                    <div className="create-menu-template-grid">
+                      <button
+                        type="button"
+                        onClick={() => addTemplateExpression("sin(x)")}
+                      >
+                        sin(x)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => addTemplateExpression("cos(x)")}
+                      >
+                        cos(x)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => addTemplateExpression("tan(x)")}
+                      >
+                        tan(x)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => addTemplateExpression("sqrt(x)")}
+                      >
+                        sqrt(x)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => addTemplateExpression("abs(x)")}
+                      >
+                        abs(x)
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               </div>
             ) : null}
             <button
