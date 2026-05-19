@@ -455,7 +455,8 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           const isSelectedCurveAnalysisPoint =
             nearestPoint.sourceExpressionId === selectedCurveIdRef.current &&
             (nearestPoint.expressionId.includes("-extremum") ||
-              nearestPoint.expressionId.includes("-root"));
+              nearestPoint.expressionId.includes("-root") ||
+              nearestPoint.expressionId.includes("-y-intercept"));
 
           if (!isSelectedCurveAnalysisPoint) {
             selectedCurveIdRef.current = null;
@@ -726,8 +727,19 @@ function draw(
         height,
         viewport,
       );
+      const yInterceptPoints = drawSelectedCurveYIntercepts(
+        ctx,
+        selectedCurve,
+        width,
+        height,
+        viewport,
+      );
 
-      renderedPoints.push(...extremumPoints, ...rootPoints);
+      renderedPoints.push(
+        ...extremumPoints,
+        ...rootPoints,
+        ...yInterceptPoints,
+      );
     }
   }
 
@@ -775,6 +787,79 @@ function drawSelectedCurve(
 
   ctx.stroke();
   ctx.restore();
+}
+
+function drawSelectedCurveYIntercepts(
+  ctx: CanvasRenderingContext2D,
+  curve: RenderedCurve,
+  width: number,
+  height: number,
+  viewport: Viewport,
+): RenderedPoint[] {
+  const yIntercept = findVisibleCurveYIntercept(curve);
+
+  if (!yIntercept) return [];
+
+  const screenX = graphToScreenX(yIntercept.x, width, viewport);
+  const screenY = graphToScreenY(yIntercept.y, height, viewport);
+
+  ctx.save();
+
+  ctx.beginPath();
+  ctx.fillStyle = "#f1f1f1";
+  ctx.strokeStyle = curve.color;
+  ctx.lineWidth = 2;
+  ctx.arc(screenX, screenY, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.restore();
+
+  return [
+    {
+      expressionId: `${curve.expressionId}-y-intercept`,
+      sourceExpressionId: curve.expressionId,
+      point: {
+        x: normalizeAnalysisCoordinate(yIntercept.x),
+        y: normalizeAnalysisCoordinate(yIntercept.y),
+      },
+      screenX,
+      screenY,
+      color: curve.color,
+    },
+  ];
+}
+
+function findVisibleCurveYIntercept(curve: RenderedCurve) {
+  if (curve.points.length < 2) return null;
+
+  for (let index = 0; index < curve.points.length - 1; index++) {
+    const first = curve.points[index];
+    const second = curve.points[index + 1];
+
+    if (!first || !second) continue;
+    if (!Number.isFinite(first.x) || !Number.isFinite(second.x)) continue;
+    if (!Number.isFinite(first.y) || !Number.isFinite(second.y)) continue;
+
+    if (Math.abs(first.x) < 1e-9) {
+      return {
+        x: 0,
+        y: normalizeAnalysisCoordinate(first.y),
+      };
+    }
+
+    if ((first.x < 0 && second.x > 0) || (first.x > 0 && second.x < 0)) {
+      const amount =
+        Math.abs(first.x) / (Math.abs(first.x) + Math.abs(second.x));
+
+      return {
+        x: 0,
+        y: normalizeAnalysisCoordinate(first.y + (second.y - first.y) * amount),
+      };
+    }
+  }
+
+  return null;
 }
 
 function drawSelectedCurveRoots(
