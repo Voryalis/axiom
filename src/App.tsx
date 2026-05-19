@@ -409,10 +409,11 @@ function buildEvaluationScope(expressions: GraphExpression[]) {
 function formatEvaluatedValue(value: unknown) {
   if (typeof value === "number") {
     if (!Number.isFinite(value)) return "undefined";
-    return `= ${Number(value.toPrecision(12)).toString()}`;
+
+    return `= ${formatRoundedNumber(value, 6)}`;
   }
 
-  if (typeof value?.toString === "function") {
+  if (typeof value === "boolean") {
     return `= ${value.toString()}`;
   }
 
@@ -487,6 +488,11 @@ function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
     if (assignment) {
       const sliderConfig = parseSliderConfig(assignment.expression);
       const value = math.evaluate(sliderConfig.expression, scope);
+
+      if (typeof value === "function" || typeof value === "object") {
+        return "";
+      }
+
       return formatEvaluatedValue(value);
     }
 
@@ -496,6 +502,11 @@ function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
     if (usesX) return "";
 
     const value = compiled.evaluate(scope);
+
+    if (typeof value === "function" || typeof value === "object") {
+      return "";
+    }
+
     return formatEvaluatedValue(value);
   } catch {
     return "invalid";
