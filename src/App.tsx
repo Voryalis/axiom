@@ -2387,19 +2387,34 @@ function App() {
             <section className="settings-section">
               <h3>Appearance</h3>
 
-              <div className="settings-row">
-                <div>
-                  <span>Theme</span>
-                  <small>Dark only for now.</small>
-                </div>
-                <button
-                  className="setting-switch setting-switch-active"
-                  type="button"
-                  aria-pressed="true"
-                  disabled
+              <div className="settings-subgroup">
+                <h4>Theme</h4>
+                <div
+                  className="settings-theme-options"
+                  role="group"
+                  aria-label="Theme options"
                 >
-                  <span />
-                </button>
+                  <button
+                    className="settings-theme-option settings-theme-option-active"
+                    type="button"
+                    aria-pressed="true"
+                    disabled
+                  >
+                    Dark (current)
+                  </button>
+                  <button
+                    className="settings-theme-option"
+                    type="button"
+                    aria-pressed="false"
+                    disabled
+                  >
+                    Light (coming later)
+                  </button>
+                </div>
+                <small className="settings-theme-note">
+                  Theme switching is planned, but only dark mode is available
+                  right now.
+                </small>
               </div>
             </section>
 
