@@ -909,6 +909,17 @@ function App() {
     rowCount: number,
     axis: "x" | "y",
   ) {
+    const table = expressions
+      .map((expression) =>
+        expression.id === id ? getEditableTable(expression) : null,
+      )
+      .find((candidate) => candidate !== null);
+    const currentRow = table?.rows[rowIndex];
+    const isCurrentRowEmpty = currentRow
+      ? isEditableTableRowEmpty(currentRow)
+      : true;
+    const isLastRow = rowIndex === rowCount - 1;
+
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
@@ -965,8 +976,10 @@ function App() {
 
       if (axis === "x") {
         focusTableCell(id, rowIndex, "y");
-      } else if (rowIndex === rowCount - 1) {
-        addTableRow(id, "x");
+      } else if (isLastRow) {
+        if (!isCurrentRowEmpty) {
+          addTableRow(id, "x");
+        }
       } else {
         focusTableCell(id, rowIndex + 1, "x");
       }
@@ -1046,16 +1059,7 @@ function App() {
       (event.key === "Backspace" || event.key === "Delete") &&
       event.currentTarget.value.length === 0
     ) {
-      const table = expressions
-        .map((expression) =>
-          expression.id === id ? getEditableTable(expression) : null,
-        )
-        .find((candidate) => candidate !== null);
-
-      const row = table?.rows[rowIndex];
-      const isRowEmpty = row ? isEditableTableRowEmpty(row) : true;
-
-      if (!isRowEmpty) {
+      if (!isCurrentRowEmpty) {
         return;
       }
 
