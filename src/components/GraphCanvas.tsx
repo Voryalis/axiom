@@ -789,12 +789,26 @@ function drawSelectedCurve(
   ctx.restore();
 }
 
+function isNearRenderedPoint(
+  screenX: number,
+  screenY: number,
+  points: RenderedPoint[],
+  radius = 10,
+) {
+  return points.some((point) => {
+    return (
+      Math.hypot(point.screenX - screenX, point.screenY - screenY) < radius
+    );
+  });
+}
+
 function drawSelectedCurveYIntercepts(
   ctx: CanvasRenderingContext2D,
   curve: RenderedCurve,
   width: number,
   height: number,
   viewport: Viewport,
+  existingAnalysisPoints: RenderedPoint[] = [],
 ): RenderedPoint[] {
   const yIntercept = findVisibleCurveYIntercept(curve);
 
@@ -802,6 +816,10 @@ function drawSelectedCurveYIntercepts(
 
   const screenX = graphToScreenX(yIntercept.x, width, viewport);
   const screenY = graphToScreenY(yIntercept.y, height, viewport);
+
+  if (isNearRenderedPoint(screenX, screenY, existingAnalysisPoints)) {
+    return [];
+  }
 
   ctx.save();
 
@@ -868,12 +886,23 @@ function drawSelectedCurveRoots(
   width: number,
   height: number,
   viewport: Viewport,
+  existingAnalysisPoints: RenderedPoint[] = [],
 ): RenderedPoint[] {
   const roots = findVisibleCurveRoots(curve);
+  const renderedRoots: RenderedPoint[] = [];
 
-  return roots.map((root, index) => {
+  roots.forEach((root, index) => {
     const screenX = graphToScreenX(root.x, width, viewport);
     const screenY = graphToScreenY(root.y, height, viewport);
+
+    if (
+      isNearRenderedPoint(screenX, screenY, [
+        ...existingAnalysisPoints,
+        ...renderedRoots,
+      ])
+    ) {
+      return;
+    }
 
     ctx.save();
 
@@ -887,7 +916,7 @@ function drawSelectedCurveRoots(
 
     ctx.restore();
 
-    return {
+    renderedRoots.push({
       expressionId: `${curve.expressionId}-root-${index}`,
       sourceExpressionId: curve.expressionId,
       point: {
@@ -897,8 +926,10 @@ function drawSelectedCurveRoots(
       screenX,
       screenY,
       color: curve.color,
-    };
+    });
   });
+
+  return renderedRoots;
 }
 
 function findVisibleCurveRoots(curve: RenderedCurve) {
