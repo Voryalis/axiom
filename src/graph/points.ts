@@ -9,6 +9,13 @@ export type GraphPoint = {
 export type RenderedPoint = {
   expressionId: string;
   sourceExpressionId?: string;
+  source?:
+    | "quadratic-vertex"
+    | "quadratic-root"
+    | "quadratic-y-intercept"
+    | "evaluator-root"
+    | "evaluator-y-intercept"
+    | "sampled-fallback";
   point: GraphPoint;
   screenX: number;
   screenY: number;

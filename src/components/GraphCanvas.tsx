@@ -220,8 +220,6 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
 
     function zoomViewport(factor: number) {
       onViewportDirtyChange?.(true);
-      pinnedPointRef.current = null;
-      selectedCurveIdRef.current = null;
       startViewportInteraction();
       const viewport = viewportRef.current;
 
@@ -352,8 +350,6 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         event.preventDefault();
         event.stopPropagation();
         onViewportDirtyChange?.(true);
-        pinnedPointRef.current = null;
-        selectedCurveIdRef.current = null;
         startViewportInteraction();
 
         const rect = canvas.getBoundingClientRect();
@@ -400,8 +396,6 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         if (isDraggingRef.current) {
           event.preventDefault();
           onViewportDirtyChange?.(true);
-          pinnedPointRef.current = null;
-          selectedCurveIdRef.current = null;
           startViewportInteraction();
 
           const rect = canvas.getBoundingClientRect();
@@ -854,6 +848,11 @@ function drawSelectedCurveYIntercepts(
         x: normalizeAnalysisCoordinate(yIntercept.x),
         y: normalizeAnalysisCoordinate(yIntercept.y),
       },
+      source: curve.quadratic
+        ? "quadratic-y-intercept"
+        : curve.evaluator
+          ? "evaluator-y-intercept"
+          : "sampled-fallback",
       screenX,
       screenY,
       color: curve.color,
@@ -936,6 +935,11 @@ function drawSelectedCurveRoots(
         x: normalizeAnalysisCoordinate(root.x),
         y: normalizeAnalysisCoordinate(root.y),
       },
+      source: curve.quadratic
+        ? "quadratic-root"
+        : curve.evaluator
+          ? "evaluator-root"
+          : "sampled-fallback",
       screenX,
       screenY,
       color: curve.color,
@@ -1039,6 +1043,7 @@ function drawSelectedCurveExtrema(
         x: normalizeAnalysisCoordinate(extremum.x),
         y: normalizeAnalysisCoordinate(extremum.y),
       },
+      source: curve.quadratic ? "quadratic-vertex" : "sampled-fallback",
       screenX,
       screenY,
       color: curve.color,
