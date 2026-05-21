@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { all, create } from "mathjs";
 import {
   evaluateYIntercept,
+  findVisibleExtremaFromEvaluator,
   findVisibleCurveExtrema,
   findVisibleRoots,
   normalizeAnalysisCoordinate,
@@ -1064,10 +1065,16 @@ function getCurveExtremaGraphPoints(curve: RenderedCurve) {
     return findVisibleCurveExtrema(curve.points);
   }
 
-  // Explicit evaluator curves currently fall back to sampled extrema.
-  // We intentionally avoid inferred analytic overrides to prevent
-  // misclassifying non-quadratic expressions.
-  return findVisibleCurveExtrema(curve.points);
+  return findVisibleExtremaFromEvaluator(
+    curve.evaluator,
+    curve.points[0]?.x ?? -10,
+    curve.points[curve.points.length - 1]?.x ?? 10,
+  ).map((point) => ({
+    x: point.x,
+    y: point.y,
+    screenX: 0,
+    screenY: 0,
+  }));
 }
 
 function findNearestCurve(
