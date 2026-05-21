@@ -128,24 +128,6 @@ export function findVisibleRoots(
   return roots.sort((a, b) => a.x - b.x);
 }
 
-export function tryFindQuadraticModel(evaluate: ExplicitCurveEvaluator) {
-  const y0 = evaluate(0);
-  const y1 = evaluate(1);
-  const ym1 = evaluate(-1);
-  if ([y0, y1, ym1].some((v) => v === null || !Number.isFinite(v as number))) return null;
-  const c = y0 as number;
-  const a = ((y1 as number) + (ym1 as number)) / 2 - c;
-  const b = (y1 as number) - a - c;
-  const checkpoints = [-2, -0.5, 0.5, 2];
-  for (const x of checkpoints) {
-    const y = evaluate(x);
-    if (y === null || !Number.isFinite(y)) return null;
-    const expected = a * x * x + b * x + c;
-    if (Math.abs(y - expected) > 1e-9 * Math.max(1, Math.abs(y), Math.abs(expected))) return null;
-  }
-  return { a, b, c };
-}
-
 function hasNearAnalysisPoint(
   points: AnalysisPoint[],
   screenX: number,

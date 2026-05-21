@@ -5,7 +5,6 @@ import {
   findVisibleCurveExtrema,
   findVisibleRoots,
   normalizeAnalysisCoordinate,
-  tryFindQuadraticModel,
   type ExplicitCurveEvaluator,
 } from "../graph/analysis";
 import {
@@ -1010,7 +1009,7 @@ function drawSelectedCurveExtrema(
   height: number,
   viewport: Viewport,
 ): RenderedPoint[] {
-  const extrema = getCurveExtremaGraphPoints(curve, viewport);
+  const extrema = getCurveExtremaGraphPoints(curve);
 
   return extrema.map((extremum, index) => {
     const screenX = graphToScreenX(extremum.x, width, viewport);
@@ -1056,37 +1055,18 @@ function getCurveRootsGraphPoints(curve: RenderedCurve, viewport: Viewport) {
     return findVisibleCurveRoots(curve);
   }
 
-  const quadratic = tryFindQuadraticModel(curve.evaluator);
-
-  if (quadratic && Math.abs(quadratic.a) > 1e-12) {
-    const d = quadratic.b * quadratic.b - 4 * quadratic.a * quadratic.c;
-    if (d >= 0) {
-      const sqrtD = Math.sqrt(d);
-      return [(-quadratic.b - sqrtD) / (2 * quadratic.a), (-quadratic.b + sqrtD) / (2 * quadratic.a)]
-        .filter((x) => x >= viewport.xMin && x <= viewport.xMax)
-        .map((x) => ({ x: normalizeAnalysisCoordinate(x), y: 0 }));
-    }
-  }
-
   return findVisibleRoots(curve.evaluator, viewport.xMin, viewport.xMax);
 }
 
-function getCurveExtremaGraphPoints(curve: RenderedCurve, viewport: Viewport) {
+function getCurveExtremaGraphPoints(curve: RenderedCurve) {
   if (!curve.evaluator) {
     // Fallback for curves without evaluator metadata (still sample-based).
     return findVisibleCurveExtrema(curve.points);
   }
 
-  const quadratic = tryFindQuadraticModel(curve.evaluator);
-  if (quadratic && Math.abs(quadratic.a) > 1e-12) {
-    const x = -quadratic.b / (2 * quadratic.a);
-    const y = quadratic.a * x * x + quadratic.b * x + quadratic.c;
-    if (x >= viewport.xMin && x <= viewport.xMax && Number.isFinite(y)) {
-      return [{ x: normalizeAnalysisCoordinate(x), y: normalizeAnalysisCoordinate(y), screenX: 0, screenY: 0 }];
-    }
-  }
-
-  // Non-quadratic explicit curves currently fall back to sampled extrema.
+  // Explicit evaluator curves currently fall back to sampled extrema.
+  // We intentionally avoid inferred analytic overrides to prevent
+  // misclassifying non-quadratic expressions.
   return findVisibleCurveExtrema(curve.points);
 }
 
