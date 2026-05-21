@@ -1,6 +1,12 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { all, create } from "mathjs";
-import { findVisibleCurveExtrema } from "../graph/analysis";
+import {
+  evaluateYIntercept,
+  findVisibleCurveExtrema,
+  findVisibleRoots,
+  tryFindQuadraticModel,
+  type ExplicitCurveEvaluator,
+} from "../graph/analysis";
 import {
   drawPoint,
   drawPointLabel,
@@ -93,6 +99,7 @@ type RenderedCurve = {
   expressionId: string;
   color: string;
   points: RenderedCurvePoint[];
+  evaluator?: ExplicitCurveEvaluator;
 };
 
 const ZOOM_SENSITIVITY = 0.0015;
@@ -811,7 +818,9 @@ function drawSelectedCurveYIntercepts(
   viewport: Viewport,
   existingAnalysisPoints: RenderedPoint[] = [],
 ): RenderedPoint[] {
-  const yIntercept = findVisibleCurveYIntercept(curve);
+  const yIntercept = curve.evaluator
+    ? evaluateYIntercept(curve.evaluator)
+    : findVisibleCurveYIntercept(curve);
 
   if (!yIntercept) return [];
 
@@ -889,7 +898,24 @@ function drawSelectedCurveRoots(
   viewport: Viewport,
   existingAnalysisPoints: RenderedPoint[] = [],
 ): RenderedPoint[] {
-  const roots = findVisibleCurveRoots(curve);
+  let roots = curve.evaluator
+    ? findVisibleRoots(curve.evaluator, viewport.xMin, viewport.xMax)
+    : findVisibleCurveRoots(curve);
+  if (curve.evaluator) {
+    const q = tryFindQuadraticModel(curve.evaluator);
+    if (q && Math.abs(q.a) > 1e-12) {
+      const d = q.b * q.b - 4 * q.a * q.c;
+      if (d >= 0) {
+        const sqrtD = Math.sqrt(d);
+        const candidates = [(-q.b - sqrtD) / (2 * q.a), (-q.b + sqrtD) / (2 * q.a)]
+          .filter((x) => x >= viewport.xMin && x <= viewport.xMax)
+          .map((x) => ({ x: normalizeAnalysisCoordinate(x), y: 0 }));
+        if (candidates.length > 0) {
+          roots = candidates;
+        }
+      }
+    }
+  }
   const renderedRoots: RenderedPoint[] = [];
 
   roots.forEach((root, index) => {
@@ -1018,7 +1044,18 @@ function drawSelectedCurveExtrema(
   height: number,
   viewport: Viewport,
 ): RenderedPoint[] {
-  const extrema = findVisibleCurveExtrema(curve.points);
+  let extrema = findVisibleCurveExtrema(curve.points);
+
+  if (curve.evaluator) {
+    const quadratic = tryFindQuadraticModel(curve.evaluator);
+    if (quadratic && Math.abs(quadratic.a) > 1e-12) {
+      const x = -quadratic.b / (2 * quadratic.a);
+      const y = quadratic.a * x * x + quadratic.b * x + quadratic.c;
+      if (x >= viewport.xMin && x <= viewport.xMax && Number.isFinite(y)) {
+        extrema = [{ x: normalizeAnalysisCoordinate(x), y: normalizeAnalysisCoordinate(y), screenX: 0, screenY: 0 }];
+      }
+    }
+  }
 
   return extrema.map((extremum, index) => {
     const screenX = graphToScreenX(extremum.x, width, viewport);
@@ -1495,6 +1532,14 @@ function drawExpression(
     expressionId: graphExpression.id,
     color: graphExpression.color,
     points,
+    evaluator: (x: number) => {
+      try {
+        const value = compiled.evaluate({ ...scope, x });
+        return typeof value === "number" && Number.isFinite(value) ? value : null;
+      } catch {
+        return null;
+      }
+    },
   };
 }
 
@@ -1587,6 +1632,14 @@ function drawYEquation(
     expressionId,
     color,
     points,
+    evaluator: (x: number) => {
+      try {
+        const value = compiled.evaluate({ ...scope, x });
+        return typeof value === "number" && Number.isFinite(value) ? value : null;
+      } catch {
+        return null;
+      }
+    },
   };
 }
 

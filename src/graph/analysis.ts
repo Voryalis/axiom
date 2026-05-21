@@ -62,6 +62,80 @@ export function normalizeAnalysisCoordinate(value: number) {
   return Math.abs(value) < 1e-10 ? 0 : value;
 }
 
+export type ExplicitCurveEvaluator = (x: number) => number | null;
+
+export function evaluateYIntercept(evaluate: ExplicitCurveEvaluator) {
+  const y = evaluate(0);
+  if (y === null || !Number.isFinite(y)) return null;
+  return { x: 0, y: normalizeAnalysisCoordinate(y) };
+}
+
+export function findVisibleRoots(
+  evaluate: ExplicitCurveEvaluator,
+  xMin: number,
+  xMax: number,
+) {
+  const roots: Array<{ x: number; y: number }> = [];
+  const steps = 1024;
+  const dx = (xMax - xMin) / steps;
+  let previousX = xMin;
+  let previousY = evaluate(previousX);
+
+  const pushRoot = (x: number) => {
+    if (roots.some((root) => Math.abs(root.x - x) < 1e-6)) return;
+    roots.push({ x: normalizeAnalysisCoordinate(x), y: 0 });
+  };
+
+  for (let index = 1; index <= steps; index++) {
+    const x = xMin + dx * index;
+    const y = evaluate(x);
+    if (previousY !== null && Number.isFinite(previousY) && Math.abs(previousY) < 1e-12) pushRoot(previousX);
+    if (previousY !== null && y !== null && Number.isFinite(previousY) && Number.isFinite(y) && previousY * y < 0) {
+      let left = previousX;
+      let right = x;
+      let leftY = previousY;
+      for (let i = 0; i < 60; i++) {
+        const mid = (left + right) / 2;
+        const midY = evaluate(mid);
+        if (midY === null || !Number.isFinite(midY)) break;
+        if (Math.abs(midY) < 1e-14) {
+          left = mid;
+          right = mid;
+          break;
+        }
+        if (leftY * midY <= 0) {
+          right = mid;
+        } else {
+          left = mid;
+          leftY = midY;
+        }
+      }
+      pushRoot((left + right) / 2);
+    }
+    previousX = x;
+    previousY = y;
+  }
+  return roots.sort((a, b) => a.x - b.x);
+}
+
+export function tryFindQuadraticModel(evaluate: ExplicitCurveEvaluator) {
+  const y0 = evaluate(0);
+  const y1 = evaluate(1);
+  const ym1 = evaluate(-1);
+  if ([y0, y1, ym1].some((v) => v === null || !Number.isFinite(v as number))) return null;
+  const c = y0 as number;
+  const a = ((y1 as number) + (ym1 as number)) / 2 - c;
+  const b = (y1 as number) - a - c;
+  const checkpoints = [-2, -0.5, 0.5, 2];
+  for (const x of checkpoints) {
+    const y = evaluate(x);
+    if (y === null || !Number.isFinite(y)) return null;
+    const expected = a * x * x + b * x + c;
+    if (Math.abs(y - expected) > 1e-9 * Math.max(1, Math.abs(y), Math.abs(expected))) return null;
+  }
+  return { a, b, c };
+}
+
 function hasNearAnalysisPoint(
   points: AnalysisPoint[],
   screenX: number,
