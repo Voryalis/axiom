@@ -1055,7 +1055,6 @@ function getCurveYInterceptGraphPoint(curve: RenderedCurve) {
   if (curve.evaluator) {
     return evaluateYIntercept(curve.evaluator);
   }
-  // Fallback for curves without evaluator metadata (still sample-based).
   return findVisibleCurveYIntercept(curve);
 }
 
