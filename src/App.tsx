@@ -712,13 +712,21 @@ function App() {
     element.style.height = `${Math.min(element.scrollHeight, 160)}px`;
   }
 
-  function focusExpression(id: string) {
+  function focusExpression(
+    id: string,
+    selection?: { start: number; end: number },
+  ) {
     requestAnimationFrame(() => {
       const element = expressionInputRefs.current[id];
       if (!element) return;
 
       resizeExpressionInput(element);
       element.focus();
+
+      if (selection) {
+        element.setSelectionRange(selection.start, selection.end);
+        return;
+      }
 
       const length = element.value.length;
       element.setSelectionRange(length, length);
@@ -1232,13 +1240,19 @@ function App() {
       ...createEmptyExpression(nextColorIndex),
       raw,
     };
+    const placeholderIndex = raw.indexOf("x");
 
     setExpressions((current) => [...current, expression]);
     setNextColorIndex((current) => current + 1);
     setFocusedExpressionId(expression.id);
     setIsCreateMenuOpen(false);
     setIsFunctionTemplatesOpen(false);
-    focusExpression(expression.id);
+    focusExpression(
+      expression.id,
+      placeholderIndex === -1
+        ? undefined
+        : { start: placeholderIndex, end: placeholderIndex + 1 },
+    );
     markUnsaved();
   }
 
