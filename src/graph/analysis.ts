@@ -59,7 +59,17 @@ export function findVisibleCurveExtrema(points: RenderedCurvePoint[]) {
 
 export function normalizeAnalysisCoordinate(value: number) {
   if (!Number.isFinite(value)) return value;
-  return Math.abs(value) < 1e-10 ? 0 : value;
+  const nearestInteger = Math.round(value);
+
+  if (Math.abs(value - nearestInteger) < 0.002) {
+    return nearestInteger;
+  }
+
+  if (Math.abs(value) < 1e-9) {
+    return 0;
+  }
+
+  return value;
 }
 
 export type ExplicitCurveEvaluator = (x: number) => number | null;

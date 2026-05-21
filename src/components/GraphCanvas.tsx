@@ -4,6 +4,7 @@ import {
   evaluateYIntercept,
   findVisibleCurveExtrema,
   findVisibleRoots,
+  normalizeAnalysisCoordinate,
   tryFindQuadraticModel,
   type ExplicitCurveEvaluator,
 } from "../graph/analysis";
@@ -818,9 +819,7 @@ function drawSelectedCurveYIntercepts(
   viewport: Viewport,
   existingAnalysisPoints: RenderedPoint[] = [],
 ): RenderedPoint[] {
-  const yIntercept = curve.evaluator
-    ? evaluateYIntercept(curve.evaluator)
-    : findVisibleCurveYIntercept(curve);
+  const yIntercept = getCurveYInterceptGraphPoint(curve);
 
   if (!yIntercept) return [];
 
@@ -898,24 +897,7 @@ function drawSelectedCurveRoots(
   viewport: Viewport,
   existingAnalysisPoints: RenderedPoint[] = [],
 ): RenderedPoint[] {
-  let roots = curve.evaluator
-    ? findVisibleRoots(curve.evaluator, viewport.xMin, viewport.xMax)
-    : findVisibleCurveRoots(curve);
-  if (curve.evaluator) {
-    const q = tryFindQuadraticModel(curve.evaluator);
-    if (q && Math.abs(q.a) > 1e-12) {
-      const d = q.b * q.b - 4 * q.a * q.c;
-      if (d >= 0) {
-        const sqrtD = Math.sqrt(d);
-        const candidates = [(-q.b - sqrtD) / (2 * q.a), (-q.b + sqrtD) / (2 * q.a)]
-          .filter((x) => x >= viewport.xMin && x <= viewport.xMax)
-          .map((x) => ({ x: normalizeAnalysisCoordinate(x), y: 0 }));
-        if (candidates.length > 0) {
-          roots = candidates;
-        }
-      }
-    }
-  }
+  const roots = getCurveRootsGraphPoints(curve, viewport);
   const renderedRoots: RenderedPoint[] = [];
 
   roots.forEach((root, index) => {
@@ -1021,22 +1003,6 @@ function findVisibleCurveRoots(curve: RenderedCurve) {
   return roots;
 }
 
-function normalizeAnalysisCoordinate(value: number) {
-  if (!Number.isFinite(value)) return value;
-
-  const nearestInteger = Math.round(value);
-
-  if (Math.abs(value - nearestInteger) < 0.002) {
-    return nearestInteger;
-  }
-
-  if (Math.abs(value) < 1e-9) {
-    return 0;
-  }
-
-  return value;
-}
-
 function drawSelectedCurveExtrema(
   ctx: CanvasRenderingContext2D,
   curve: RenderedCurve,
@@ -1044,18 +1010,7 @@ function drawSelectedCurveExtrema(
   height: number,
   viewport: Viewport,
 ): RenderedPoint[] {
-  let extrema = findVisibleCurveExtrema(curve.points);
-
-  if (curve.evaluator) {
-    const quadratic = tryFindQuadraticModel(curve.evaluator);
-    if (quadratic && Math.abs(quadratic.a) > 1e-12) {
-      const x = -quadratic.b / (2 * quadratic.a);
-      const y = quadratic.a * x * x + quadratic.b * x + quadratic.c;
-      if (x >= viewport.xMin && x <= viewport.xMax && Number.isFinite(y)) {
-        extrema = [{ x: normalizeAnalysisCoordinate(x), y: normalizeAnalysisCoordinate(y), screenX: 0, screenY: 0 }];
-      }
-    }
-  }
+  const extrema = getCurveExtremaGraphPoints(curve, viewport);
 
   return extrema.map((extremum, index) => {
     const screenX = graphToScreenX(extremum.x, width, viewport);
@@ -1077,14 +1032,62 @@ function drawSelectedCurveExtrema(
       expressionId: `${curve.expressionId}-extremum-${index}`,
       sourceExpressionId: curve.expressionId,
       point: {
-        x: extremum.x,
-        y: extremum.y,
+        x: normalizeAnalysisCoordinate(extremum.x),
+        y: normalizeAnalysisCoordinate(extremum.y),
       },
       screenX,
       screenY,
       color: curve.color,
     };
   });
+}
+
+function getCurveYInterceptGraphPoint(curve: RenderedCurve) {
+  if (curve.evaluator) {
+    return evaluateYIntercept(curve.evaluator);
+  }
+  // Fallback for curves without evaluator metadata (still sample-based).
+  return findVisibleCurveYIntercept(curve);
+}
+
+function getCurveRootsGraphPoints(curve: RenderedCurve, viewport: Viewport) {
+  if (!curve.evaluator) {
+    // Fallback for curves without evaluator metadata (still sample-based).
+    return findVisibleCurveRoots(curve);
+  }
+
+  const quadratic = tryFindQuadraticModel(curve.evaluator);
+
+  if (quadratic && Math.abs(quadratic.a) > 1e-12) {
+    const d = quadratic.b * quadratic.b - 4 * quadratic.a * quadratic.c;
+    if (d >= 0) {
+      const sqrtD = Math.sqrt(d);
+      return [(-quadratic.b - sqrtD) / (2 * quadratic.a), (-quadratic.b + sqrtD) / (2 * quadratic.a)]
+        .filter((x) => x >= viewport.xMin && x <= viewport.xMax)
+        .map((x) => ({ x: normalizeAnalysisCoordinate(x), y: 0 }));
+    }
+  }
+
+  return findVisibleRoots(curve.evaluator, viewport.xMin, viewport.xMax);
+}
+
+function getCurveExtremaGraphPoints(curve: RenderedCurve, viewport: Viewport) {
+  if (!curve.evaluator) {
+    // Fallback for curves without evaluator metadata (still sample-based).
+    return findVisibleCurveExtrema(curve.points);
+  }
+
+  const quadratic = tryFindQuadraticModel(curve.evaluator);
+  if (quadratic && Math.abs(quadratic.a) > 1e-12) {
+    const x = -quadratic.b / (2 * quadratic.a);
+    const y = quadratic.a * x * x + quadratic.b * x + quadratic.c;
+    if (x >= viewport.xMin && x <= viewport.xMax && Number.isFinite(y)) {
+      return [{ x: normalizeAnalysisCoordinate(x), y: normalizeAnalysisCoordinate(y), screenX: 0, screenY: 0 }];
+    }
+  }
+
+  // Non-quadratic explicit curves currently fall back to sampled extrema.
+  return findVisibleCurveExtrema(curve.points);
 }
 
 function findNearestCurve(
