@@ -191,6 +191,13 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       pinnedPointRef.current = freshPinnedPoint;
 
       if (freshPinnedPoint) {
+        const sourceLabel = freshPinnedPoint.source ?? "unknown";
+        console.debug("[Axiom][analysis-point]", {
+          expressionId: freshPinnedPoint.expressionId,
+          sourceExpressionId: freshPinnedPoint.sourceExpressionId,
+          source: sourceLabel,
+          point: freshPinnedPoint.point,
+        });
         drawSelectedPointHighlight(ctx, freshPinnedPoint);
         drawPointLabel(ctx, rect.width, rect.height, freshPinnedPoint);
       }
@@ -488,6 +495,14 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           selectedCurveIdRef.current = null;
         } else {
           selectedCurveIdRef.current = nearestCurve?.expressionId ?? null;
+          if (nearestCurve) {
+            console.debug("[Axiom][selected-curve-metadata]", {
+              expressionId: nearestCurve.expressionId,
+              hasQuadratic: Boolean(nearestCurve.quadratic),
+              hasEvaluator: Boolean(nearestCurve.evaluator),
+              quadratic: nearestCurve.quadratic ?? null,
+            });
+          }
         }
 
         renderWithPinnedPointLabel();
