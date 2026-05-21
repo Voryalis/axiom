@@ -1040,7 +1040,6 @@ input {
 .table-row {
   display: contents;
 }
-/* Expression and table editor controls */
 .expression-list {
   gap: 22px;
 }
@@ -1221,12 +1220,10 @@ input {
   border-color: #8b949e !important;
 }
 
-/* Expression card shape polish */
 .expression-card:not(.expression-card-table) {
   border-radius: 6px !important;
 }
 
-/* Graph floating control icons */
 .graph-floating-controls button svg {
   width: 18px;
   height: 18px;
@@ -1238,7 +1235,6 @@ input {
   stroke-linejoin: round;
 }
 
-/* Scrollable settings popup */
 .settings-popover {
   max-height: min(72vh, 520px);
   overflow-y: auto;
@@ -1264,7 +1260,6 @@ input {
   background: #6e7681;
 }
 
-/* Settings checkbox rows */
 .settings-checkbox-row {
   display: flex;
   align-items: center;
