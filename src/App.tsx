@@ -358,6 +358,24 @@ function formatSliderConfigNumber(value: number) {
   return formatRoundedNumber(value, 6);
 }
 
+function formatVariableAssignmentWithSliderConfig(
+  name: string,
+  value: number,
+  config?: { min: number; max: number; step: number } | null,
+) {
+  const roundedValue = formatRoundedNumber(value, 6);
+
+  if (!config) {
+    return `${name} = ${roundedValue}`;
+  }
+
+  return `${name} = ${roundedValue} [${formatSliderConfigNumber(
+    config.min,
+  )}, ${formatSliderConfigNumber(config.max)}, ${formatSliderConfigNumber(
+    config.step,
+  )}]`;
+}
+
 function parseNumericVariableAssignment(rawExpression: string) {
   const assignment = parseVariableAssignment(rawExpression);
 
@@ -519,17 +537,64 @@ function updateVariableAssignment(raw: string, value: number) {
   if (!assignment) return raw;
 
   const sliderConfig = parseSliderConfig(assignment.expression);
-  const rounded = formatRoundedNumber(value, 6);
 
-  if (!sliderConfig.hasCustomConfig) {
-    return `${assignment.name} = ${rounded}`;
+  return formatVariableAssignmentWithSliderConfig(
+    assignment.name,
+    value,
+    sliderConfig.hasCustomConfig
+      ? {
+          min: sliderConfig.min,
+          max: sliderConfig.max,
+          step: sliderConfig.step,
+        }
+      : null,
+  );
+}
+
+export function updateVariableAssignmentSliderConfig(
+  raw: string,
+  patch: Partial<{ min: number; max: number; step: number }>,
+) {
+  const assignment = parseVariableAssignment(raw);
+
+  if (!assignment) return raw;
+
+  const sliderConfig = parseSliderConfig(assignment.expression);
+  const nextConfig = {
+    min: sliderConfig.min,
+    max: sliderConfig.max,
+    step: sliderConfig.step,
+  };
+
+  if (patch.min !== undefined) nextConfig.min = patch.min;
+  if (patch.max !== undefined) nextConfig.max = patch.max;
+  if (patch.step !== undefined) nextConfig.step = patch.step;
+
+  if (
+    !Number.isFinite(nextConfig.min) ||
+    !Number.isFinite(nextConfig.max) ||
+    !Number.isFinite(nextConfig.step) ||
+    nextConfig.min >= nextConfig.max ||
+    nextConfig.step <= 0
+  ) {
+    return raw;
   }
 
-  return `${assignment.name} = ${rounded} [${formatSliderConfigNumber(
-    sliderConfig.min,
-  )}, ${formatSliderConfigNumber(sliderConfig.max)}, ${formatSliderConfigNumber(
-    sliderConfig.step,
-  )}]`;
+  try {
+    const value = math.evaluate(sliderConfig.expression);
+
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      return raw;
+    }
+
+    return formatVariableAssignmentWithSliderConfig(
+      assignment.name,
+      value,
+      nextConfig,
+    );
+  } catch {
+    return raw;
+  }
 }
 
 function parseEditableTable(rawExpression: string): EditableTable | null {
