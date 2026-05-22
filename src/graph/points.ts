@@ -80,10 +80,9 @@ export function drawPointLabel(
   height: number,
   renderedPoint: RenderedPoint,
 ) {
-  const sourceLabel = renderedPoint.source ?? "unknown";
   const label = `(${formatNumber(renderedPoint.point.x)}, ${formatNumber(
     renderedPoint.point.y,
-  )}) [${sourceLabel}]`;
+  )})`;
 
   ctx.save();
 
