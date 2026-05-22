@@ -331,6 +331,49 @@ input {
   color: #8b949e;
   font-size: 11px;
 }
+.slider-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 6px;
+}
+.slider-field {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.slider-field span {
+  color: #8b949e;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.slider-field input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #3d444d;
+  border-radius: 6px;
+  background: #0d1117;
+  color: #f0f6fc;
+  font-size: 12px;
+  line-height: 1.2;
+  padding: 4px 6px;
+}
+.slider-field input:hover {
+  border-color: #57606a;
+}
+.slider-field input:focus {
+  border-color: #1f6feb;
+  outline: 2px solid rgba(31, 111, 235, 0.25);
+  outline-offset: 0;
+}
+@media (max-width: 560px) {
+  .slider-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .graph-area {
   position: relative;
   display: grid;
