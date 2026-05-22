@@ -949,6 +949,50 @@ function App() {
     });
   }
 
+  function commitSliderFieldDraft(
+    id: string,
+    field: "value" | "min" | "max" | "step",
+    value: string,
+  ) {
+    if (field === "value") {
+      updateExpressionFromSliderValueInput(id, value);
+    } else {
+      updateExpressionFromSliderConfigInput(id, field, value);
+    }
+
+    clearSliderDraftValue(id, field);
+  }
+
+  function handleSliderFieldKeyDown(
+    event: React.KeyboardEvent<HTMLInputElement>,
+    id: string,
+    field: "value" | "min" | "max" | "step",
+  ) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      event.stopPropagation();
+      commitSliderFieldDraft(id, field, event.currentTarget.value);
+      event.currentTarget.blur();
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      clearSliderDraftValue(id, field);
+      event.currentTarget.blur();
+      return;
+    }
+
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      (event.key.toLowerCase() === "d" || event.key.toLowerCase() === "w")
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
   function updateTableExpression(
     id: string,
     updater: (table: EditableTable) => EditableTable,
@@ -2422,15 +2466,19 @@ function App() {
                                       )
                                     }
                                     onBlur={(event) => {
-                                      updateExpressionFromSliderValueInput(
-                                        expression.id,
-                                        event.target.value,
-                                      );
-                                      clearSliderDraftValue(
+                                      commitSliderFieldDraft(
                                         expression.id,
                                         "value",
+                                        event.target.value,
                                       );
                                     }}
+                                    onKeyDown={(event) =>
+                                      handleSliderFieldKeyDown(
+                                        event,
+                                        expression.id,
+                                        "value",
+                                      )
+                                    }
                                     aria-label="Slider value"
                                   />
                                 </label>
@@ -2450,16 +2498,19 @@ function App() {
                                       )
                                     }
                                     onBlur={(event) => {
-                                      updateExpressionFromSliderConfigInput(
+                                      commitSliderFieldDraft(
                                         expression.id,
                                         "min",
                                         event.target.value,
                                       );
-                                      clearSliderDraftValue(
+                                    }}
+                                    onKeyDown={(event) =>
+                                      handleSliderFieldKeyDown(
+                                        event,
                                         expression.id,
                                         "min",
-                                      );
-                                    }}
+                                      )
+                                    }
                                     aria-label="Slider min"
                                   />
                                 </label>
@@ -2479,16 +2530,19 @@ function App() {
                                       )
                                     }
                                     onBlur={(event) => {
-                                      updateExpressionFromSliderConfigInput(
+                                      commitSliderFieldDraft(
                                         expression.id,
                                         "max",
                                         event.target.value,
                                       );
-                                      clearSliderDraftValue(
+                                    }}
+                                    onKeyDown={(event) =>
+                                      handleSliderFieldKeyDown(
+                                        event,
                                         expression.id,
                                         "max",
-                                      );
-                                    }}
+                                      )
+                                    }
                                     aria-label="Slider max"
                                   />
                                 </label>
@@ -2508,16 +2562,19 @@ function App() {
                                       )
                                     }
                                     onBlur={(event) => {
-                                      updateExpressionFromSliderConfigInput(
+                                      commitSliderFieldDraft(
                                         expression.id,
                                         "step",
                                         event.target.value,
                                       );
-                                      clearSliderDraftValue(
+                                    }}
+                                    onKeyDown={(event) =>
+                                      handleSliderFieldKeyDown(
+                                        event,
                                         expression.id,
                                         "step",
-                                      );
-                                    }}
+                                      )
+                                    }
                                     aria-label="Slider step"
                                   />
                                 </label>
