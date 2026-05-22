@@ -971,7 +971,6 @@ function App() {
     if (event.key === "Enter") {
       event.preventDefault();
       event.stopPropagation();
-      commitSliderFieldDraft(id, field, event.currentTarget.value);
       event.currentTarget.blur();
       return;
     }
@@ -980,6 +979,7 @@ function App() {
       event.preventDefault();
       event.stopPropagation();
       clearSliderDraftValue(id, field);
+      event.currentTarget.dataset.skipSliderFieldBlurCommit = "true";
       event.currentTarget.blur();
       return;
     }
@@ -991,6 +991,19 @@ function App() {
       event.preventDefault();
       event.stopPropagation();
     }
+  }
+
+  function handleSliderFieldBlur(
+    event: React.FocusEvent<HTMLInputElement>,
+    id: string,
+    field: "value" | "min" | "max" | "step",
+  ) {
+    if (event.currentTarget.dataset.skipSliderFieldBlurCommit === "true") {
+      delete event.currentTarget.dataset.skipSliderFieldBlurCommit;
+      return;
+    }
+
+    commitSliderFieldDraft(id, field, event.currentTarget.value);
   }
 
   function updateTableExpression(
@@ -2465,13 +2478,13 @@ function App() {
                                         event.target.value,
                                       )
                                     }
-                                    onBlur={(event) => {
-                                      commitSliderFieldDraft(
+                                    onBlur={(event) =>
+                                      handleSliderFieldBlur(
+                                        event,
                                         expression.id,
                                         "value",
-                                        event.target.value,
-                                      );
-                                    }}
+                                      )
+                                    }
                                     onKeyDown={(event) =>
                                       handleSliderFieldKeyDown(
                                         event,
@@ -2497,13 +2510,13 @@ function App() {
                                         event.target.value,
                                       )
                                     }
-                                    onBlur={(event) => {
-                                      commitSliderFieldDraft(
+                                    onBlur={(event) =>
+                                      handleSliderFieldBlur(
+                                        event,
                                         expression.id,
                                         "min",
-                                        event.target.value,
-                                      );
-                                    }}
+                                      )
+                                    }
                                     onKeyDown={(event) =>
                                       handleSliderFieldKeyDown(
                                         event,
@@ -2529,13 +2542,13 @@ function App() {
                                         event.target.value,
                                       )
                                     }
-                                    onBlur={(event) => {
-                                      commitSliderFieldDraft(
+                                    onBlur={(event) =>
+                                      handleSliderFieldBlur(
+                                        event,
                                         expression.id,
                                         "max",
-                                        event.target.value,
-                                      );
-                                    }}
+                                      )
+                                    }
                                     onKeyDown={(event) =>
                                       handleSliderFieldKeyDown(
                                         event,
@@ -2561,13 +2574,13 @@ function App() {
                                         event.target.value,
                                       )
                                     }
-                                    onBlur={(event) => {
-                                      commitSliderFieldDraft(
+                                    onBlur={(event) =>
+                                      handleSliderFieldBlur(
+                                        event,
                                         expression.id,
                                         "step",
-                                        event.target.value,
-                                      );
-                                    }}
+                                      )
+                                    }
                                     onKeyDown={(event) =>
                                       handleSliderFieldKeyDown(
                                         event,
