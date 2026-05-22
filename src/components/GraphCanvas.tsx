@@ -1059,7 +1059,6 @@ function getCurveYInterceptGraphPoint(curve: RenderedCurve) {
 }
 
 function getCurveRootsGraphPoints(curve: RenderedCurve, viewport: Viewport) {
-  // Prefer exact quadratic roots when expression metadata is available.
   if (curve.quadratic && Math.abs(curve.quadratic.a) > 1e-12) {
     const { a, b, c } = curve.quadratic;
     const discriminant = b * b - 4 * a * c;
@@ -1073,7 +1072,6 @@ function getCurveRootsGraphPoints(curve: RenderedCurve, viewport: Viewport) {
   }
 
   if (!curve.evaluator) {
-    // Fallback when no evaluator metadata is available.
     return findVisibleCurveRoots(curve);
   }
 
@@ -1081,7 +1079,6 @@ function getCurveRootsGraphPoints(curve: RenderedCurve, viewport: Viewport) {
 }
 
 function getCurveExtremaGraphPoints(curve: RenderedCurve, viewport: Viewport) {
-  // Prefer exact quadratic vertex when expression metadata is available.
   if (curve.quadratic && Math.abs(curve.quadratic.a) > 1e-12) {
     const { a, b, c } = curve.quadratic;
     const x = -b / (2 * a);
@@ -1092,7 +1089,6 @@ function getCurveExtremaGraphPoints(curve: RenderedCurve, viewport: Viewport) {
     }
   }
 
-  // Fallback when no exact metadata path is available.
   return findVisibleCurveExtrema(curve.points);
 }
 
