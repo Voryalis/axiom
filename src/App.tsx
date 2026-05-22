@@ -986,7 +986,7 @@ function App() {
 
     if (
       (event.ctrlKey || event.metaKey) &&
-      (event.key.toLowerCase() === "d" || event.key.toLowerCase() === "w")
+      ["s", "r", "0", "w", "d"].includes(event.key.toLowerCase())
     ) {
       event.preventDefault();
       event.stopPropagation();
