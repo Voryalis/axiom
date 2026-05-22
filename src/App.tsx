@@ -551,7 +551,7 @@ function updateVariableAssignment(raw: string, value: number) {
   );
 }
 
-export function updateVariableAssignmentSliderConfig(
+function updateVariableAssignmentSliderConfig(
   raw: string,
   patch: Partial<{ min: number; max: number; step: number }>,
 ) {
@@ -750,6 +750,12 @@ function App() {
     () => loadAppSettings().showIntersections,
   );
   const [settingsSaveStatus, setSettingsSaveStatus] = useState("");
+  const [sliderDrafts, setSliderDrafts] = useState<
+    Record<
+      string,
+      Partial<{ value: string; min: string; max: string; step: string }>
+    >
+  >({});
 
   const isGridVisible = showGraphDetails && showGrid;
   const isMinorGridVisible = isGridVisible && showMinorGrid;
@@ -859,6 +865,88 @@ function App() {
       ),
     );
     markUnsaved();
+  }
+
+  function updateExpressionFromSliderValueInput(id: string, value: string) {
+    const parsedValue = Number(value);
+
+    if (!Number.isFinite(parsedValue)) {
+      return;
+    }
+
+    updateExpressionFromSlider(id, parsedValue);
+  }
+
+  function updateExpressionSliderConfig(
+    id: string,
+    patch: Partial<{ min: number; max: number; step: number }>,
+  ) {
+    setExpressions((current) =>
+      current.map((expression) =>
+        expression.id === id
+          ? {
+              ...expression,
+              raw: updateVariableAssignmentSliderConfig(expression.raw, patch),
+            }
+          : expression,
+      ),
+    );
+    markUnsaved();
+  }
+
+  function updateExpressionFromSliderConfigInput(
+    id: string,
+    field: "min" | "max" | "step",
+    value: string,
+  ) {
+    const parsedValue = Number(value);
+
+    if (!Number.isFinite(parsedValue)) {
+      return;
+    }
+
+    updateExpressionSliderConfig(id, { [field]: parsedValue });
+  }
+
+  function setSliderDraftValue(
+    id: string,
+    field: "value" | "min" | "max" | "step",
+    value: string,
+  ) {
+    setSliderDrafts((current) => ({
+      ...current,
+      [id]: {
+        ...current[id],
+        [field]: value,
+      },
+    }));
+  }
+
+  function clearSliderDraftValue(
+    id: string,
+    field: "value" | "min" | "max" | "step",
+  ) {
+    setSliderDrafts((current) => {
+      const existing = current[id];
+
+      if (!existing) {
+        return current;
+      }
+
+      const nextEntry = { ...existing };
+      delete nextEntry[field];
+
+      if (Object.keys(nextEntry).length === 0) {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      }
+
+      return {
+        ...current,
+        [id]: nextEntry,
+      };
+    });
   }
 
   function updateTableExpression(
@@ -2314,6 +2402,100 @@ function App() {
                               <span className="slider-label">
                                 {formatSliderConfigNumber(slider.max)}
                               </span>
+                              <input
+                                type="text"
+                                value={
+                                  sliderDrafts[expression.id]?.value ??
+                                  formatRoundedNumber(slider.value, 6)
+                                }
+                                onChange={(event) =>
+                                  setSliderDraftValue(
+                                    expression.id,
+                                    "value",
+                                    event.target.value,
+                                  )
+                                }
+                                onBlur={(event) => {
+                                  updateExpressionFromSliderValueInput(
+                                    expression.id,
+                                    event.target.value,
+                                  );
+                                  clearSliderDraftValue(
+                                    expression.id,
+                                    "value",
+                                  );
+                                }}
+                                aria-label="Slider value"
+                              />
+                              <input
+                                type="text"
+                                value={
+                                  sliderDrafts[expression.id]?.min ??
+                                  formatSliderConfigNumber(slider.min)
+                                }
+                                onChange={(event) =>
+                                  setSliderDraftValue(
+                                    expression.id,
+                                    "min",
+                                    event.target.value,
+                                  )
+                                }
+                                onBlur={(event) => {
+                                  updateExpressionFromSliderConfigInput(
+                                    expression.id,
+                                    "min",
+                                    event.target.value,
+                                  );
+                                  clearSliderDraftValue(expression.id, "min");
+                                }}
+                                aria-label="Slider min"
+                              />
+                              <input
+                                type="text"
+                                value={
+                                  sliderDrafts[expression.id]?.max ??
+                                  formatSliderConfigNumber(slider.max)
+                                }
+                                onChange={(event) =>
+                                  setSliderDraftValue(
+                                    expression.id,
+                                    "max",
+                                    event.target.value,
+                                  )
+                                }
+                                onBlur={(event) => {
+                                  updateExpressionFromSliderConfigInput(
+                                    expression.id,
+                                    "max",
+                                    event.target.value,
+                                  );
+                                  clearSliderDraftValue(expression.id, "max");
+                                }}
+                                aria-label="Slider max"
+                              />
+                              <input
+                                type="text"
+                                value={
+                                  sliderDrafts[expression.id]?.step ??
+                                  formatSliderConfigNumber(slider.step)
+                                }
+                                onChange={(event) =>
+                                  setSliderDraftValue(
+                                    expression.id,
+                                    "step",
+                                    event.target.value,
+                                  )
+                                }
+                                onBlur={(event) => {
+                                  updateExpressionFromSliderConfigInput(
+                                    expression.id,
+                                    "step",
+                                    event.target.value,
+                                  );
+                                  clearSliderDraftValue(expression.id, "step");
+                                }}
+                                aria-label="Slider step"
+                              />
                             </div>
                           ) : null}
                         </>
