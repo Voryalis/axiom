@@ -8,11 +8,13 @@ import {
   type ExplicitCurveEvaluator,
 } from "../graph/analysis";
 import {
+  areRenderedPointsSame,
   drawPoint,
   drawPointLabel,
   drawSelectedPointHighlight,
   findMatchingRenderedPoint,
   findNearestPoint,
+  shouldSuppressHoverPointLabel,
   type GraphPoint,
   type RenderedPoint,
 } from "../graph/points";
@@ -130,6 +132,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
     const renderedPointsRef = useRef<RenderedPoint[]>([]);
     const renderedCurvesRef = useRef<RenderedCurve[]>([]);
     const pinnedPointRef = useRef<RenderedPoint | null>(null);
+    const hoverPointRef = useRef<RenderedPoint | null>(null);
     const selectedCurveIdRef = useRef<string | null>(null);
     const isViewportInteractingRef = useRef(false);
     const viewportInteractionTimeoutRef = useRef<number | null>(null);
@@ -175,7 +178,14 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       renderedCurvesRef.current = drawResult.curves;
     }
 
-    function drawPinnedPointLabel() {
+    function isPersistentPointLabelVisible(point: RenderedPoint) {
+      return expressions.some(
+        (expression) =>
+          expression.id === point.expressionId && expression.showLabel === true,
+      );
+    }
+
+    function drawActivePointLabels() {
       const canvas = canvasRef.current;
       const parent = canvas?.parentElement;
       const ctx = canvas?.getContext("2d");
@@ -188,13 +198,31 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         pinnedPointRef.current,
         renderedPointsRef.current,
       );
+      const freshHoverPoint = findMatchingRenderedPoint(
+        hoverPointRef.current,
+        renderedPointsRef.current,
+      );
 
       pinnedPointRef.current = freshPinnedPoint;
+      hoverPointRef.current = freshHoverPoint;
 
       if (freshPinnedPoint) {
         drawSelectedPointHighlight(ctx, freshPinnedPoint);
         drawPointLabel(ctx, rect.width, rect.height, freshPinnedPoint);
       }
+
+      if (
+        shouldSuppressHoverPointLabel(
+          freshHoverPoint,
+          freshPinnedPoint,
+          isPersistentPointLabelVisible,
+        )
+      ) {
+        return;
+      }
+
+      drawSelectedPointHighlight(ctx, freshHoverPoint!);
+      drawPointLabel(ctx, rect.width, rect.height, freshHoverPoint!);
     }
 
     function startViewportInteraction() {
@@ -215,7 +243,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         isViewportInteractingRef.current = false;
         viewportInteractionTimeoutRef.current = null;
         renderCurrentViewport();
-        drawPinnedPointLabel();
+        drawActivePointLabels();
       }, 120);
     }
 
@@ -344,7 +372,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
 
       const renderWithPinnedPointLabel = () => {
         renderCurrentViewport();
-        drawPinnedPointLabel();
+        drawActivePointLabels();
       };
 
       const handleWheel = (event: WheelEvent) => {
@@ -430,11 +458,20 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           mouseX,
           mouseY,
         );
+        const hoverChanged = !areRenderedPointsSame(
+          hoverPointRef.current,
+          nearestPoint,
+        );
+        hoverPointRef.current = nearestPoint;
         const nearestCurve = nearestPoint
           ? null
           : findNearestCurve(renderedCurvesRef.current, mouseX, mouseY);
 
         canvas.style.cursor = nearestPoint || nearestCurve ? "pointer" : "grab";
+
+        if (hoverChanged) {
+          renderWithPinnedPointLabel();
+        }
       };
 
       const handlePointerUp = (event: PointerEvent) => {
@@ -481,6 +518,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         );
 
         pinnedPointRef.current = null;
+        hoverPointRef.current = null;
 
         if (
           nearestCurve &&
@@ -498,6 +536,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         isDraggingRef.current = false;
         finishViewportInteraction();
         canvas.style.cursor = "grab";
+        hoverPointRef.current = null;
         renderWithPinnedPointLabel();
       };
 

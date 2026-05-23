@@ -152,9 +152,30 @@ export function findMatchingRenderedPoint(
   if (!point) return null;
 
   return (
-    points.find((candidate) => candidate.expressionId === point.expressionId) ??
-    null
+    points.find((candidate) => areRenderedPointsSame(candidate, point)) ?? null
   );
+}
+
+export function areRenderedPointsSame(
+  first: RenderedPoint | null,
+  second: RenderedPoint | null,
+) {
+  if (!first || !second) return false;
+
+  return (
+    first.expressionId === second.expressionId &&
+    first.sourceExpressionId === second.sourceExpressionId
+  );
+}
+
+export function shouldSuppressHoverPointLabel(
+  hoverPoint: RenderedPoint | null,
+  pinnedPoint: RenderedPoint | null,
+  isPersistentLabelVisible: (point: RenderedPoint) => boolean,
+) {
+  if (!hoverPoint) return true;
+  if (areRenderedPointsSame(hoverPoint, pinnedPoint)) return true;
+  return isPersistentLabelVisible(hoverPoint);
 }
 
 function formatNumber(value: number) {
