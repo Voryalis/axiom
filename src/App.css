@@ -364,7 +364,7 @@ input {
 }
 .slider-endpoint-label:focus-visible {
   border-radius: 4px;
-  outline: 2px solid #58a6ff;
+  outline: 1px solid rgba(240, 246, 252, 0.35);
   outline-offset: 2px;
 }
 .slider-endpoint-input:hover {
@@ -372,9 +372,9 @@ input {
   background: rgba(13, 17, 23, 0.35);
 }
 .slider-endpoint-input:focus {
-  border-color: #1f6feb;
-  background: #0d1117;
-  outline: 2px solid rgba(31, 111, 235, 0.25);
+  border-color: #8b949e;
+  background: rgba(13, 17, 23, 0.55);
+  outline: 1px solid rgba(240, 246, 252, 0.35);
   outline-offset: 0;
 }
 .slider-step-control {
@@ -403,7 +403,7 @@ input {
 }
 .slider-step-label:focus-visible {
   border-radius: 4px;
-  outline: 2px solid #58a6ff;
+  outline: 1px solid rgba(240, 246, 252, 0.35);
   outline-offset: 2px;
 }
 .slider-step-control input {
@@ -423,9 +423,9 @@ input {
   background: rgba(13, 17, 23, 0.35);
 }
 .slider-step-control input:focus {
-  border-color: #1f6feb;
-  background: #0d1117;
-  outline: 2px solid rgba(31, 111, 235, 0.25);
+  border-color: #8b949e;
+  background: rgba(13, 17, 23, 0.55);
+  outline: 1px solid rgba(240, 246, 252, 0.35);
   outline-offset: 0;
 }
 .graph-area {
