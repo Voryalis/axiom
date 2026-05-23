@@ -148,6 +148,7 @@ export default function SliderControl({
           style={{
             accentColor: color,
             color,
+            ["--slider-active-color" as string]: color,
             ["--slider-progress" as string]: `${sliderProgress}%`,
           }}
           onChange={(event) => onSliderValueChange(expressionId, Number(event.target.value))}
