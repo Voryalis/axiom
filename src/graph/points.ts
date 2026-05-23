@@ -81,9 +81,13 @@ export function drawPointLabel(
   height: number,
   renderedPoint: RenderedPoint,
 ) {
-  const label = `(${formatNumber(renderedPoint.point.x)}, ${formatNumber(
+  const coordinateLabel = `(${formatNumber(renderedPoint.point.x)}, ${formatNumber(
     renderedPoint.point.y,
   )})`;
+  const analysisLabel = formatAnalysisSourceLabel(renderedPoint.source);
+  const label = analysisLabel
+    ? `${coordinateLabel} · ${analysisLabel}`
+    : coordinateLabel;
 
   ctx.save();
 
@@ -180,6 +184,22 @@ export function shouldSuppressHoverPointLabel(
   if (!hoverPoint) return true;
   if (areRenderedPointsSame(hoverPoint, pinnedPoint)) return true;
   return isPersistentLabelVisible(hoverPoint);
+}
+
+
+function formatAnalysisSourceLabel(source: RenderedPoint["source"]) {
+  switch (source) {
+    case "quadratic-vertex":
+      return "Vertex";
+    case "quadratic-root":
+    case "evaluator-root":
+      return "Root";
+    case "quadratic-y-intercept":
+    case "evaluator-y-intercept":
+      return "Y-intercept";
+    default:
+      return null;
+  }
 }
 
 function formatNumber(value: number) {
