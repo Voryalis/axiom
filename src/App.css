@@ -336,7 +336,7 @@ input {
   max-width: 56px;
   min-width: 42px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 3px;
   background: transparent;
   color: #f0f6fc;
   font-size: 11px;
@@ -411,7 +411,7 @@ input {
   max-width: 56px;
   min-width: 42px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 3px;
   background: transparent;
   color: #f0f6fc;
   font-size: 11px;
