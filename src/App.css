@@ -955,7 +955,6 @@ input {
   background: transparent;
 }
 
-
 .create-menu-template-section {
   display: grid;
   gap: 8px;
@@ -1017,7 +1016,6 @@ input {
   border-radius: 0;
   background: transparent;
 }
-
 .brand-mark {
   width: 38px;
   height: 38px;
