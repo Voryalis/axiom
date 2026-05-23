@@ -331,11 +331,19 @@ input {
   height: 14px;
   background: transparent;
 }
+
 .slider-control input[type="range"]::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 999px;
-  background: transparent;
+  background: linear-gradient(
+    to right,
+    currentColor 0%,
+    currentColor var(--slider-progress, 50%),
+    #161b22 var(--slider-progress, 50%),
+    #161b22 100%
+  );
 }
+
 .slider-control input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -947,6 +955,7 @@ input {
   background: transparent;
 }
 
+
 .create-menu-template-section {
   display: grid;
   gap: 8px;
@@ -1008,6 +1017,7 @@ input {
   border-radius: 0;
   background: transparent;
 }
+
 .brand-mark {
   width: 38px;
   height: 38px;
