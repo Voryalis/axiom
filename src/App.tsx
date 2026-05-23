@@ -597,6 +597,33 @@ function updateVariableAssignmentSliderConfig(
   }
 }
 
+function formatExpressionForDisplay(raw: string) {
+  const assignment = parseVariableAssignment(raw);
+  if (!assignment) return raw;
+  const sliderConfig = parseSliderConfig(assignment.expression);
+  if (!sliderConfig.hasCustomConfig) return raw;
+  return `${assignment.name} = ${sliderConfig.expression}`;
+}
+
+function preserveSliderConfigFromPreviousRaw(previousRaw: string, nextRaw: string) {
+  const previousAssignment = parseVariableAssignment(previousRaw);
+  const nextAssignment = parseVariableAssignment(nextRaw);
+  if (!previousAssignment || !nextAssignment) return nextRaw;
+  if (previousAssignment.name !== nextAssignment.name) return nextRaw;
+
+  const previousSliderConfig = parseSliderConfig(previousAssignment.expression);
+  if (!previousSliderConfig.hasCustomConfig) return nextRaw;
+
+  const nextSliderConfig = parseSliderConfig(nextAssignment.expression);
+  if (nextSliderConfig.hasCustomConfig) return nextRaw;
+
+  return `${nextAssignment.name} = ${nextSliderConfig.expression} [${formatSliderConfigNumber(
+    previousSliderConfig.min,
+  )}, ${formatSliderConfigNumber(previousSliderConfig.max)}, ${formatSliderConfigNumber(
+    previousSliderConfig.step,
+  )}]`;
+}
+
 function parseEditableTable(rawExpression: string): EditableTable | null {
   const lines = rawExpression.split("\n").map((line) => line.trim());
 
@@ -751,10 +778,7 @@ function App() {
   );
   const [settingsSaveStatus, setSettingsSaveStatus] = useState("");
   const [sliderDrafts, setSliderDrafts] = useState<
-    Record<
-      string,
-      Partial<{ value: string; min: string; max: string; step: string }>
-    >
+    Record<string, Partial<{ min: string; max: string; step: string }>>
   >({});
 
   const isGridVisible = showGraphDetails && showGrid;
@@ -838,7 +862,12 @@ function App() {
   function updateExpression(id: string, raw: string) {
     setExpressions((current) =>
       current.map((expression) =>
-        expression.id === id ? { ...expression, raw } : expression,
+        expression.id === id
+          ? {
+              ...expression,
+              raw: preserveSliderConfigFromPreviousRaw(expression.raw, raw),
+            }
+          : expression,
       ),
     );
     markUnsaved();
@@ -865,16 +894,6 @@ function App() {
       ),
     );
     markUnsaved();
-  }
-
-  function updateExpressionFromSliderValueInput(id: string, value: string) {
-    const parsedValue = Number(value);
-
-    if (!Number.isFinite(parsedValue)) {
-      return;
-    }
-
-    updateExpressionFromSlider(id, parsedValue);
   }
 
   function updateExpressionSliderConfig(
@@ -910,7 +929,7 @@ function App() {
 
   function setSliderDraftValue(
     id: string,
-    field: "value" | "min" | "max" | "step",
+    field: "min" | "max" | "step",
     value: string,
   ) {
     setSliderDrafts((current) => ({
@@ -924,7 +943,7 @@ function App() {
 
   function clearSliderDraftValue(
     id: string,
-    field: "value" | "min" | "max" | "step",
+    field: "min" | "max" | "step",
   ) {
     setSliderDrafts((current) => {
       const existing = current[id];
@@ -951,22 +970,17 @@ function App() {
 
   function commitSliderFieldDraft(
     id: string,
-    field: "value" | "min" | "max" | "step",
+    field: "min" | "max" | "step",
     value: string,
   ) {
-    if (field === "value") {
-      updateExpressionFromSliderValueInput(id, value);
-    } else {
-      updateExpressionFromSliderConfigInput(id, field, value);
-    }
-
+    updateExpressionFromSliderConfigInput(id, field, value);
     clearSliderDraftValue(id, field);
   }
 
   function handleSliderFieldKeyDown(
     event: React.KeyboardEvent<HTMLInputElement>,
     id: string,
-    field: "value" | "min" | "max" | "step",
+    field: "min" | "max" | "step",
   ) {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -996,7 +1010,7 @@ function App() {
   function handleSliderFieldBlur(
     event: React.FocusEvent<HTMLInputElement>,
     id: string,
-    field: "value" | "min" | "max" | "step",
+    field: "min" | "max" | "step",
   ) {
     if (event.currentTarget.dataset.skipSliderFieldBlurCommit === "true") {
       delete event.currentTarget.dataset.skipSliderFieldBlurCommit;
@@ -2365,7 +2379,7 @@ function App() {
                             }}
                             className="expression-textarea"
                             rows={1}
-                            value={expression.raw}
+                            value={formatExpressionForDisplay(expression.raw)}
                             onFocus={() =>
                               setFocusedExpressionId(expression.id)
                             }
@@ -2437,9 +2451,36 @@ function App() {
                           {slider ? (
                             <>
                               <div className="slider-control">
-                                <span className="slider-label">
-                                  {formatSliderConfigNumber(slider.min)}
-                                </span>
+                                <input
+                                  className="slider-endpoint-input"
+                                  type="text"
+                                  value={
+                                    sliderDrafts[expression.id]?.min ??
+                                    formatSliderConfigNumber(slider.min)
+                                  }
+                                  onChange={(event) =>
+                                    setSliderDraftValue(
+                                      expression.id,
+                                      "min",
+                                      event.target.value,
+                                    )
+                                  }
+                                  onBlur={(event) =>
+                                    handleSliderFieldBlur(
+                                      event,
+                                      expression.id,
+                                      "min",
+                                    )
+                                  }
+                                  onKeyDown={(event) =>
+                                    handleSliderFieldKeyDown(
+                                      event,
+                                      expression.id,
+                                      "min",
+                                    )
+                                  }
+                                  aria-label="Slider min"
+                                />
                                 <input
                                   type="range"
                                   min={slider.min}
@@ -2457,141 +2498,69 @@ function App() {
                                     )
                                   }
                                 />
-                                <span className="slider-label">
-                                  {formatSliderConfigNumber(slider.max)}
-                                </span>
+                                <input
+                                  className="slider-endpoint-input"
+                                  type="text"
+                                  value={
+                                    sliderDrafts[expression.id]?.max ??
+                                    formatSliderConfigNumber(slider.max)
+                                  }
+                                  onChange={(event) =>
+                                    setSliderDraftValue(
+                                      expression.id,
+                                      "max",
+                                      event.target.value,
+                                    )
+                                  }
+                                  onBlur={(event) =>
+                                    handleSliderFieldBlur(
+                                      event,
+                                      expression.id,
+                                      "max",
+                                    )
+                                  }
+                                  onKeyDown={(event) =>
+                                    handleSliderFieldKeyDown(
+                                      event,
+                                      expression.id,
+                                      "max",
+                                    )
+                                  }
+                                  aria-label="Slider max"
+                                />
                               </div>
-
-                              <div className="slider-fields">
-                                <label className="slider-field">
-                                  <span>Value</span>
-                                  <input
-                                    type="text"
-                                    value={
-                                      sliderDrafts[expression.id]?.value ??
-                                      formatRoundedNumber(slider.value, 6)
-                                    }
-                                    onChange={(event) =>
-                                      setSliderDraftValue(
-                                        expression.id,
-                                        "value",
-                                        event.target.value,
-                                      )
-                                    }
-                                    onBlur={(event) =>
-                                      handleSliderFieldBlur(
-                                        event,
-                                        expression.id,
-                                        "value",
-                                      )
-                                    }
-                                    onKeyDown={(event) =>
-                                      handleSliderFieldKeyDown(
-                                        event,
-                                        expression.id,
-                                        "value",
-                                      )
-                                    }
-                                    aria-label="Slider value"
-                                  />
-                                </label>
-                                <label className="slider-field">
-                                  <span>Min</span>
-                                  <input
-                                    type="text"
-                                    value={
-                                      sliderDrafts[expression.id]?.min ??
-                                      formatSliderConfigNumber(slider.min)
-                                    }
-                                    onChange={(event) =>
-                                      setSliderDraftValue(
-                                        expression.id,
-                                        "min",
-                                        event.target.value,
-                                      )
-                                    }
-                                    onBlur={(event) =>
-                                      handleSliderFieldBlur(
-                                        event,
-                                        expression.id,
-                                        "min",
-                                      )
-                                    }
-                                    onKeyDown={(event) =>
-                                      handleSliderFieldKeyDown(
-                                        event,
-                                        expression.id,
-                                        "min",
-                                      )
-                                    }
-                                    aria-label="Slider min"
-                                  />
-                                </label>
-                                <label className="slider-field">
-                                  <span>Max</span>
-                                  <input
-                                    type="text"
-                                    value={
-                                      sliderDrafts[expression.id]?.max ??
-                                      formatSliderConfigNumber(slider.max)
-                                    }
-                                    onChange={(event) =>
-                                      setSliderDraftValue(
-                                        expression.id,
-                                        "max",
-                                        event.target.value,
-                                      )
-                                    }
-                                    onBlur={(event) =>
-                                      handleSliderFieldBlur(
-                                        event,
-                                        expression.id,
-                                        "max",
-                                      )
-                                    }
-                                    onKeyDown={(event) =>
-                                      handleSliderFieldKeyDown(
-                                        event,
-                                        expression.id,
-                                        "max",
-                                      )
-                                    }
-                                    aria-label="Slider max"
-                                  />
-                                </label>
-                                <label className="slider-field">
-                                  <span>Step</span>
-                                  <input
-                                    type="text"
-                                    value={
-                                      sliderDrafts[expression.id]?.step ??
-                                      formatSliderConfigNumber(slider.step)
-                                    }
-                                    onChange={(event) =>
-                                      setSliderDraftValue(
-                                        expression.id,
-                                        "step",
-                                        event.target.value,
-                                      )
-                                    }
-                                    onBlur={(event) =>
-                                      handleSliderFieldBlur(
-                                        event,
-                                        expression.id,
-                                        "step",
-                                      )
-                                    }
-                                    onKeyDown={(event) =>
-                                      handleSliderFieldKeyDown(
-                                        event,
-                                        expression.id,
-                                        "step",
-                                      )
-                                    }
-                                    aria-label="Slider step"
-                                  />
-                                </label>
-                              </div>
+                              <label className="slider-step-control">
+                                <span>step</span>
+                                <input
+                                  type="text"
+                                  value={
+                                    sliderDrafts[expression.id]?.step ??
+                                    formatSliderConfigNumber(slider.step)
+                                  }
+                                  onChange={(event) =>
+                                    setSliderDraftValue(
+                                      expression.id,
+                                      "step",
+                                      event.target.value,
+                                    )
+                                  }
+                                  onBlur={(event) =>
+                                    handleSliderFieldBlur(
+                                      event,
+                                      expression.id,
+                                      "step",
+                                    )
+                                  }
+                                  onKeyDown={(event) =>
+                                    handleSliderFieldKeyDown(
+                                      event,
+                                      expression.id,
+                                      "step",
+                                    )
+                                  }
+                                  aria-label="Slider step"
+                                />
+                              </label>
                             </>
                           ) : null}
                         </>
