@@ -326,6 +326,51 @@ input {
 .slider-control input[type="range"] {
   width: 100%;
   accent-color: #8ab4f8;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 14px;
+  background: transparent;
+}
+
+.slider-control input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--slider-active-color, #8ab4f8) 0%,
+    var(--slider-active-color, #8ab4f8) var(--slider-progress, 50%),
+    #0d1117 var(--slider-progress, 50%),
+    #0d1117 100%
+  );
+}
+
+.slider-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border: 0;
+  border-radius: 50%;
+  background: #ffffff;
+  margin-top: -3px;
+}
+.slider-control input[type="range"]::-moz-range-track {
+  height: 4px;
+  border: 0;
+  border-radius: 999px;
+  background: #0d1117;
+}
+.slider-control input[type="range"]::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--slider-active-color, #8ab4f8);
+}
+.slider-control input[type="range"]::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  border-radius: 50%;
+  background: #ffffff;
 }
 .slider-label {
   color: #8b949e;
@@ -364,7 +409,7 @@ input {
 }
 .slider-endpoint-label:focus-visible {
   border-radius: 4px;
-  background: #161b22;
+  background: #0d1117;
   outline: 1px solid #8b949e;
   outline-offset: 2px;
 }
@@ -374,7 +419,7 @@ input {
 }
 .slider-endpoint-input:focus {
   border-color: #8b949e;
-  background: #161b22;
+  background: #0d1117;
   outline: none;
   outline-offset: 0;
   box-shadow: inset 0 0 0 1px #8b949e;
@@ -383,6 +428,7 @@ input {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  min-height: 18px;
   margin-top: 4px;
   margin-left: 2px;
   color: #8b949e;
@@ -391,7 +437,9 @@ input {
   text-transform: lowercase;
 }
 .slider-step-label {
-  display: inline;
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
   border: 0;
   background: transparent;
   color: #8b949e;
@@ -405,11 +453,13 @@ input {
 }
 .slider-step-label:focus-visible {
   border-radius: 4px;
-  background: #161b22;
+  background: #0d1117;
   outline: 1px solid #8b949e;
   outline-offset: 2px;
 }
 .slider-step-control input {
+  box-sizing: border-box;
+  height: 18px;
   width: 46px;
   max-width: 56px;
   min-width: 42px;
@@ -427,7 +477,7 @@ input {
 }
 .slider-step-control input:focus {
   border-color: #8b949e;
-  background: #161b22;
+  background: #0d1117;
   outline: none;
   outline-offset: 0;
   box-shadow: inset 0 0 0 1px #8b949e;
