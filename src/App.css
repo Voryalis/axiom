@@ -332,16 +332,33 @@ input {
   font-size: 11px;
 }
 .slider-endpoint-input {
-  width: 64px;
+  width: 56px;
   min-width: 0;
   border: 1px solid #3d444d;
   border-radius: 6px;
   background: #0d1117;
   color: #f0f6fc;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.2;
-  padding: 3px 6px;
+  padding: 2px 5px;
   text-align: center;
+}
+.slider-endpoint-label {
+  border: 0;
+  background: transparent;
+  color: #8b949e;
+  font-size: 11px;
+  padding: 0;
+  margin: 0;
+  cursor: text;
+}
+.slider-endpoint-label:hover {
+  color: #c9d1d9;
+}
+.slider-endpoint-label:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid #58a6ff;
+  outline-offset: 2px;
 }
 .slider-endpoint-input:hover {
   border-color: #57606a;
@@ -358,17 +375,18 @@ input {
   margin-top: 4px;
   color: #8b949e;
   font-size: 10px;
+  opacity: 0.9;
   text-transform: lowercase;
 }
 .slider-step-control input {
-  width: 72px;
+  width: 64px;
   border: 1px solid #3d444d;
   border-radius: 6px;
   background: #0d1117;
   color: #f0f6fc;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.2;
-  padding: 2px 6px;
+  padding: 2px 5px;
 }
 .slider-step-control input:hover {
   border-color: #57606a;

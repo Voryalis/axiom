@@ -780,6 +780,9 @@ function App() {
   const [sliderDrafts, setSliderDrafts] = useState<
     Record<string, Partial<{ min: string; max: string; step: string }>>
   >({});
+  const [editingSliderField, setEditingSliderField] = useState<
+    Record<string, Partial<Record<"min" | "max" | "step", boolean>>>
+  >({});
 
   const isGridVisible = showGraphDetails && showGrid;
   const isMinorGridVisible = isGridVisible && showMinorGrid;
@@ -968,6 +971,34 @@ function App() {
     });
   }
 
+  function setSliderFieldEditingState(
+    id: string,
+    field: "min" | "max" | "step",
+    isEditing: boolean,
+  ) {
+    setEditingSliderField((current) => {
+      const existing = current[id] ?? {};
+      const nextEntry = { ...existing };
+
+      if (isEditing) {
+        nextEntry[field] = true;
+      } else {
+        delete nextEntry[field];
+      }
+
+      if (Object.keys(nextEntry).length === 0) {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      }
+
+      return {
+        ...current,
+        [id]: nextEntry,
+      };
+    });
+  }
+
   function commitSliderFieldDraft(
     id: string,
     field: "min" | "max" | "step",
@@ -995,6 +1026,7 @@ function App() {
       clearSliderDraftValue(id, field);
       event.currentTarget.dataset.skipSliderFieldBlurCommit = "true";
       event.currentTarget.blur();
+      setSliderFieldEditingState(id, field, false);
       return;
     }
 
@@ -1014,10 +1046,12 @@ function App() {
   ) {
     if (event.currentTarget.dataset.skipSliderFieldBlurCommit === "true") {
       delete event.currentTarget.dataset.skipSliderFieldBlurCommit;
+      setSliderFieldEditingState(id, field, false);
       return;
     }
 
     commitSliderFieldDraft(id, field, event.currentTarget.value);
+    setSliderFieldEditingState(id, field, false);
   }
 
   function updateTableExpression(
@@ -2451,36 +2485,54 @@ function App() {
                           {slider ? (
                             <>
                               <div className="slider-control">
-                                <input
-                                  className="slider-endpoint-input"
-                                  type="text"
-                                  value={
-                                    sliderDrafts[expression.id]?.min ??
-                                    formatSliderConfigNumber(slider.min)
-                                  }
-                                  onChange={(event) =>
-                                    setSliderDraftValue(
-                                      expression.id,
-                                      "min",
-                                      event.target.value,
-                                    )
-                                  }
-                                  onBlur={(event) =>
-                                    handleSliderFieldBlur(
-                                      event,
-                                      expression.id,
-                                      "min",
-                                    )
-                                  }
-                                  onKeyDown={(event) =>
-                                    handleSliderFieldKeyDown(
-                                      event,
-                                      expression.id,
-                                      "min",
-                                    )
-                                  }
-                                  aria-label="Slider min"
-                                />
+                                {editingSliderField[expression.id]?.min ? (
+                                  <input
+                                    className="slider-endpoint-input"
+                                    type="text"
+                                    value={
+                                      sliderDrafts[expression.id]?.min ??
+                                      formatSliderConfigNumber(slider.min)
+                                    }
+                                    onChange={(event) =>
+                                      setSliderDraftValue(
+                                        expression.id,
+                                        "min",
+                                        event.target.value,
+                                      )
+                                    }
+                                    onBlur={(event) =>
+                                      handleSliderFieldBlur(
+                                        event,
+                                        expression.id,
+                                        "min",
+                                      )
+                                    }
+                                    onKeyDown={(event) =>
+                                      handleSliderFieldKeyDown(
+                                        event,
+                                        expression.id,
+                                        "min",
+                                      )
+                                    }
+                                    autoFocus
+                                    aria-label="Slider min"
+                                  />
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="slider-endpoint-label"
+                                    onClick={() =>
+                                      setSliderFieldEditingState(
+                                        expression.id,
+                                        "min",
+                                        true,
+                                      )
+                                    }
+                                    aria-label="Edit slider min"
+                                  >
+                                    {formatSliderConfigNumber(slider.min)}
+                                  </button>
+                                )}
                                 <input
                                   type="range"
                                   min={slider.min}
@@ -2498,36 +2550,54 @@ function App() {
                                     )
                                   }
                                 />
-                                <input
-                                  className="slider-endpoint-input"
-                                  type="text"
-                                  value={
-                                    sliderDrafts[expression.id]?.max ??
-                                    formatSliderConfigNumber(slider.max)
-                                  }
-                                  onChange={(event) =>
-                                    setSliderDraftValue(
-                                      expression.id,
-                                      "max",
-                                      event.target.value,
-                                    )
-                                  }
-                                  onBlur={(event) =>
-                                    handleSliderFieldBlur(
-                                      event,
-                                      expression.id,
-                                      "max",
-                                    )
-                                  }
-                                  onKeyDown={(event) =>
-                                    handleSliderFieldKeyDown(
-                                      event,
-                                      expression.id,
-                                      "max",
-                                    )
-                                  }
-                                  aria-label="Slider max"
-                                />
+                                {editingSliderField[expression.id]?.max ? (
+                                  <input
+                                    className="slider-endpoint-input"
+                                    type="text"
+                                    value={
+                                      sliderDrafts[expression.id]?.max ??
+                                      formatSliderConfigNumber(slider.max)
+                                    }
+                                    onChange={(event) =>
+                                      setSliderDraftValue(
+                                        expression.id,
+                                        "max",
+                                        event.target.value,
+                                      )
+                                    }
+                                    onBlur={(event) =>
+                                      handleSliderFieldBlur(
+                                        event,
+                                        expression.id,
+                                        "max",
+                                      )
+                                    }
+                                    onKeyDown={(event) =>
+                                      handleSliderFieldKeyDown(
+                                        event,
+                                        expression.id,
+                                        "max",
+                                      )
+                                    }
+                                    autoFocus
+                                    aria-label="Slider max"
+                                  />
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="slider-endpoint-label"
+                                    onClick={() =>
+                                      setSliderFieldEditingState(
+                                        expression.id,
+                                        "max",
+                                        true,
+                                      )
+                                    }
+                                    aria-label="Edit slider max"
+                                  >
+                                    {formatSliderConfigNumber(slider.max)}
+                                  </button>
+                                )}
                               </div>
                               <label className="slider-step-control">
                                 <span>step</span>
