@@ -161,6 +161,7 @@ export function areRenderedPointsSame(
   first: RenderedPoint | null,
   second: RenderedPoint | null,
 ) {
+  if (!first && !second) return true;
   if (!first || !second) return false;
 
   return (
