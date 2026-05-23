@@ -148,9 +148,7 @@ export default function SliderControl({
           style={{
             accentColor: color,
             color,
-            ["--slider-progress" as string]: `${
-              sliderProgress
-            }%`,
+            background: `linear-gradient(to right, ${color} 0%, ${color} ${sliderProgress}%, #161b22 ${sliderProgress}%, #161b22 100%)`,
           }}
           onChange={(event) => onSliderValueChange(expressionId, Number(event.target.value))}
         />
