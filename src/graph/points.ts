@@ -23,6 +23,7 @@ export type RenderedPoint = {
 };
 
 const POINT_HIT_RADIUS = 10;
+const POINT_IDENTITY_EPSILON = 1e-9;
 
 export function drawPoint(
   ctx: CanvasRenderingContext2D,
@@ -164,7 +165,9 @@ export function areRenderedPointsSame(
 
   return (
     first.expressionId === second.expressionId &&
-    first.sourceExpressionId === second.sourceExpressionId
+    first.sourceExpressionId === second.sourceExpressionId &&
+    Math.abs(first.point.x - second.point.x) <= POINT_IDENTITY_EPSILON &&
+    Math.abs(first.point.y - second.point.y) <= POINT_IDENTITY_EPSILON
   );
 }
 
