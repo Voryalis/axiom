@@ -318,7 +318,7 @@ input {
 }
 .slider-control {
   display: grid;
-  grid-template-columns: minmax(0, 72px) minmax(0, 1fr) minmax(0, 72px);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   margin-top: 4px;
@@ -332,21 +332,20 @@ input {
   font-size: 11px;
 }
 .slider-endpoint-input {
-  width: 56px;
-  min-width: 0;
-  border: 1px solid #3d444d;
+  width: 46px;
+  max-width: 56px;
+  min-width: 42px;
+  border: 1px solid transparent;
   border-radius: 6px;
-  background: #0d1117;
+  background: transparent;
   color: #f0f6fc;
   font-size: 11px;
   line-height: 1.2;
-  padding: 2px 5px;
+  padding: 1px 3px;
   text-align: center;
 }
 .slider-endpoint-label {
   display: inline-block;
-  width: 100%;
-  max-width: 72px;
   border: 0;
   background: transparent;
   color: #8b949e;
@@ -369,38 +368,35 @@ input {
   outline-offset: 2px;
 }
 .slider-endpoint-input:hover {
-  border-color: #57606a;
+  border-color: rgba(87, 96, 106, 0.6);
+  background: rgba(13, 17, 23, 0.35);
 }
 .slider-endpoint-input:focus {
   border-color: #1f6feb;
+  background: #0d1117;
   outline: 2px solid rgba(31, 111, 235, 0.25);
   outline-offset: 0;
 }
 .slider-step-control {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   margin-top: 4px;
+  margin-left: 2px;
   color: #8b949e;
   font-size: 10px;
   opacity: 0.9;
   text-transform: lowercase;
 }
 .slider-step-label {
-  display: inline-block;
-  max-width: 132px;
-  margin-top: 4px;
+  display: inline;
   border: 0;
   background: transparent;
   color: #8b949e;
   font-size: 10px;
   line-height: 1.2;
-  text-transform: lowercase;
   cursor: text;
   padding: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .slider-step-label:hover {
   color: #c9d1d9;
@@ -411,20 +407,24 @@ input {
   outline-offset: 2px;
 }
 .slider-step-control input {
-  width: 64px;
-  border: 1px solid #3d444d;
+  width: 46px;
+  max-width: 56px;
+  min-width: 42px;
+  border: 1px solid transparent;
   border-radius: 6px;
-  background: #0d1117;
+  background: transparent;
   color: #f0f6fc;
   font-size: 11px;
   line-height: 1.2;
-  padding: 2px 5px;
+  padding: 1px 3px;
 }
 .slider-step-control input:hover {
-  border-color: #57606a;
+  border-color: rgba(87, 96, 106, 0.6);
+  background: rgba(13, 17, 23, 0.35);
 }
 .slider-step-control input:focus {
   border-color: #1f6feb;
+  background: #0d1117;
   outline: 2px solid rgba(31, 111, 235, 0.25);
   outline-offset: 0;
 }

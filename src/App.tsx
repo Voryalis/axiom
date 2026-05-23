@@ -2644,21 +2644,23 @@ function App() {
                                   />
                                 </label>
                               ) : (
-                                <button
-                                  type="button"
-                                  className="slider-step-label"
-                                  onClick={() =>
-                                    setSliderFieldEditingState(
-                                      expression.id,
-                                      "step",
-                                      true,
-                                    )
-                                  }
-                                  aria-label="Edit slider step"
-                                >
-                                  <span>step</span>{" "}
-                                  {formatSliderUiCompactNumber(slider.step)}
-                                </button>
+                                <label className="slider-step-control">
+                                  <span>step</span>
+                                  <button
+                                    type="button"
+                                    className="slider-step-label"
+                                    onClick={() =>
+                                      setSliderFieldEditingState(
+                                        expression.id,
+                                        "step",
+                                        true,
+                                      )
+                                    }
+                                    aria-label="Edit slider step"
+                                  >
+                                    {formatSliderUiCompactNumber(slider.step)}
+                                  </button>
+                                </label>
                               )}
                             </>
                           ) : null}
