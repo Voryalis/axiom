@@ -110,6 +110,11 @@ export default function SliderControl({
     setSliderFieldEditingState(field, false);
   }
 
+  const clampedSliderValue = Math.max(slider.min, Math.min(slider.max, slider.value));
+  const sliderRange = slider.max - slider.min;
+  const sliderProgress =
+    sliderRange > 0 ? ((clampedSliderValue - slider.min) / sliderRange) * 100 : 0;
+
   return (
     <>
       <div className="slider-control">
@@ -139,8 +144,14 @@ export default function SliderControl({
           min={slider.min}
           max={slider.max}
           step={slider.step}
-          value={Math.max(slider.min, Math.min(slider.max, slider.value))}
-          style={{ accentColor: color }}
+          value={clampedSliderValue}
+          style={{
+            accentColor: color,
+            color,
+            ["--slider-progress" as string]: `${
+              sliderProgress
+            }%`,
+          }}
           onChange={(event) => onSliderValueChange(expressionId, Number(event.target.value))}
         />
         {editingSliderField.max ? (
