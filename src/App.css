@@ -318,7 +318,7 @@ input {
 }
 .slider-control {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: minmax(0, 72px) minmax(0, 1fr) minmax(0, 72px);
   align-items: center;
   gap: 8px;
   margin-top: 4px;
@@ -344,13 +344,21 @@ input {
   text-align: center;
 }
 .slider-endpoint-label {
+  display: inline-block;
+  width: 100%;
+  max-width: 72px;
   border: 0;
   background: transparent;
   color: #8b949e;
   font-size: 11px;
+  line-height: 1.2;
   padding: 0;
   margin: 0;
   cursor: text;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .slider-endpoint-label:hover {
   color: #c9d1d9;
@@ -377,6 +385,30 @@ input {
   font-size: 10px;
   opacity: 0.9;
   text-transform: lowercase;
+}
+.slider-step-label {
+  display: inline-block;
+  max-width: 132px;
+  margin-top: 4px;
+  border: 0;
+  background: transparent;
+  color: #8b949e;
+  font-size: 10px;
+  line-height: 1.2;
+  text-transform: lowercase;
+  cursor: text;
+  padding: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.slider-step-label:hover {
+  color: #c9d1d9;
+}
+.slider-step-label:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid #58a6ff;
+  outline-offset: 2px;
 }
 .slider-step-control input {
   width: 64px;

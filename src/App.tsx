@@ -358,6 +358,16 @@ function formatSliderConfigNumber(value: number) {
   return formatRoundedNumber(value, 6);
 }
 
+function formatSliderUiCompactNumber(value: number) {
+  const abs = Math.abs(value);
+
+  if ((abs >= 1e7 || (abs > 0 && abs < 1e-4)) && Number.isFinite(value)) {
+    return value.toExponential(0).replace("e+", "e");
+  }
+
+  return formatSliderConfigNumber(value);
+}
+
 function formatVariableAssignmentWithSliderConfig(
   name: string,
   value: number,
@@ -2530,7 +2540,7 @@ function App() {
                                     }
                                     aria-label="Edit slider min"
                                   >
-                                    {formatSliderConfigNumber(slider.min)}
+                                    {formatSliderUiCompactNumber(slider.min)}
                                   </button>
                                 )}
                                 <input
@@ -2595,42 +2605,61 @@ function App() {
                                     }
                                     aria-label="Edit slider max"
                                   >
-                                    {formatSliderConfigNumber(slider.max)}
+                                    {formatSliderUiCompactNumber(slider.max)}
                                   </button>
                                 )}
                               </div>
-                              <label className="slider-step-control">
-                                <span>step</span>
-                                <input
-                                  type="text"
-                                  value={
-                                    sliderDrafts[expression.id]?.step ??
-                                    formatSliderConfigNumber(slider.step)
-                                  }
-                                  onChange={(event) =>
-                                    setSliderDraftValue(
+                              {editingSliderField[expression.id]?.step ? (
+                                <label className="slider-step-control">
+                                  <span>step</span>
+                                  <input
+                                    type="text"
+                                    value={
+                                      sliderDrafts[expression.id]?.step ??
+                                      formatSliderConfigNumber(slider.step)
+                                    }
+                                    onChange={(event) =>
+                                      setSliderDraftValue(
+                                        expression.id,
+                                        "step",
+                                        event.target.value,
+                                      )
+                                    }
+                                    onBlur={(event) =>
+                                      handleSliderFieldBlur(
+                                        event,
+                                        expression.id,
+                                        "step",
+                                      )
+                                    }
+                                    onKeyDown={(event) =>
+                                      handleSliderFieldKeyDown(
+                                        event,
+                                        expression.id,
+                                        "step",
+                                      )
+                                    }
+                                    autoFocus
+                                    aria-label="Slider step"
+                                  />
+                                </label>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="slider-step-label"
+                                  onClick={() =>
+                                    setSliderFieldEditingState(
                                       expression.id,
                                       "step",
-                                      event.target.value,
+                                      true,
                                     )
                                   }
-                                  onBlur={(event) =>
-                                    handleSliderFieldBlur(
-                                      event,
-                                      expression.id,
-                                      "step",
-                                    )
-                                  }
-                                  onKeyDown={(event) =>
-                                    handleSliderFieldKeyDown(
-                                      event,
-                                      expression.id,
-                                      "step",
-                                    )
-                                  }
-                                  aria-label="Slider step"
-                                />
-                              </label>
+                                  aria-label="Edit slider step"
+                                >
+                                  <span>step</span>{" "}
+                                  {formatSliderUiCompactNumber(slider.step)}
+                                </button>
+                              )}
                             </>
                           ) : null}
                         </>
