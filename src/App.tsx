@@ -8,6 +8,14 @@ import SliderControl from "./components/SliderControl";
 import "./App.css";
 import { formatRoundedNumber } from "./graph/format";
 import {
+  buildTableExpression,
+  getEditableTable,
+  isEditableTableRowEmpty,
+  normalizeEditableTableRows,
+  parseEditableTable,
+  type EditableTable,
+} from "./graph/tables";
+import {
   formatExpressionForDisplay,
   formatSliderUiCompactNumber,
   parseNumericVariableAssignment,
@@ -37,16 +45,6 @@ type AppSettings = {
   showAxes: boolean;
   showAxisLabels: boolean;
   showIntersections: boolean;
-};
-
-type EditableTableRow = {
-  x: string;
-  y: string;
-};
-
-type EditableTable = {
-  connect: boolean;
-  rows: EditableTableRow[];
 };
 
 const COLORS = ["#8ab4f8", "#a8d08d", "#f6c177", "#c4a7e7", "#f28b82"];
@@ -453,105 +451,6 @@ function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
   }
 }
 
-function parseEditableTable(rawExpression: string): EditableTable | null {
-  const lines = rawExpression.split("\n").map((line) => line.trim());
-
-  const firstContentIndex = lines.findIndex((line) => line.length > 0);
-
-  if (firstContentIndex === -1) return null;
-
-  const firstLine = lines[firstContentIndex]?.toLowerCase();
-
-  const isPlainTable = firstLine === "table:" || firstLine === "table";
-  const isConnectedTable =
-    firstLine === "table lines:" ||
-    firstLine === "table lines" ||
-    firstLine === "table line:" ||
-    firstLine === "table line";
-
-  if (!isPlainTable && !isConnectedTable) return null;
-
-  const dataLines = lines.slice(firstContentIndex + 1).filter(Boolean);
-  const rows =
-    dataLines[0]?.toLowerCase().replace(/\s/g, "") === "x,y"
-      ? dataLines.slice(1)
-      : dataLines;
-
-  const tableRows = rows.map((row) => {
-    const [x = "", y = ""] = row.split(",").map((part) => part.trim());
-
-    return { x, y };
-  });
-
-  return {
-    connect: isConnectedTable,
-    rows: tableRows.length > 0 ? tableRows : [{ x: "", y: "" }],
-  };
-}
-
-function editableTableFromTableData(
-  tableData: GraphExpression["tableData"],
-): EditableTable | null {
-  if (!tableData) return null;
-
-  const rows = tableData.rows.map((row) => ({
-    x: row.cells.x ?? "",
-    y: row.cells.y ?? "",
-  }));
-
-  return {
-    connect: tableData.connectLines,
-    rows: rows.length > 0 ? rows : [{ x: "", y: "" }],
-  };
-}
-
-function getEditableTable(expression: GraphExpression) {
-  return (
-    editableTableFromTableData(expression.tableData) ??
-    parseEditableTable(expression.raw)
-  );
-}
-
-function isEditableTableRowEmpty(row: EditableTableRow) {
-  return row.x.trim().length === 0 && row.y.trim().length === 0;
-}
-
-function normalizeEditableTableRows(rows: EditableTableRow[]) {
-  const normalizedRows = rows.map((row) => ({ ...row }));
-
-  while (
-    normalizedRows.length > 1 &&
-    isEditableTableRowEmpty(normalizedRows[normalizedRows.length - 1]) &&
-    isEditableTableRowEmpty(normalizedRows[normalizedRows.length - 2])
-  ) {
-    normalizedRows.pop();
-  }
-
-  const lastRow = normalizedRows[normalizedRows.length - 1];
-
-  if (!lastRow || !isEditableTableRowEmpty(lastRow)) {
-    normalizedRows.push({ x: "", y: "" });
-  }
-
-  return normalizedRows;
-}
-
-function buildTableExpression(
-  table: EditableTable,
-  options: { preserveEmptyRows?: boolean } = {},
-) {
-  const header = table.connect ? "table lines:" : "table:";
-  const sourceRows = table.rows.length > 0 ? table.rows : [{ x: "", y: "" }];
-  const rows = options.preserveEmptyRows
-    ? sourceRows
-    : normalizeEditableTableRows(sourceRows);
-
-  return [
-    header,
-    "x, y",
-    ...rows.map((row) => `${row.x.trim()}, ${row.y.trim()}`),
-  ].join("\n");
-}
 
 function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
