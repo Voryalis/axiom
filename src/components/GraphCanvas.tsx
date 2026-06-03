@@ -2189,8 +2189,8 @@ function findCurveIntersections(
           intersections.push({
             expressionId: `intersection-${intersections.length}`,
             point: {
-              x: intersection.x,
-              y: intersection.y,
+              x: normalizeAnalysisCoordinate(intersection.x),
+              y: normalizeAnalysisCoordinate(intersection.y),
             },
             screenX: intersection.screenX,
             screenY: intersection.screenY,
