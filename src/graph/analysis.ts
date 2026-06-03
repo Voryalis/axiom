@@ -57,6 +57,100 @@ export function findVisibleCurveExtrema(points: RenderedCurvePoint[]) {
   return extrema;
 }
 
+export function findVisibleSampledYIntercept(points: RenderedCurvePoint[]) {
+  if (points.length < 2) return null;
+
+  for (let index = 0; index < points.length - 1; index++) {
+    const first = points[index];
+    const second = points[index + 1];
+
+    if (!first || !second) continue;
+    if (!Number.isFinite(first.x) || !Number.isFinite(second.x)) continue;
+    if (!Number.isFinite(first.y) || !Number.isFinite(second.y)) continue;
+
+    if (Math.abs(first.x) < 1e-9) {
+      return {
+        x: 0,
+        y: normalizeAnalysisCoordinate(first.y),
+      };
+    }
+
+    if ((first.x < 0 && second.x > 0) || (first.x > 0 && second.x < 0)) {
+      const amount =
+        Math.abs(first.x) / (Math.abs(first.x) + Math.abs(second.x));
+
+      return {
+        x: 0,
+        y: normalizeAnalysisCoordinate(first.y + (second.y - first.y) * amount),
+      };
+    }
+  }
+
+  return null;
+}
+
+export function findVisibleSampledRoots(points: RenderedCurvePoint[]) {
+  if (points.length < 2) return [];
+
+  const roots: Array<{
+    x: number;
+    y: number;
+    screenX: number;
+    screenY: number;
+  }> = [];
+
+  for (let index = 0; index < points.length - 1; index++) {
+    const first = points[index];
+    const second = points[index + 1];
+
+    if (!first || !second) continue;
+    if (!Number.isFinite(first.y) || !Number.isFinite(second.y)) continue;
+
+    let root: {
+      x: number;
+      y: number;
+      screenX: number;
+      screenY: number;
+    } | null = null;
+
+    if (Math.abs(first.y) < 1e-9) {
+      root = {
+        x: normalizeAnalysisCoordinate(first.x),
+        y: 0,
+        screenX: first.screenX,
+        screenY: first.screenY,
+      };
+    } else if ((first.y < 0 && second.y > 0) || (first.y > 0 && second.y < 0)) {
+      const amount =
+        Math.abs(first.y) / (Math.abs(first.y) + Math.abs(second.y));
+
+      root = {
+        x: normalizeAnalysisCoordinate(first.x + (second.x - first.x) * amount),
+        y: 0,
+        screenX: first.screenX + (second.screenX - first.screenX) * amount,
+        screenY: first.screenY + (second.screenY - first.screenY) * amount,
+      };
+    }
+
+    if (!root) continue;
+
+    const duplicate = roots.some((existing) => {
+      return (
+        Math.hypot(
+          existing.screenX - root.screenX,
+          existing.screenY - root.screenY,
+        ) < 18
+      );
+    });
+
+    if (duplicate) continue;
+
+    roots.push(root);
+  }
+
+  return roots;
+}
+
 export function normalizeAnalysisCoordinate(value: number) {
   if (!Number.isFinite(value)) return value;
   const nearestInteger = Math.round(value);
