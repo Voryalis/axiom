@@ -796,6 +796,9 @@ function draw(
     const intersections = findCurveIntersections(
       renderedCurves,
       selectedCurveId,
+      width,
+      height,
+      viewport,
     );
 
     intersections.forEach((intersection) => {
@@ -2053,6 +2056,9 @@ function drawIntersectionPoint(
 function findCurveIntersections(
   curves: RenderedCurve[],
   selectedCurveId: string | null,
+  width: number,
+  height: number,
+  viewport: Viewport,
 ) {
   const intersections: RenderedPoint[] = [];
 
@@ -2094,14 +2100,23 @@ function findCurveIntersections(
           if (!intersection) continue;
           if (isDuplicateIntersection(intersection, intersections)) continue;
 
+          const refinedIntersection = refineIntersectionPoint(
+            firstCurve,
+            secondCurve,
+            intersection,
+            width,
+            height,
+            viewport,
+          );
+
           intersections.push({
             expressionId: `intersection-${intersections.length}`,
             point: {
-              x: intersection.x,
-              y: intersection.y,
+              x: refinedIntersection.x,
+              y: refinedIntersection.y,
             },
-            screenX: intersection.screenX,
-            screenY: intersection.screenY,
+            screenX: refinedIntersection.screenX,
+            screenY: refinedIntersection.screenY,
             color: mixIntersectionColor(firstCurve.color, secondCurve.color),
           });
 
@@ -2114,6 +2129,101 @@ function findCurveIntersections(
   }
 
   return intersections;
+}
+
+function getVerticalCurveX(curve: RenderedCurve) {
+  if (curve.points.length < 2) return null;
+
+  const firstX = curve.points[0]?.x;
+
+  if (firstX === undefined || !Number.isFinite(firstX)) return null;
+
+  const verticalEpsilon = 1e-9;
+
+  for (const point of curve.points) {
+    if (!Number.isFinite(point.x)) return null;
+    if (Math.abs(point.x - firstX) > verticalEpsilon) return null;
+  }
+
+  return firstX;
+}
+
+function getVisibleCurveYRange(curve: RenderedCurve) {
+  let minY = Number.POSITIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+
+  for (const point of curve.points) {
+    if (!Number.isFinite(point.y)) continue;
+
+    minY = Math.min(minY, point.y);
+    maxY = Math.max(maxY, point.y);
+  }
+
+  if (!Number.isFinite(minY) || !Number.isFinite(maxY)) return null;
+
+  return { minY, maxY };
+}
+
+function refineIntersectionPoint(
+  firstCurve: RenderedCurve,
+  secondCurve: RenderedCurve,
+  candidate: {
+    x: number;
+    y: number;
+    screenX: number;
+    screenY: number;
+  },
+  width: number,
+  height: number,
+  viewport: Viewport,
+) {
+  const firstVerticalX = getVerticalCurveX(firstCurve);
+  const secondVerticalX = getVerticalCurveX(secondCurve);
+
+  const refinementContext =
+    firstCurve.evaluator && secondVerticalX !== null
+      ? {
+          evaluator: firstCurve.evaluator,
+          verticalCurve: secondCurve,
+          verticalX: secondVerticalX,
+        }
+      : secondCurve.evaluator && firstVerticalX !== null
+        ? {
+            evaluator: secondCurve.evaluator,
+            verticalCurve: firstCurve,
+            verticalX: firstVerticalX,
+          }
+        : null;
+
+  if (!refinementContext) return candidate;
+
+  const { evaluator, verticalCurve, verticalX } = refinementContext;
+  const refinedY = evaluator(verticalX);
+
+  if (refinedY === null || !Number.isFinite(refinedY)) return candidate;
+
+  const visibleYRange = getVisibleCurveYRange(verticalCurve);
+
+  if (!visibleYRange) return candidate;
+
+  const rangeEpsilon = Math.max(
+    1e-9,
+    (visibleYRange.maxY - visibleYRange.minY) * 1e-9,
+  );
+
+  if (
+    refinedY < visibleYRange.minY - rangeEpsilon ||
+    refinedY > visibleYRange.maxY + rangeEpsilon
+  ) {
+    return candidate;
+  }
+
+  return {
+    x: verticalX,
+    y: refinedY,
+    screenX: graphToScreenX(verticalX, width, viewport),
+    screenY: graphToScreenY(refinedY, height, viewport),
+  };
 }
 
 function areCurvesOverlapping(
