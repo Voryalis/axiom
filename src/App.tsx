@@ -395,7 +395,6 @@ function evaluateMathExpression(raw: string, expressions: GraphExpression[]) {
   }
 }
 
-
 function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const graphCanvasRef = useRef<GraphCanvasHandle | null>(null);
@@ -2005,9 +2004,15 @@ function App() {
                               slider={slider}
                               color={expression.color}
                               onSliderValueChange={updateExpressionFromSlider}
-                              onSliderConfigChange={updateExpressionSliderConfig}
-                              formatSliderConfigNumber={formatSliderConfigNumber}
-                              formatSliderUiCompactNumber={formatSliderUiCompactNumber}
+                              onSliderConfigChange={
+                                updateExpressionSliderConfig
+                              }
+                              formatSliderConfigNumber={
+                                formatSliderConfigNumber
+                              }
+                              formatSliderUiCompactNumber={
+                                formatSliderUiCompactNumber
+                              }
                             />
                           ) : null}
                         </>
