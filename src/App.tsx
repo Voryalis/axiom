@@ -8,6 +8,11 @@ import SliderControl from "./components/SliderControl";
 import "./App.css";
 import { formatRoundedNumber } from "./graph/format";
 import {
+  loadAppSettings,
+  saveAppSettings,
+  type AppSettings,
+} from "./app/settings";
+import {
   buildTableExpression,
   getEditableTable,
   isEditableTableRowEmpty,
@@ -28,23 +33,12 @@ import {
 const math = create(all, {});
 
 const GRAPH_LIBRARY_KEY = "axiom.graphLibrary";
-const APP_SETTINGS_KEY = "axiom.appSettings";
-
 type SavedGraph = {
   id: string;
   version: number;
   title: string;
   expressions: GraphExpression[];
   updatedAt: string;
-};
-
-type AppSettings = {
-  showGraphDetails: boolean;
-  showGrid: boolean;
-  showMinorGrid: boolean;
-  showAxes: boolean;
-  showAxisLabels: boolean;
-  showIntersections: boolean;
 };
 
 const COLORS = ["#8ab4f8", "#a8d08d", "#f6c177", "#c4a7e7", "#f28b82"];
@@ -237,57 +231,6 @@ function loadGraphLibrary(): SavedGraph[] {
 
 function saveGraphLibrary(graphs: SavedGraph[]) {
   localStorage.setItem(GRAPH_LIBRARY_KEY, JSON.stringify(graphs, null, 2));
-}
-
-function loadAppSettings(): AppSettings {
-  try {
-    const raw = localStorage.getItem(APP_SETTINGS_KEY);
-
-    if (!raw) {
-      return {
-        showGraphDetails: true,
-        showGrid: true,
-        showMinorGrid: true,
-        showAxes: true,
-        showAxisLabels: true,
-        showIntersections: true,
-      };
-    }
-
-    const parsed = JSON.parse(raw);
-
-    return {
-      showGraphDetails:
-        typeof parsed.showGraphDetails === "boolean"
-          ? parsed.showGraphDetails
-          : true,
-      showGrid: typeof parsed.showGrid === "boolean" ? parsed.showGrid : true,
-      showMinorGrid:
-        typeof parsed.showMinorGrid === "boolean" ? parsed.showMinorGrid : true,
-      showAxes: typeof parsed.showAxes === "boolean" ? parsed.showAxes : true,
-      showAxisLabels:
-        typeof parsed.showAxisLabels === "boolean"
-          ? parsed.showAxisLabels
-          : true,
-      showIntersections:
-        typeof parsed.showIntersections === "boolean"
-          ? parsed.showIntersections
-          : true,
-    };
-  } catch {
-    return {
-      showGraphDetails: true,
-      showGrid: true,
-      showMinorGrid: true,
-      showAxes: true,
-      showAxisLabels: true,
-      showIntersections: true,
-    };
-  }
-}
-
-function saveAppSettings(settings: AppSettings) {
-  localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(settings, null, 2));
 }
 
 function normalizeMathExpression(raw: string) {
@@ -1557,14 +1500,16 @@ function App() {
       return;
     }
 
-    saveAppSettings({
+    const nextSettings: AppSettings = {
       showGraphDetails,
       showGrid,
       showMinorGrid,
       showAxes,
       showAxisLabels,
       showIntersections,
-    });
+    };
+
+    saveAppSettings(nextSettings);
 
     setSettingsSaveStatus("saved");
 
