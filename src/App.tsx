@@ -5,6 +5,7 @@ import GraphCanvas, {
   type GraphExpression,
 } from "./components/GraphCanvas";
 import SliderControl from "./components/SliderControl";
+import CreateMenu from "./components/CreateMenu";
 import SettingsPopover from "./components/SettingsPopover";
 import "./App.css";
 import { formatRoundedNumber } from "./graph/format";
@@ -1601,78 +1602,16 @@ function App() {
             </button>
 
             {isCreateMenuOpen ? (
-              <div
-                className="create-menu"
+              <CreateMenu
+                isFunctionTemplatesOpen={isFunctionTemplatesOpen}
+                onAddExpression={addExpressionFromMenu}
+                onAddTable={addTableExpression}
+                onToggleFunctionTemplates={() =>
+                  setIsFunctionTemplatesOpen((current) => !current)
+                }
+                onAddTemplate={addTemplateExpression}
                 onPointerDown={(event) => event.stopPropagation()}
-              >
-                <button
-                  className="create-menu-primary-button"
-                  onClick={addExpressionFromMenu}
-                >
-                  <span>Expression</span>
-                </button>
-                <button
-                  className="create-menu-primary-button"
-                  onClick={addTableExpression}
-                >
-                  <span>Table</span>
-                </button>
-
-                <div className="create-menu-template-section">
-                  <button
-                    className="create-menu-template-trigger"
-                    type="button"
-                    aria-expanded={isFunctionTemplatesOpen}
-                    onClick={() =>
-                      setIsFunctionTemplatesOpen((current) => !current)
-                    }
-                  >
-                    <span>Function templates</span>
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      {isFunctionTemplatesOpen ? (
-                        <path d="m18 15-6-6-6 6" />
-                      ) : (
-                        <path d="m6 9 6 6 6-6" />
-                      )}
-                    </svg>
-                  </button>
-
-                  {isFunctionTemplatesOpen ? (
-                    <div className="create-menu-template-grid">
-                      <button
-                        type="button"
-                        onClick={() => addTemplateExpression("sin(x)")}
-                      >
-                        sin(x)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => addTemplateExpression("cos(x)")}
-                      >
-                        cos(x)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => addTemplateExpression("tan(x)")}
-                      >
-                        tan(x)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => addTemplateExpression("sqrt(x)")}
-                      >
-                        sqrt(x)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => addTemplateExpression("abs(x)")}
-                      >
-                        abs(x)
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
+              />
             ) : null}
             <button
               className="sidebar-collapse-glyph inline-collapse-glyph"
