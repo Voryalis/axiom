@@ -5,9 +5,7 @@ import { normalizeMathInput } from "./inputNormalization";
 const math = create(all, {});
 
 function parseVariableAssignment(rawExpression: string) {
-  const match = normalizeMathInput(rawExpression)
-    .trim()
-    .match(/^([a-zA-Z]\w*)\s*=\s*(.+)$/);
+  const match = rawExpression.trim().match(/^([a-zA-Z]\w*)\s*=\s*(.+)$/);
 
   if (!match) return null;
 
@@ -19,14 +17,23 @@ function parseVariableAssignment(rawExpression: string) {
   return { name, expression };
 }
 
-export function parseSliderConfig(expression: string) {
-  const trimmed = normalizeMathInput(expression).trim();
+type ParseSliderConfigOptions = {
+  normalizeExpression?: boolean;
+};
+
+export function parseSliderConfig(
+  expression: string,
+  options: ParseSliderConfigOptions = {},
+) {
+  const { normalizeExpression = true } = options;
+  const trimmed = expression.trim();
+  const normalizedExpression = normalizeMathInput(expression).trim();
   const match = trimmed.match(
     /^(.*?)\s*\[\s*(-?(?:\d+(?:\.\d+)?|\.\d+))\s*,\s*(-?(?:\d+(?:\.\d+)?|\.\d+))(?:\s*,\s*(-?(?:\d+(?:\.\d+)?|\.\d+)))?\s*\]\s*$/,
   );
 
   const defaultConfig = {
-    expression: trimmed,
+    expression: normalizeExpression ? normalizedExpression : trimmed,
     min: -10,
     max: 10,
     step: 0.1,
@@ -55,8 +62,12 @@ export function parseSliderConfig(expression: string) {
     return defaultConfig;
   }
 
+  const trimmedExpression = rawExpression.trim();
+
   return {
-    expression: rawExpression.trim(),
+    expression: normalizeExpression
+      ? normalizeMathInput(trimmedExpression).trim()
+      : trimmedExpression,
     min,
     max,
     step,
@@ -190,7 +201,9 @@ export function updateVariableAssignmentSliderConfig(
 export function formatExpressionForDisplay(raw: string) {
   const assignment = parseVariableAssignment(raw);
   if (!assignment) return raw;
-  const sliderConfig = parseSliderConfig(assignment.expression);
+  const sliderConfig = parseSliderConfig(assignment.expression, {
+    normalizeExpression: false,
+  });
   if (!sliderConfig.hasCustomConfig) return raw;
   return `${assignment.name} = ${sliderConfig.expression}`;
 }
