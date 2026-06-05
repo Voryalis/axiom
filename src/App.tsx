@@ -34,6 +34,7 @@ import {
   updateVariableAssignment,
   updateVariableAssignmentSliderConfig,
 } from "./graph/sliders";
+import { normalizeMathInput } from "./graph/inputNormalization";
 
 const math = create(all, {});
 
@@ -239,7 +240,7 @@ function saveGraphLibrary(graphs: SavedGraph[]) {
 }
 
 function normalizeMathExpression(raw: string) {
-  const trimmed = raw.trim();
+  const trimmed = normalizeMathInput(raw).trim();
 
   if (trimmed.toLowerCase().startsWith("y=")) {
     return trimmed.slice(2).trim();
@@ -253,7 +254,9 @@ function normalizeMathExpression(raw: string) {
 }
 
 function parseVariableAssignment(rawExpression: string) {
-  const match = rawExpression.trim().match(/^([a-zA-Z]\w*)\s*=\s*(.+)$/);
+  const match = normalizeMathInput(rawExpression)
+    .trim()
+    .match(/^([a-zA-Z]\w*)\s*=\s*(.+)$/);
 
   if (!match) return null;
 
@@ -307,7 +310,9 @@ function formatEvaluatedValue(value: unknown) {
 }
 
 function isPointExpression(rawExpression: string) {
-  return /^\(\s*(.+)\s*,\s*(.+)\s*\)$/.test(rawExpression.trim());
+  return /^\(\s*(.+)\s*,\s*(.+)\s*\)$/.test(
+    normalizeMathInput(rawExpression).trim(),
+  );
 }
 
 function isTableExpression(rawExpression: string) {
@@ -328,11 +333,13 @@ function isTableExpression(rawExpression: string) {
 }
 
 function isInequalityExpression(rawExpression: string) {
-  return /^(x|y)\s*(>=|<=|>|<)\s*(.+)$/i.test(rawExpression.trim());
+  return /^(x|y)\s*(>=|<=|>|<)\s*(.+)$/i.test(
+    normalizeMathInput(rawExpression).trim(),
+  );
 }
 
 function isEquationExpression(rawExpression: string) {
-  const trimmed = rawExpression.trim();
+  const trimmed = normalizeMathInput(rawExpression).trim();
   const match = trimmed.match(/^(.+?)\s*=\s*(.+)$/);
 
   if (!match) return false;

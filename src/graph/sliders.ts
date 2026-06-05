@@ -1,10 +1,13 @@
 import { all, create } from "mathjs";
 import { formatRoundedNumber } from "./format";
+import { normalizeMathInput } from "./inputNormalization";
 
 const math = create(all, {});
 
 function parseVariableAssignment(rawExpression: string) {
-  const match = rawExpression.trim().match(/^([a-zA-Z]\w*)\s*=\s*(.+)$/);
+  const match = normalizeMathInput(rawExpression)
+    .trim()
+    .match(/^([a-zA-Z]\w*)\s*=\s*(.+)$/);
 
   if (!match) return null;
 
@@ -17,7 +20,7 @@ function parseVariableAssignment(rawExpression: string) {
 }
 
 export function parseSliderConfig(expression: string) {
-  const trimmed = expression.trim();
+  const trimmed = normalizeMathInput(expression).trim();
   const match = trimmed.match(
     /^(.*?)\s*\[\s*(-?(?:\d+(?:\.\d+)?|\.\d+))\s*,\s*(-?(?:\d+(?:\.\d+)?|\.\d+))(?:\s*,\s*(-?(?:\d+(?:\.\d+)?|\.\d+)))?\s*\]\s*$/,
   );
@@ -192,7 +195,10 @@ export function formatExpressionForDisplay(raw: string) {
   return `${assignment.name} = ${sliderConfig.expression}`;
 }
 
-export function preserveSliderConfigFromPreviousRaw(previousRaw: string, nextRaw: string) {
+export function preserveSliderConfigFromPreviousRaw(
+  previousRaw: string,
+  nextRaw: string,
+) {
   const previousAssignment = parseVariableAssignment(previousRaw);
   const nextAssignment = parseVariableAssignment(nextRaw);
   if (!previousAssignment || !nextAssignment) return nextRaw;
