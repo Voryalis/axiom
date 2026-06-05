@@ -6,6 +6,7 @@ import GraphCanvas, {
 } from "./components/GraphCanvas";
 import SliderControl from "./components/SliderControl";
 import CreateMenu from "./components/CreateMenu";
+import LibraryPanel from "./components/LibraryPanel";
 import SettingsPopover from "./components/SettingsPopover";
 import "./App.css";
 import { formatRoundedNumber } from "./graph/format";
@@ -2017,42 +2018,12 @@ function App() {
           )}
         </section>
 
-        <section className="panel library-panel">
-          <div className="panel-header">
-            <h2>Library</h2>
-          </div>
-
-          {library.length === 0 ? (
-            <p className="empty-library">No saved graphs yet.</p>
-          ) : (
-            <div className="library-list">
-              {library.map((graph) => (
-                <div
-                  className={`library-item ${
-                    graph.id === activeGraphId ? "library-item-active" : ""
-                  }`}
-                  key={graph.id}
-                >
-                  <button
-                    className="library-load-button"
-                    onClick={() => loadGraph(graph)}
-                  >
-                    <span>{graph.title || "Untitled Graph"}</span>
-                    <small>{new Date(graph.updatedAt).toLocaleString()}</small>
-                  </button>
-
-                  <button
-                    className="remove-button"
-                    onClick={() => deleteGraph(graph.id)}
-                    title="Delete saved graph"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+        <LibraryPanel
+          library={library}
+          activeGraphId={activeGraphId}
+          onLoadGraph={loadGraph}
+          onDeleteGraph={deleteGraph}
+        />
       </aside>
 
       <section className="graph-area">
