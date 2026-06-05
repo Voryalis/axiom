@@ -39,6 +39,7 @@ import {
 } from "../graph/viewport";
 import { formatRoundedNumber, normalizeDisplayNumber } from "../graph/format";
 import { extractQuadraticCoefficients } from "../graph/polynomial";
+import { normalizeMathInput } from "../graph/inputNormalization";
 
 const math = create(all, {});
 
@@ -1036,7 +1037,14 @@ function getCurveExtremaGraphPoints(curve: RenderedCurve, viewport: Viewport) {
 
     if (x >= viewport.xMin && x <= viewport.xMax) {
       const y = a * x * x + b * x + c;
-      return [{ x: normalizeAnalysisCoordinate(x), y: normalizeAnalysisCoordinate(y), screenX: 0, screenY: 0 }];
+      return [
+        {
+          x: normalizeAnalysisCoordinate(x),
+          y: normalizeAnalysisCoordinate(y),
+          screenX: 0,
+          screenY: 0,
+        },
+      ];
     }
   }
 
@@ -1105,7 +1113,7 @@ function distanceToSegment(
 }
 
 function normalizeExpression(raw: string) {
-  const trimmed = raw.trim();
+  const trimmed = normalizeMathInput(raw).trim();
 
   if (trimmed.toLowerCase().startsWith("y=")) {
     return trimmed.slice(2).trim();
@@ -1119,7 +1127,7 @@ function normalizeExpression(raw: string) {
 }
 
 function isVariableAssignment(rawExpression: string) {
-  const trimmed = rawExpression.trim();
+  const trimmed = normalizeMathInput(rawExpression).trim();
 
   if (trimmed.toLowerCase().startsWith("y=")) return false;
   if (trimmed.toLowerCase().startsWith("y =")) return false;
@@ -1128,7 +1136,9 @@ function isVariableAssignment(rawExpression: string) {
 }
 
 function parseVariableAssignment(rawExpression: string) {
-  const match = rawExpression.trim().match(/^([a-zA-Z]\w*)\s*=\s*(.+)$/);
+  const match = normalizeMathInput(rawExpression)
+    .trim()
+    .match(/^([a-zA-Z]\w*)\s*=\s*(.+)$/);
 
   if (!match) return null;
 
@@ -1140,7 +1150,7 @@ function parseVariableAssignment(rawExpression: string) {
 }
 
 function parseSliderConfig(expression: string) {
-  const trimmed = expression.trim();
+  const trimmed = normalizeMathInput(expression).trim();
   const match = trimmed.match(
     /^(.*?)\s*\[\s*(-?(?:\d+(?:\.\d+)?|\.\d+))\s*,\s*(-?(?:\d+(?:\.\d+)?|\.\d+))(?:\s*,\s*(-?(?:\d+(?:\.\d+)?|\.\d+)))?\s*\]\s*$/,
   );
@@ -1186,7 +1196,7 @@ function parsePointExpression(
   rawExpression: string,
   scope: Record<string, number>,
 ): GraphPoint | null {
-  const trimmed = rawExpression.trim();
+  const trimmed = normalizeMathInput(rawExpression).trim();
 
   const match = trimmed.match(/^\(\s*(.+)\s*,\s*(.+)\s*\)$/);
 
@@ -1218,7 +1228,7 @@ function parsePointExpression(
 function parseInequalityExpression(
   rawExpression: string,
 ): ParsedInequality | null {
-  const trimmed = rawExpression.trim();
+  const trimmed = normalizeMathInput(rawExpression).trim();
   const match = trimmed.match(/^(x|y)\s*(>=|<=|>|<)\s*(.+)$/i);
 
   if (!match) return null;
@@ -1246,7 +1256,7 @@ function parseInequalityExpression(
 }
 
 function parseEquationExpression(rawExpression: string): ParsedEquation | null {
-  const trimmed = rawExpression.trim();
+  const trimmed = normalizeMathInput(rawExpression).trim();
   const match = trimmed.match(/^(.+?)\s*=\s*(.+)$/);
 
   if (!match) return null;
@@ -1492,7 +1502,9 @@ function drawExpression(
     evaluator: (x: number) => {
       try {
         const value = compiled.evaluate({ ...scope, x });
-        return typeof value === "number" && Number.isFinite(value) ? value : null;
+        return typeof value === "number" && Number.isFinite(value)
+          ? value
+          : null;
       } catch {
         return null;
       }
@@ -1593,7 +1605,9 @@ function drawYEquation(
     evaluator: (x: number) => {
       try {
         const value = compiled.evaluate({ ...scope, x });
-        return typeof value === "number" && Number.isFinite(value) ? value : null;
+        return typeof value === "number" && Number.isFinite(value)
+          ? value
+          : null;
       } catch {
         return null;
       }
@@ -2326,7 +2340,7 @@ function mixIntersectionColor(firstColor: string, secondColor: string) {
 }
 
 function usesVariable(expression: string, variable: "x" | "y") {
-  return new RegExp(`\\b${variable}\\b`).test(expression);
+  return new RegExp(`\\b${variable}\\b`).test(normalizeMathInput(expression));
 }
 
 function interpolateZeroCrossing(
