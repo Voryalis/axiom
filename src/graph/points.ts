@@ -1,5 +1,5 @@
 import { graphToScreenX, graphToScreenY, type Viewport } from "./viewport";
-import { formatRoundedNumber } from "./format";
+import { formatRoundedNumber, type CoordinateLabelFormatter } from "./format";
 
 export type GraphPoint = {
   x: number;
@@ -80,8 +80,9 @@ export function drawPointLabel(
   width: number,
   height: number,
   renderedPoint: RenderedPoint,
+  formatCoordinate: CoordinateLabelFormatter = formatNumber,
 ) {
-  const label = `(${formatNumber(renderedPoint.point.x)}, ${formatNumber(
+  const label = `(${formatCoordinate(renderedPoint.point.x)}, ${formatCoordinate(
     renderedPoint.point.y,
   )})`;
 

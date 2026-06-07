@@ -1,3 +1,5 @@
+import type { CoordinateLabelFormat } from "../graph/format";
+
 type SettingsPopoverProps = {
   settingsSaveStatus: string;
   showGraphDetails: boolean;
@@ -7,6 +9,7 @@ type SettingsPopoverProps = {
   isAxesVisible: boolean;
   isAxisLabelsVisible: boolean;
   areIntersectionsVisible: boolean;
+  coordinateLabelFormat: CoordinateLabelFormat;
   onClose: () => void;
   onToggleGraphDetails: () => void;
   onToggleGrid: () => void;
@@ -14,6 +17,7 @@ type SettingsPopoverProps = {
   onToggleAxes: () => void;
   onToggleAxisLabels: () => void;
   onToggleIntersections: () => void;
+  onChangeCoordinateLabelFormat: (format: CoordinateLabelFormat) => void;
 };
 
 function renderSettingsCheckbox(isChecked: boolean) {
@@ -38,6 +42,7 @@ export default function SettingsPopover({
   isAxesVisible,
   isAxisLabelsVisible,
   areIntersectionsVisible,
+  coordinateLabelFormat,
   onClose,
   onToggleGraphDetails,
   onToggleGrid,
@@ -45,6 +50,7 @@ export default function SettingsPopover({
   onToggleAxes,
   onToggleAxisLabels,
   onToggleIntersections,
+  onChangeCoordinateLabelFormat,
 }: SettingsPopoverProps) {
   return (
     <div
@@ -226,25 +232,33 @@ export default function SettingsPopover({
             aria-label="Coordinate label mode options"
           >
             <button
-              className="settings-theme-option settings-theme-option-active"
+              className={`settings-theme-option ${
+                coordinateLabelFormat === "decimal"
+                  ? "settings-theme-option-active"
+                  : ""
+              }`}
               type="button"
-              aria-pressed="true"
-              disabled
+              aria-pressed={coordinateLabelFormat === "decimal"}
+              onClick={() => onChangeCoordinateLabelFormat("decimal")}
             >
               Decimal
             </button>
             <button
-              className="settings-theme-option"
+              className={`settings-theme-option ${
+                coordinateLabelFormat === "symbolic-pi"
+                  ? "settings-theme-option-active"
+                  : ""
+              }`}
               type="button"
-              aria-pressed="false"
-              disabled
+              aria-pressed={coordinateLabelFormat === "symbolic-pi"}
+              onClick={() => onChangeCoordinateLabelFormat("symbolic-pi")}
             >
               Symbolic / π
             </button>
           </div>
           <small className="settings-theme-note">
-            Decimal coordinate labels are active. Symbolic labels are planned
-            for later.
+            Decimal labels remain the default. Symbolic labels show simple π
+            multiples when coordinates are close enough.
           </small>
         </div>
       </section>

@@ -417,6 +417,7 @@ function App() {
   const tableInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const startingExpressions = useMemo(() => createDefaultExpressions(), []);
+  const initialSettings = useMemo(() => loadAppSettings(), []);
 
   const [activeGraphId, setActiveGraphId] = useState<string>(
     crypto.randomUUID(),
@@ -445,18 +446,21 @@ function App() {
   const [isFunctionTemplatesOpen, setIsFunctionTemplatesOpen] = useState(false);
   const [isViewportDirty, setIsViewportDirty] = useState(false);
   const [showGraphDetails, setShowGraphDetails] = useState(
-    () => loadAppSettings().showGraphDetails,
+    initialSettings.showGraphDetails,
   );
-  const [showGrid, setShowGrid] = useState(() => loadAppSettings().showGrid);
+  const [showGrid, setShowGrid] = useState(initialSettings.showGrid);
   const [showMinorGrid, setShowMinorGrid] = useState(
-    () => loadAppSettings().showMinorGrid,
+    initialSettings.showMinorGrid,
   );
-  const [showAxes, setShowAxes] = useState(() => loadAppSettings().showAxes);
+  const [showAxes, setShowAxes] = useState(initialSettings.showAxes);
   const [showAxisLabels, setShowAxisLabels] = useState(
-    () => loadAppSettings().showAxisLabels,
+    initialSettings.showAxisLabels,
   );
   const [showIntersections, setShowIntersections] = useState(
-    () => loadAppSettings().showIntersections,
+    initialSettings.showIntersections,
+  );
+  const [coordinateLabelFormat, setCoordinateLabelFormat] = useState(
+    initialSettings.coordinateLabelFormat,
   );
   const [settingsSaveStatus, setSettingsSaveStatus] = useState("");
 
@@ -1505,6 +1509,7 @@ function App() {
       showAxes,
       showAxisLabels,
       showIntersections,
+      coordinateLabelFormat,
     };
 
     saveAppSettings(nextSettings);
@@ -1525,6 +1530,7 @@ function App() {
     showAxes,
     showAxisLabels,
     showIntersections,
+    coordinateLabelFormat,
   ]);
 
   useEffect(() => {
@@ -2078,6 +2084,7 @@ function App() {
             isAxesVisible={isAxesVisible}
             isAxisLabelsVisible={isAxisLabelsVisible}
             areIntersectionsVisible={areIntersectionsVisible}
+            coordinateLabelFormat={coordinateLabelFormat}
             onClose={() => setIsSettingsOpen(false)}
             onToggleGraphDetails={() => {
               if (hasVisibleGraphDetails) {
@@ -2099,6 +2106,7 @@ function App() {
             onToggleIntersections={() =>
               setShowIntersections((current) => !current)
             }
+            onChangeCoordinateLabelFormat={setCoordinateLabelFormat}
           />
         ) : null}
 
@@ -2111,6 +2119,7 @@ function App() {
             showAxes={isAxesVisible}
             showAxisLabels={isAxisLabelsVisible}
             showIntersections={areIntersectionsVisible}
+            coordinateLabelFormat={coordinateLabelFormat}
             onViewportDirtyChange={setIsViewportDirty}
           />
 
