@@ -1,3 +1,5 @@
+import type { CoordinateLabelFormat } from "../graph/format";
+
 export type AppSettings = {
   showGraphDetails: boolean;
   showGrid: boolean;
@@ -5,6 +7,7 @@ export type AppSettings = {
   showAxes: boolean;
   showAxisLabels: boolean;
   showIntersections: boolean;
+  coordinateLabelFormat: CoordinateLabelFormat;
 };
 
 export const APP_SETTINGS_KEY = "axiom.appSettings";
@@ -16,6 +19,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   showAxes: true,
   showAxisLabels: true,
   showIntersections: true,
+  coordinateLabelFormat: "decimal",
 };
 
 export function loadAppSettings(): AppSettings {
@@ -45,6 +49,10 @@ export function loadAppSettings(): AppSettings {
         typeof parsed.showIntersections === "boolean"
           ? parsed.showIntersections
           : true,
+      coordinateLabelFormat:
+        parsed.coordinateLabelFormat === "symbolic-pi"
+          ? "symbolic-pi"
+          : "decimal",
     };
   } catch {
     return DEFAULT_APP_SETTINGS;

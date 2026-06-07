@@ -37,7 +37,12 @@ import {
   screenToGraphY,
   type Viewport,
 } from "../graph/viewport";
-import { formatRoundedNumber, normalizeDisplayNumber } from "../graph/format";
+import {
+  formatAxisDecimalCoordinate,
+  formatCoordinateLabel,
+  formatPointDecimalCoordinate,
+  type CoordinateLabelFormat,
+} from "../graph/format";
 import { extractQuadraticCoefficients } from "../graph/polynomial";
 import { normalizeMathInput } from "../graph/inputNormalization";
 
@@ -80,6 +85,7 @@ type GraphCanvasProps = {
   showAxes: boolean;
   showAxisLabels: boolean;
   showIntersections: boolean;
+  coordinateLabelFormat: CoordinateLabelFormat;
   onViewportDirtyChange?: (isDirty: boolean) => void;
 };
 
@@ -124,6 +130,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       showAxes,
       showAxisLabels,
       showIntersections,
+      coordinateLabelFormat,
       onViewportDirtyChange,
     },
     ref,
@@ -175,6 +182,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
         showAxisLabels,
         showIntersections && !isViewportInteractingRef.current,
         selectedCurveIdRef.current,
+        coordinateLabelFormat,
       );
 
       renderedPointsRef.current = drawResult.points;
@@ -187,6 +195,9 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
           expression.id === point.expressionId && expression.showLabel === true,
       );
     }
+
+    const activePointCoordinateFormatter = (value: number) =>
+      formatPointCoordinateLabel(value, coordinateLabelFormat);
 
     function drawActivePointLabels() {
       const canvas = canvasRef.current;
@@ -211,7 +222,13 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
 
       if (freshPinnedPoint) {
         drawSelectedPointHighlight(ctx, freshPinnedPoint);
-        drawPointLabel(ctx, rect.width, rect.height, freshPinnedPoint);
+        drawPointLabel(
+          ctx,
+          rect.width,
+          rect.height,
+          freshPinnedPoint,
+          activePointCoordinateFormatter,
+        );
       }
 
       if (
@@ -225,7 +242,13 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       }
 
       drawSelectedPointHighlight(ctx, freshHoverPoint!);
-      drawPointLabel(ctx, rect.width, rect.height, freshHoverPoint!);
+      drawPointLabel(
+        ctx,
+        rect.width,
+        rect.height,
+        freshHoverPoint!,
+        activePointCoordinateFormatter,
+      );
     }
 
     function startViewportInteraction() {
@@ -590,6 +613,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(
       showAxes,
       showAxisLabels,
       showIntersections,
+      coordinateLabelFormat,
       onViewportDirtyChange,
     ]);
 
@@ -609,9 +633,12 @@ function draw(
   showAxisLabels: boolean,
   shouldFindIntersections: boolean,
   selectedCurveId: string | null,
+  coordinateLabelFormat: CoordinateLabelFormat,
 ) {
   const renderedPoints: RenderedPoint[] = [];
   const renderedCurves: RenderedCurve[] = [];
+  const pointCoordinateFormatter = (value: number) =>
+    formatPointCoordinateLabel(value, coordinateLabelFormat);
 
   ctx.clearRect(0, 0, width, height);
 
@@ -626,7 +653,7 @@ function draw(
   }
 
   if (showAxes && showAxisLabels) {
-    drawLabels(ctx, width, height, viewport);
+    drawLabels(ctx, width, height, viewport, coordinateLabelFormat);
   }
 
   const scope = buildEvaluationScope(expressions);
@@ -734,7 +761,13 @@ function draw(
         renderedPoints.push(renderedPoint);
 
         if (expression.showLabel) {
-          drawPointLabel(ctx, width, height, renderedPoint);
+          drawPointLabel(
+            ctx,
+            width,
+            height,
+            renderedPoint,
+            pointCoordinateFormatter,
+          );
         }
       }
 
@@ -1385,6 +1418,7 @@ function drawLabels(
   width: number,
   height: number,
   viewport: Viewport,
+  coordinateLabelFormat: CoordinateLabelFormat,
 ) {
   const step = getGridStep(viewport.xMax - viewport.xMin);
 
@@ -1403,7 +1437,7 @@ function drawLabels(
     if (Math.abs(x) < step / 1000) continue;
 
     const sx = graphToScreenX(x, width, viewport);
-    const label = formatNumber(x);
+    const label = formatAxisCoordinateLabel(x, coordinateLabelFormat);
     const isNegative = label.startsWith("-");
     const numberPart = isNegative ? label.slice(1) : label;
 
@@ -1431,7 +1465,7 @@ function drawLabels(
     if (Math.abs(y) < step / 1000) continue;
 
     const sy = graphToScreenY(y, height, viewport);
-    const label = formatNumber(y);
+    const label = formatAxisCoordinateLabel(y, coordinateLabelFormat);
     const labelWidth = Math.ceil(ctx.measureText(label).width) + 8;
     const labelHeight = 16;
 
@@ -2371,28 +2405,26 @@ function interpolateZeroCrossing(
   };
 }
 
-function formatNumber(value: number) {
-  if (!Number.isFinite(value)) {
-    return "undefined";
-  }
+function formatAxisCoordinateLabel(
+  value: number,
+  coordinateLabelFormat: CoordinateLabelFormat,
+) {
+  return formatCoordinateLabel(
+    value,
+    coordinateLabelFormat,
+    formatAxisDecimalCoordinate,
+  );
+}
 
-  value = normalizeDisplayNumber(value, 1e-8);
-
-  if (value === 0) {
-    return "0";
-  }
-
-  const nearestInteger = Math.round(value);
-
-  if (Math.abs(value - nearestInteger) < 0.001) {
-    return nearestInteger.toString();
-  }
-
-  if (Math.abs(value) >= 1000 || Math.abs(value) < 0.01) {
-    return value.toExponential(1);
-  }
-
-  return formatRoundedNumber(value, 4, 1e-8);
+function formatPointCoordinateLabel(
+  value: number,
+  coordinateLabelFormat: CoordinateLabelFormat,
+) {
+  return formatCoordinateLabel(
+    value,
+    coordinateLabelFormat,
+    formatPointDecimalCoordinate,
+  );
 }
 
 function drawError(ctx: CanvasRenderingContext2D, message: string) {
