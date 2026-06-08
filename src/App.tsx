@@ -10,6 +10,7 @@ import LibraryPanel from "./components/LibraryPanel";
 import SettingsPopover from "./components/SettingsPopover";
 import Topbar from "./components/Topbar";
 import GraphControls from "./components/GraphControls";
+import MathPalette from "./components/MathPalette";
 import "./App.css";
 import { formatRoundedNumber } from "./graph/format";
 import {
@@ -35,6 +36,10 @@ import {
   updateVariableAssignmentSliderConfig,
 } from "./graph/sliders";
 import { normalizeMathInput } from "./graph/inputNormalization";
+import {
+  getMathPaletteCursorOffset,
+  insertMathPaletteSnippet,
+} from "./graph/mathPalette";
 
 const math = create(all, {});
 
@@ -415,6 +420,7 @@ function App() {
     Record<string, HTMLTextAreaElement | null>
   >({});
   const tableInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const focusedExpressionInputIdRef = useRef<string | null>(null);
 
   const startingExpressions = useMemo(() => createDefaultExpressions(), []);
   const initialSettings = useMemo(() => loadAppSettings(), []);
@@ -444,6 +450,7 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isFunctionTemplatesOpen, setIsFunctionTemplatesOpen] = useState(false);
+  const [isMathPaletteOpen, setIsMathPaletteOpen] = useState(false);
   const [isViewportDirty, setIsViewportDirty] = useState(false);
   const [showGraphDetails, setShowGraphDetails] = useState(
     initialSettings.showGraphDetails,
@@ -512,6 +519,7 @@ function App() {
   }
 
   function focusTableCell(id: string, rowIndex: number, axis: "x" | "y") {
+    focusedExpressionInputIdRef.current = null;
     setActiveTableCell({ expressionId: id, rowIndex, axis });
 
     requestAnimationFrame(() => {
@@ -527,6 +535,19 @@ function App() {
 
   function markUnsaved() {
     setSaveStatus("Unsaved changes");
+  }
+
+  function handleExpressionInputFocus(id: string) {
+    focusedExpressionInputIdRef.current = id;
+    setFocusedExpressionId(id);
+  }
+
+  function handleExpressionInputBlur(id: string) {
+    if (focusedExpressionInputIdRef.current === id) {
+      focusedExpressionInputIdRef.current = null;
+    }
+
+    setFocusedExpressionId((current) => (current === id ? null : current));
   }
 
   function updateExpression(id: string, raw: string) {
@@ -988,8 +1009,47 @@ function App() {
     setExpressions((current) => [...current, expression]);
     setNextColorIndex((current) => current + 1);
     setFocusedExpressionId(expression.id);
+    focusedExpressionInputIdRef.current = expression.id;
     focusExpression(expression.id);
     markUnsaved();
+  }
+
+  function addExpressionWithPaletteSnippet(snippet: string) {
+    const expression = {
+      ...createEmptyExpression(nextColorIndex),
+      raw: snippet,
+    };
+    const cursorPosition = getMathPaletteCursorOffset(snippet);
+
+    setExpressions((current) => [...current, expression]);
+    setNextColorIndex((current) => current + 1);
+    setFocusedExpressionId(expression.id);
+    focusedExpressionInputIdRef.current = expression.id;
+    focusExpression(expression.id, {
+      start: cursorPosition,
+      end: cursorPosition,
+    });
+    markUnsaved();
+  }
+
+  function insertPaletteSnippet(snippet: string) {
+    const id = focusedExpressionInputIdRef.current;
+    const element = id ? expressionInputRefs.current[id] : null;
+
+    if (!id || !element) {
+      addExpressionWithPaletteSnippet(snippet);
+      return;
+    }
+
+    const { value, selection } = insertMathPaletteSnippet(
+      element.value,
+      snippet,
+      element.selectionStart ?? element.value.length,
+      element.selectionEnd ?? element.value.length,
+    );
+
+    updateExpression(id, value);
+    focusExpression(id, selection);
   }
 
   function addExpressionFromMenu() {
@@ -1463,9 +1523,15 @@ function App() {
         addExpressionFromKeyboard();
       }
 
-      if (event.key === "Escape" && isCreateMenuOpen) {
-        setIsCreateMenuOpen(false);
-        setIsFunctionTemplatesOpen(false);
+      if (event.key === "Escape") {
+        if (isCreateMenuOpen) {
+          setIsCreateMenuOpen(false);
+          setIsFunctionTemplatesOpen(false);
+        }
+
+        if (isMathPaletteOpen) {
+          setIsMathPaletteOpen(false);
+        }
       }
     }
 
@@ -1548,6 +1614,20 @@ function App() {
   }, [isCreateMenuOpen]);
 
   useEffect(() => {
+    if (!isMathPaletteOpen) return;
+
+    function closeMathPalette() {
+      setIsMathPaletteOpen(false);
+    }
+
+    window.addEventListener("pointerdown", closeMathPalette);
+
+    return () => {
+      window.removeEventListener("pointerdown", closeMathPalette);
+    };
+  }, [isMathPaletteOpen]);
+
+  useEffect(() => {
     if (!isSettingsOpen) return;
 
     function handleSettingsEscape(event: KeyboardEvent) {
@@ -1606,6 +1686,7 @@ function App() {
                 setIsCreateMenuOpen((current) => {
                   const next = !current;
                   setIsFunctionTemplatesOpen(false);
+                  if (next) setIsMathPaletteOpen(false);
                   return next;
                 });
               }}
@@ -1629,6 +1710,7 @@ function App() {
                 onPointerDown={(event) => event.stopPropagation()}
               />
             ) : null}
+
             <button
               className="sidebar-collapse-glyph inline-collapse-glyph"
               onClick={() => setIsSidebarCollapsed(true)}
@@ -1641,6 +1723,8 @@ function App() {
               </svg>
             </button>
           </div>
+
+          <MathPalette onInsert={insertPaletteSnippet} />
 
           {expressions.length === 0 ? null : (
             <div className="expression-list">
@@ -1768,6 +1852,7 @@ function App() {
                                   }
                                   value={row.x}
                                   onFocus={() => {
+                                    focusedExpressionInputIdRef.current = null;
                                     setFocusedExpressionId(expression.id);
                                     setActiveTableCell({
                                       expressionId: expression.id,
@@ -1827,6 +1912,7 @@ function App() {
                                   }
                                   value={row.y}
                                   onFocus={() => {
+                                    focusedExpressionInputIdRef.current = null;
                                     setFocusedExpressionId(expression.id);
                                     setActiveTableCell({
                                       expressionId: expression.id,
@@ -1886,13 +1972,11 @@ function App() {
                             rows={1}
                             value={formatExpressionForDisplay(expression.raw)}
                             onFocus={() =>
-                              setFocusedExpressionId(expression.id)
+                              handleExpressionInputFocus(expression.id)
                             }
-                            onBlur={() => {
-                              setFocusedExpressionId((current) =>
-                                current === expression.id ? null : current,
-                              );
-                            }}
+                            onBlur={() =>
+                              handleExpressionInputBlur(expression.id)
+                            }
                             onChange={(event) =>
                               updateExpression(
                                 expression.id,
@@ -2038,6 +2122,17 @@ function App() {
           activeGraphId={activeGraphId}
           onLoadGraph={loadGraph}
           onDeleteGraph={deleteGraph}
+        />
+
+        <MathPalette
+          isOpen={isMathPaletteOpen}
+          onToggle={() => {
+            setIsMathPaletteOpen((current) => !current);
+            setIsCreateMenuOpen(false);
+            setIsFunctionTemplatesOpen(false);
+          }}
+          onInsert={insertPaletteSnippet}
+          onPointerDown={(event) => event.stopPropagation()}
         />
       </aside>
 

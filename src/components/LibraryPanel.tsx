@@ -43,11 +43,16 @@ function LibraryPanel<TGraph extends LibraryPanelGraph>({
               </button>
 
               <button
-                className="remove-button"
+                className="remove-button library-delete-button"
                 onClick={() => onDeleteGraph(graph.id)}
                 title="Delete saved graph"
+                aria-label="Delete saved graph"
+                type="button"
               >
-                ×
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
               </button>
             </div>
           ))}

@@ -288,16 +288,18 @@ input {
 }
 .library-list {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 .library-item {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
+  gap: 8px;
+  min-height: 58px;
   border: 1px solid #3d444d;
-  border-radius: 10px;
+  border-radius: 6px;
   background: #1c2128;
-  overflow: hidden;
+  padding: 10px 8px 10px 12px;
 }
 .library-item-active {
   border-color: #58a6ff;
@@ -308,13 +310,19 @@ input {
   border: 0;
   background: transparent;
   color: #f0f6fc;
-  padding: 10px 12px;
+  min-width: 0;
+  padding: 0;
   text-align: left;
   cursor: pointer;
 }
 .library-load-button small {
   color: #8b949e;
   font-size: 11px;
+}
+.library-delete-button {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
 }
 .slider-control {
   display: grid;
@@ -1927,4 +1935,124 @@ input {
 
 .create-menu-template-trigger {
   color: #f0f6fc !important;
+}
+
+.math-keyboard {
+  position: sticky;
+  bottom: 14px;
+  z-index: 30;
+  width: fit-content;
+  margin-top: auto;
+  padding-top: 18px;
+  pointer-events: none;
+}
+
+.math-keyboard-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: rgba(33, 38, 45, 0.96);
+  color: #c9d1d9;
+  cursor: pointer;
+  padding: 0;
+  pointer-events: auto;
+  box-shadow: 0 8px 20px rgba(1, 4, 9, 0.24);
+}
+
+.math-keyboard-toggle:hover,
+.math-keyboard-toggle[aria-expanded="true"] {
+  border-color: #8b949e;
+  background: rgba(48, 54, 61, 0.98);
+  color: #f0f6fc;
+}
+
+.math-keyboard-toggle:focus-visible {
+  outline: 2px solid #58a6ff;
+  outline-offset: 2px;
+}
+
+.math-keyboard-toggle svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.math-keyboard-popover {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 10px);
+  z-index: 31;
+  width: 244px;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+  box-shadow: 0 22px 56px rgba(1, 4, 9, 0.58);
+  padding: 10px;
+  pointer-events: auto;
+}
+
+.math-keyboard-popover::after {
+  position: absolute;
+  bottom: -6px;
+  left: 14px;
+  width: 10px;
+  height: 10px;
+  border-right: 1px solid #30363d;
+  border-bottom: 1px solid #30363d;
+  background: #0d1117;
+  content: "";
+  transform: rotate(45deg);
+}
+
+.math-keyboard-grip {
+  width: 38px;
+  height: 3px;
+  margin: 0 auto 10px;
+  border-radius: 999px;
+  background: #3d444d;
+}
+
+.math-keyboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+
+.math-keyboard-key {
+  display: flex;
+  min-width: 0;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #30363d;
+  border-radius: 7px;
+  background: #010409;
+  color: #f0f6fc;
+  cursor: pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1;
+  padding: 0 8px;
+  box-shadow: inset 0 1px 0 rgba(240, 246, 252, 0.04);
+}
+
+.math-keyboard-key:hover {
+  border-color: #8b949e;
+  background: #21262d;
+  color: #ffffff;
+}
+
+.math-keyboard-key:focus-visible {
+  outline: 2px solid #58a6ff;
+  outline-offset: 2px;
 }
